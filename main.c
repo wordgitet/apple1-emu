@@ -565,9 +565,7 @@ main(int argc, char *argv[])
 	int loop_count = 0;
 
 	while (true) {
-		/* When the machine is powered off or paused, just keep polling the GUI
-		 * and do nothing else — the CRT goes dark in the renderer. */
-		if (!bus.opts.headless && (!term_is_powered() || term_is_paused())) {
+		if (!bus.opts.headless && (!term_is_powered() || (term_is_paused() && !term_should_step()))) {
 			term_poll();
 			struct timespec req = {0, 10000000}; // 10ms
 			nanosleep(&req, NULL);

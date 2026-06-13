@@ -2041,6 +2041,8 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 					if (g_dbg) {
 						g_dbg->step_mode = false;
 					}
+					emulation_paused = false;
+					term_close_debugger();
 					break;
 				case 3:
 					if (g_dbg) {
@@ -2297,6 +2299,22 @@ handle_key_event(const SDL_KeyboardEvent *key)
 		}
 		/* Swallow other Ctrl combos so they don't feed text input */
 		return;
+	}
+
+	bool is_stopped = emulation_paused || (g_debug_enabled && g_dbg && g_dbg->step_mode);
+	if (is_stopped) {
+		if (sym == SDLK_S) {
+			dbg_needs_step = true;
+			return;
+		}
+		if (sym == SDLK_C) {
+			if (g_dbg) g_dbg->step_mode = false;
+			emulation_paused = false;
+			term_close_debugger();
+			strncpy(status_text, "EMULATION RESUMED.", sizeof(status_text) - 1);
+			return;
+		}
+		return; /* Ignore other key events when paused/stopped */
 	}
 
 	/* Special non-printable keys */
@@ -2678,12 +2696,15 @@ term_poll(void)
 				if (config_modal_open && editing_field_idx >= 0) {
 					handle_config_text_input(event.text.text);
 				} else {
-					/* Use text input for printable chars — SDL handles shift/caps correctly */
-					char c = event.text.text[0];
-					if (c >= 32 && c <= 126 && buffered_key_sdl == 0) {
-						/* Apple-1 only has uppercase — force it */
-						if (c >= 'a' && c <= 'z') c = (char)(c - 32);
-						buffered_key_sdl = (uint8_t)((unsigned char)c | 0x80);
+					bool is_stopped = emulation_paused || (g_debug_enabled && g_dbg && g_dbg->step_mode);
+					if (!is_stopped) {
+						/* Use text input for printable chars — SDL handles shift/caps correctly */
+						char c = event.text.text[0];
+						if (c >= 32 && c <= 126 && buffered_key_sdl == 0) {
+							/* Apple-1 only has uppercase — force it */
+							if (c >= 'a' && c <= 'z') c = (char)(c - 32);
+							buffered_key_sdl = (uint8_t)((unsigned char)c | 0x80);
+						}
 					}
 				}
 			} else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
