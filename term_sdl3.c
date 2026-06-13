@@ -2890,3 +2890,11 @@ term_close_debugger(void)
 		toggle_debug_window();
 	}
 }
+
+void
+term_open_debugger(void)
+{
+	if (!debug_window_open) {
+		toggle_debug_window();
+	}
+}

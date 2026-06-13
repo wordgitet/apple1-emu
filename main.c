@@ -636,7 +636,11 @@ main(int argc, char *argv[])
 		}
 
 		// 2. Step the CPU
+		bus.access_cb = dbg_check_access;
+		bus.access_cb_ctx = &dbg;
+		dbg.current_instruction_pc = cpu.pc;
 		uint8_t cycles = cpu_step(&cpu);
+		bus.access_cb = NULL;
 
 		cycle_accumulator += cycles;
 

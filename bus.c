@@ -245,53 +245,52 @@ pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 uint8_t
 bus_read(Bus *bus, uint16_t address)
 {
+	uint8_t result = bus->last_bus_value; /* default: open-bus float */
+
 	if (bus->opts.flat_bus) {
-		bus->last_bus_value = bus->ram[address];
-		return bus->last_bus_value;
-	}
+		result = bus->ram[address];
+		bus->last_bus_value = result;
+	} else {
+		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
+		if ((address & 0xF000) == 0xD000)
+			address = 0xD010 | (address & 0x03);
 
-	// PIA 6821 alias: the 74154 decoder selects the PIA for the full $D000-$DFFF range.
-	// Only address lines A0-A1 are connected to the PIA's RS0-RS1 register select pins.
-	if ((address & 0xF000) == 0xD000) {
-		address = 0xD010 | (address & 0x03);
-	}
+		if (bus->opts.uncapped && bus->opts.throttle_pia &&
+		    !bus->opts.headless &&
+		    address >= 0xD010 && address <= 0xD013)
+			delay_nanoseconds(977);
 
-	if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		!bus->opts.headless && address >= 0xD010 && address <= 0xD013) {
-		delay_nanoseconds(977);
-	}
-	// 1. ROM mapped to 0xFF00 - 0xFFFF (256 bytes)
-	if (address >= 0xFF00) {
-		if (bus->rom_loaded) {
-			bus->last_bus_value = bus->rom[address - 0xFF00];
-		}
-		return bus->last_bus_value;
-	}
-	// 2. PIA 6821 registers mapped to 0xD010 - 0xD013
-	if (address >= 0xD010 && address <= 0xD013) {
-		bus->last_bus_value = pia_read(bus, address);
-		return bus->last_bus_value;
-	}
-	// 3. Expansion cards (checked before RAM so cards always win regardless
-	//    of RAM size — matches real hardware address decoding priority).
-	for (int i = 0; i < bus->num_cards; i++) {
-		expansion_card_t *card = bus->cards[i];
-
-		if ((address & card->mask) == card->base) {
-			if (card->read) {
-				bus->last_bus_value =
-					card->read(card->ctx, address, false);
+		if (address >= 0xFF00) {
+			if (bus->rom_loaded)
+				bus->last_bus_value = bus->rom[address - 0xFF00];
+			result = bus->last_bus_value;
+		} else if (address >= 0xD010 && address <= 0xD013) {
+			result = pia_read(bus, address);
+			bus->last_bus_value = result;
+		} else {
+			bool card_hit = false;
+			for (int i = 0; i < bus->num_cards; i++) {
+				expansion_card_t *card = bus->cards[i];
+				if ((address & card->mask) == card->base) {
+					if (card->read)
+						bus->last_bus_value =
+							card->read(card->ctx, address, false);
+					result = bus->last_bus_value;
+					card_hit = true;
+					break;
+				}
 			}
-			return bus->last_bus_value;
+			if (!card_hit) {
+				if (bus_is_ram_address(bus, address))
+					bus->last_bus_value = bus->ram[address];
+				result = bus->last_bus_value;
+			}
 		}
 	}
-	// 4. RAM
-	if (bus_is_ram_address(bus, address)) {
-		bus->last_bus_value = bus->ram[address];
-		return bus->last_bus_value;
-	}
-	// Open bus behavior
-	return bus->last_bus_value;
+
+	if (bus->access_cb)
+		bus->access_cb(bus->access_cb_ctx, address, false, result);
+	return result;
 }
 
 void
@@ -309,44 +308,40 @@ bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 
 	if (bus->opts.flat_bus) {
 		bus->ram[address] = value;
-		return;
-	}
+	} else {
+		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
+		if ((address & 0xF000) == 0xD000)
+			address = 0xD010 | (address & 0x03);
 
-	// PIA 6821 alias: the 74154 decoder selects the PIA for the full $D000-$DFFF range.
-	// Only address lines A0-A1 are connected to the PIA's RS0-RS1 register select pins.
-	if ((address & 0xF000) == 0xD000) {
-		address = 0xD010 | (address & 0x03);
-	}
+		if (bus->opts.uncapped && bus->opts.throttle_pia &&
+		    !bus->opts.headless &&
+		    address >= 0xD010 && address <= 0xD013)
+			delay_nanoseconds(977);
 
-	if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		!bus->opts.headless && address >= 0xD010 && address <= 0xD013) {
-		delay_nanoseconds(977);
-	}
-	// 1. ROM is read-only
-	if (address >= 0xFF00) {
-		return;
-	}
-	// 2. PIA 6821
-	if (address >= 0xD010 && address <= 0xD013) {
-		pia_write(bus, address, value, is_dummy);
-		return;
-	}
-	// 3. Expansion cards (checked before RAM — same priority rationale as read).
-	for (int i = 0; i < bus->num_cards; i++) {
-		expansion_card_t *card = bus->cards[i];
-
-		if ((address & card->mask) == card->base) {
-			if (!card->rom_only && card->write) {
-				card->write(card->ctx, address, value, is_dummy);
+		if (address >= 0xFF00) {
+			/* ROM is read-only — silently ignore */
+		} else if (address >= 0xD010 && address <= 0xD013) {
+			pia_write(bus, address, value, is_dummy);
+		} else {
+			bool card_hit = false;
+			for (int i = 0; i < bus->num_cards; i++) {
+				expansion_card_t *card = bus->cards[i];
+				if ((address & card->mask) == card->base) {
+					if (!card->rom_only && card->write)
+						card->write(card->ctx, address, value,
+						            is_dummy);
+					card_hit = true;
+					break;
+				}
 			}
-			return;
+			if (!card_hit && bus_is_ram_address(bus, address))
+				bus->ram[address] = value;
 		}
 	}
-	// 4. RAM
-	if (bus_is_ram_address(bus, address)) {
-		bus->ram[address] = value;
-		return;
-	}
+
+	/* Fire watchpoint callback for real (non-phantom) writes only */
+	if (!is_dummy && bus->access_cb)
+		bus->access_cb(bus->access_cb_ctx, address, true, value);
 }
 
 void

@@ -96,3 +96,8 @@ void
 term_close_debugger(void)
 {
 }
+
+void
+term_open_debugger(void)
+{
+}

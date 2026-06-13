@@ -599,11 +599,16 @@ static int
 run_emulator(CPU *cpu, debugger_t *dbg, int max_cycles)
 {
 	int cycles = 0;
+	dbg->step_mode = false;
 	while (cycles < max_cycles) {
-		if (dbg_has_breakpoint(dbg, cpu->pc)) {
+		if (dbg_has_breakpoint(dbg, cpu->pc) || dbg->step_mode) {
 			break;
 		}
+		cpu->bus->access_cb = dbg_check_access;
+		cpu->bus->access_cb_ctx = dbg;
+		dbg->current_instruction_pc = cpu->pc;
 		uint8_t c = cpu_step(cpu);
+		cpu->bus->access_cb = NULL;
 		cycles += c;
 		if (cpu->pc == kSpin) {
 			break;
@@ -732,6 +737,8 @@ test_cpu_breakpoint_smoke(void)
 	}
 }
 
+static void test_cpu_watchpoint_smoke(void);
+
 int
 main(void)
 {
@@ -756,6 +763,82 @@ main(void)
 	test_cpu_breakpoint_smoke();
 	printf("Test PASS: CPU Breakpoint Smoke\n");
 
+	test_cpu_watchpoint_smoke();
+	printf("Test PASS: CPU Watchpoint Smoke\n");
+
 	printf("\nAll CPU tests passed successfully!\n");
 	return 0;
+}
+
+static void
+test_cpu_watchpoint_smoke(void)
+{
+	static const uint8_t wp_program[] = {
+		0xA9, 0x42,       // LDA #$42
+		0x8D, 0x00, 0x02, // STA $0200
+		0xAD, 0x00, 0x02, // LDA $0200
+		0x4C, 0x08, 0x04  // JMP $0408
+	};
+
+	// ---- Test 1: Write watchpoint fires on STA -----
+	{
+		Bus bus;
+		bus_init(&bus, 16 * 1024);
+		memcpy(bus.ram + 0x0400, wp_program, sizeof(wp_program));
+
+		CPU cpu;
+		cpu_init(&cpu, &bus);
+		cpu.halted = false;
+		cpu.pc = 0x0400;
+
+		debugger_t dbg;
+		dbg_init(&dbg, &cpu);
+		dbg.step_mode = false;
+
+		dbg_add_watchpoint(&dbg, 0x0200, WP_WRITE);
+		assert(dbg.num_watchpoints == 1);
+
+		// Run emulator
+		run_emulator(&cpu, &dbg, 100);
+
+		// Watchpoint should trigger at STA $0200 (PC = 0x0402).
+		// STA $0200 is 3 bytes, so PC is advanced to 0x0405.
+		// Since watchpoint is triggered, emulator breaks.
+		assert(dbg.step_mode == true);
+		assert(cpu.pc == 0x0405);
+		assert(bus.ram[0x0200] == 0x42);
+
+		bus_free(&bus);
+	}
+
+	// ---- Test 2: Read watchpoint fires on LDA $0200 -----
+	{
+		Bus bus;
+		bus_init(&bus, 16 * 1024);
+		memcpy(bus.ram + 0x0400, wp_program, sizeof(wp_program));
+
+		CPU cpu;
+		cpu_init(&cpu, &bus);
+		cpu.halted = false;
+		cpu.pc = 0x0400;
+
+		debugger_t dbg;
+		dbg_init(&dbg, &cpu);
+		dbg.step_mode = false;
+
+		dbg_add_watchpoint(&dbg, 0x0200, WP_READ);
+		assert(dbg.num_watchpoints == 1);
+
+		// Run emulator
+		run_emulator(&cpu, &dbg, 100);
+
+		// STA $0200 executes (doesn't trigger since it's a write, not a read).
+		// LDA $0200 executes (which reads from 0x0200, triggering read watchpoint).
+		// PC should be advanced to 0x0408.
+		assert(dbg.step_mode == true);
+		assert(cpu.pc == 0x0408);
+		assert(cpu.a == 0x42);
+
+		bus_free(&bus);
+	}
 }

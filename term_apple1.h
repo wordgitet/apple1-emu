@@ -52,4 +52,8 @@ term_request_step(void);
 void
 term_close_debugger(void);
 
+/* Opens the debugger window if it is closed. */
+void
+term_open_debugger(void);
+
 #endif // TERM_APPLE1_H

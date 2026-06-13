@@ -2,8 +2,15 @@
 #define BUS_H
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
+#include <stddef.h>
+
+/* Callback fired on every non-dummy bus read and write.
+ * addr     — the final (post-alias-resolution) address accessed
+ * is_write — true for writes, false for reads
+ * val      — the byte written or read */
+typedef void (*bus_access_cb_t)(void *ctx, uint16_t addr, bool is_write,
+                                uint8_t val);
 
 typedef struct {
 	uint8_t kbd_data;    // 0xD010: Keyboard Data
@@ -46,6 +53,11 @@ typedef struct {
 	expansion_card_t *cards[8];
 	int num_cards;
 	uint32_t kbd_bounce_cycles; /* remaining bounce window (in calls) */
+
+	/* Optional callback fired on every non-dummy bus access (read or write).
+	 * Set to NULL to disable.  Used by the debugger for watchpoints. */
+	bus_access_cb_t access_cb;
+	void           *access_cb_ctx;
 } Bus;
 
 // Initialize the memory bus with a configured RAM size
