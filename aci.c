@@ -1,0 +1,635 @@
+#include "aci.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+	uint8_t rom[256];
+
+	// Tape playback state
+	uint32_t *durations;
+	uint32_t num_durations;
+	uint32_t playback_index;
+
+	uint64_t current_cycle;
+	uint64_t last_read_cycle;
+	int32_t cycles_until_toggle;
+	bool input_level;
+	bool initial_level;
+
+	bool tape_loaded;
+	bool tape_active;
+
+	// Tape recording state
+	bool output_level;
+	bool output_initial_level;
+	uint64_t last_output_toggle_cycle;
+	bool recording_started;
+	uint32_t *recorded_durations;
+	uint32_t recorded_count;
+	uint32_t recorded_capacity;
+} aci_card_t;
+
+static void
+aci_record_toggle(aci_card_t *aci)
+{
+	if (!aci->recording_started) {
+		/* First toggle: capture initial output level before toggling */
+		aci->output_initial_level = aci->output_level;
+		aci->last_output_toggle_cycle = aci->current_cycle;
+		aci->recording_started = true;
+	} else {
+		uint64_t delta = aci->current_cycle -
+			aci->last_output_toggle_cycle;
+
+		if (delta > 0 && delta <= UINT32_MAX) {
+			/* Grow recording buffer if needed */
+			if (aci->recorded_count >= aci->recorded_capacity) {
+				uint32_t new_cap = aci->recorded_capacity == 0
+					? 4096
+					: aci->recorded_capacity * 2;
+				uint32_t *buf = realloc(aci->recorded_durations,
+					new_cap * sizeof(uint32_t));
+
+				if (buf) {
+					aci->recorded_durations = buf;
+					aci->recorded_capacity = new_cap;
+				}
+			}
+			if (aci->recorded_count < aci->recorded_capacity) {
+				aci->recorded_durations[aci->recorded_count++] =
+					(uint32_t)delta;
+			}
+		}
+		aci->last_output_toggle_cycle = aci->current_cycle;
+	}
+	aci->output_level = !aci->output_level;
+}
+
+static uint8_t
+aci_read(void *ctx, uint16_t addr, bool is_dummy)
+{
+	(void)is_dummy;
+	aci_card_t *aci = (aci_card_t *)ctx;
+
+	// ROM resides at $C100 - $C1FF
+	if (addr >= 0xC100 && addr <= 0xC1FF) {
+		return aci->rom[addr - 0xC100];
+	}
+
+	// Tape Input Register resides at $C081
+	if (addr == 0xC081) {
+		// Leader preservation rewind check:
+		// 500 ms at ~1.023 MHz clock = 511,500 cycles.
+		uint64_t gap = aci->current_cycle - aci->last_read_cycle;
+		if (aci->tape_loaded && aci->playback_index > 0 &&
+			gap > 511500) {
+			// Rewind / Arm tape at start
+			aci->playback_index = 0;
+			aci->cycles_until_toggle = aci->durations[0];
+			aci->input_level = aci->initial_level;
+			aci->tape_active = true;
+		}
+		aci->last_read_cycle = aci->current_cycle;
+		return aci->input_level ? 0x80 : 0x00;
+	}
+
+	// Other $C000 - $C0FF addresses toggle ACI output level
+	if (addr >= 0xC000 && addr <= 0xC0FF) {
+		aci_record_toggle(aci);
+	}
+
+	return 0x00;
+}
+
+static void
+aci_write(void *ctx, uint16_t addr, uint8_t val, bool is_dummy)
+{
+	(void)val;
+	(void)is_dummy;
+	aci_card_t *aci = (aci_card_t *)ctx;
+
+	// Any write to $C000 - $C0FF (except $C081) toggles ACI output level
+	if (addr >= 0xC000 && addr <= 0xC0FF && addr != 0xC081) {
+		aci_record_toggle(aci);
+	}
+}
+
+static void
+aci_tick(void *ctx, uint8_t cycles)
+{
+	aci_card_t *aci = (aci_card_t *)ctx;
+	aci->current_cycle += cycles;
+
+	if (aci->tape_loaded && aci->tape_active) {
+		aci->cycles_until_toggle -= cycles;
+		while (aci->cycles_until_toggle <= 0 && aci->tape_active) {
+			aci->input_level = !aci->input_level;
+			aci->playback_index++;
+			if (aci->playback_index >= aci->num_durations) {
+				aci->tape_active = false;
+				break;
+			}
+			aci->cycles_until_toggle +=
+				aci->durations[aci->playback_index];
+		}
+	}
+}
+
+expansion_card_t *
+aci_create(const char *rom_path)
+{
+	if (!rom_path)
+		return NULL;
+
+	FILE *f = fopen(rom_path, "rb");
+	if (!f)
+		return NULL;
+
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	if (size != 256) {
+		fprintf(stderr,
+			"Error: ACI ROM '%s' is %ld bytes, must be exactly 256.\n",
+			rom_path, size);
+		fclose(f);
+		return NULL;
+	}
+
+	aci_card_t *aci = calloc(1, sizeof(aci_card_t));
+	if (!aci) {
+		perror("Failed to allocate ACI card context");
+		fclose(f);
+		return NULL;
+	}
+
+	if (fread(aci->rom, 1, 256, f) != 256) {
+		fprintf(stderr, "Error: Failed to read ACI ROM '%s'\n", rom_path);
+		free(aci);
+		fclose(f);
+		return NULL;
+	}
+	fclose(f);
+
+	expansion_card_t *card = malloc(sizeof(expansion_card_t));
+	if (!card) {
+		perror("Failed to allocate ACI expansion card");
+		free(aci);
+		return NULL;
+	}
+
+	card->name     = "ACI";
+	card->base     = 0xC000;
+	card->mask     = 0xFE00;
+	card->rom_only = false;
+	card->read     = aci_read;
+	card->write    = aci_write;
+	card->tick     = aci_tick;
+	card->ctx      = aci;
+
+	printf("Registered ACI card: ROM mapped at 0xC100 - 0xC1FF, registers "
+	       "at 0xC000 - 0xC0FF\n");
+	return card;
+}
+
+
+
+static bool
+pcm_to_durations(const float *mono, uint32_t num_samples, uint32_t sample_rate,
+	uint32_t **out_durations, uint32_t *out_count, bool *out_initial_level)
+{
+	if (num_samples == 0 || sample_rate == 0) {
+		return false;
+	}
+
+	const float threshold = 0.02f;
+	uint32_t first_active = 0;
+
+	while (first_active < num_samples &&
+		(mono[first_active] < 0.0f ? -mono[first_active] : mono[first_active]) < threshold) {
+		first_active++;
+	}
+
+	if (first_active == num_samples) {
+		fprintf(stderr,
+			"Error: Audio file does not contain a detectable cassette signal\n");
+		return false;
+	}
+
+	*out_initial_level = mono[first_active] >= 0.0f;
+	bool current_level = *out_initial_level;
+	uint32_t last_transition = first_active;
+
+	uint32_t cap = 4096;
+	uint32_t count = 0;
+	uint32_t *durations = malloc(cap * sizeof(uint32_t));
+
+	if (!durations) {
+		perror("Failed to allocate durations buffer");
+		return false;
+	}
+
+	for (uint32_t i = first_active + 1; i < num_samples; i++) {
+		bool new_level = current_level;
+
+		if (mono[i] >= threshold) {
+			new_level = true;
+		} else if (mono[i] <= -threshold) {
+			new_level = false;
+		}
+
+		if (new_level != current_level) {
+			uint32_t delta_samples = i - last_transition;
+			uint32_t cycles = (uint32_t)(((double)delta_samples * 1023000.0) /
+				(double)sample_rate + 0.5);
+
+			if (cycles == 0) {
+				cycles = 1;
+			}
+
+			if (count >= cap) {
+				cap *= 2;
+				uint32_t *new_buf = realloc(durations, cap * sizeof(uint32_t));
+
+				if (!new_buf) {
+					perror("Failed to reallocate durations buffer");
+					free(durations);
+					return false;
+				}
+				durations = new_buf;
+			}
+			durations[count++] = cycles;
+			current_level = new_level;
+			last_transition = i;
+		}
+	}
+
+	if (count == 0) {
+		free(durations);
+		return false;
+	}
+
+	*out_durations = durations;
+	*out_count = count;
+	return true;
+}
+
+static bool
+load_wav_tape(aci_card_t *aci, const char *tape_path)
+{
+	FILE *f = fopen(tape_path, "rb");
+
+	if (!f) {
+		fprintf(stderr, "Error: Could not open WAV file '%s'\n", tape_path);
+		return false;
+	}
+
+	uint8_t riff_header[12];
+
+	if (fread(riff_header, 1, 12, f) != 12) {
+		fprintf(stderr, "Error: Truncated WAV header\n");
+		fclose(f);
+		return false;
+	}
+
+	if (memcmp(riff_header, "RIFF", 4) != 0 || memcmp(riff_header + 8, "WAVE", 4) != 0) {
+		fprintf(stderr, "Error: Invalid WAV format\n");
+		fclose(f);
+		return false;
+	}
+
+	uint16_t audio_format = 0;
+	uint16_t channels = 0;
+	uint32_t sample_rate = 0;
+	uint16_t bits_per_sample = 0;
+	uint8_t *data_chunk = NULL;
+	uint32_t data_size = 0;
+
+	while (1) {
+		uint8_t chunk_header[8];
+
+		if (fread(chunk_header, 1, 8, f) != 8) {
+			break;
+		}
+
+		uint32_t chunk_size = chunk_header[4] | (chunk_header[5] << 8) |
+			(chunk_header[6] << 16) | (chunk_header[7] << 24);
+
+		if (memcmp(chunk_header, "fmt ", 4) == 0) {
+			uint8_t fmt_data[16];
+
+			if (chunk_size < 16) {
+				fprintf(stderr, "Error: Invalid fmt chunk size\n");
+				fclose(f);
+				return false;
+			}
+			if (fread(fmt_data, 1, 16, f) != 16) {
+				fprintf(stderr, "Error: Truncated fmt chunk\n");
+				fclose(f);
+				return false;
+			}
+			audio_format = fmt_data[0] | (fmt_data[1] << 8);
+			channels = fmt_data[2] | (fmt_data[3] << 8);
+			sample_rate = fmt_data[4] | (fmt_data[5] << 8) | (fmt_data[6] << 16) | (fmt_data[7] << 24);
+			bits_per_sample = fmt_data[14] | (fmt_data[15] << 8);
+
+			if (chunk_size > 16) {
+				fseek(f, chunk_size - 16, SEEK_CUR);
+			}
+		} else if (memcmp(chunk_header, "data", 4) == 0) {
+			data_size = chunk_size;
+			data_chunk = malloc(data_size);
+			if (!data_chunk) {
+				perror("Failed to allocate data chunk buffer");
+				fclose(f);
+				return false;
+			}
+			if (fread(data_chunk, 1, data_size, f) != data_size) {
+				fprintf(stderr, "Error: Truncated data chunk\n");
+				free(data_chunk);
+				fclose(f);
+				return false;
+			}
+			break;
+		} else {
+			uint32_t aligned_size = chunk_size + (chunk_size & 1);
+
+			fseek(f, aligned_size, SEEK_CUR);
+		}
+	}
+
+	fclose(f);
+
+	if (!data_chunk) {
+		fprintf(stderr, "Error: Missing WAV data chunk\n");
+		return false;
+	}
+	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
+		fprintf(stderr, "Error: Missing WAV format details\n");
+		free(data_chunk);
+		return false;
+	}
+	if (audio_format != 1 && audio_format != 3) {
+		fprintf(stderr, "Error: Unsupported WAV format (only PCM and float32 are supported)\n");
+		free(data_chunk);
+		return false;
+	}
+
+	uint32_t bytes_per_sample = bits_per_sample / 8;
+
+	if (bytes_per_sample == 0 || data_size < bytes_per_sample * channels) {
+		fprintf(stderr, "Error: Unsupported WAV sample format\n");
+		free(data_chunk);
+		return false;
+	}
+
+	uint32_t frame_count = data_size / (bytes_per_sample * channels);
+	float *mono_samples = malloc(frame_count * sizeof(float));
+
+	if (!mono_samples) {
+		perror("Failed to allocate mixed mono samples buffer");
+		free(data_chunk);
+		return false;
+	}
+
+	for (uint32_t i = 0; i < frame_count; i++) {
+		float mixed = 0.0f;
+
+		for (uint16_t ch = 0; ch < channels; ch++) {
+			uint8_t *sample_ptr = data_chunk + (i * channels + ch) * bytes_per_sample;
+			float value = 0.0f;
+
+			if (audio_format == 1 && bits_per_sample == 8) {
+				value = ((int)sample_ptr[0] - 128) / 128.0f;
+			} else if (audio_format == 1 && bits_per_sample == 16) {
+				int16_t s = sample_ptr[0] | (sample_ptr[1] << 8);
+
+				value = (float)s / 32768.0f;
+			} else if (audio_format == 1 && bits_per_sample == 24) {
+				int32_t s = (sample_ptr[0]) | (sample_ptr[1] << 8) | (sample_ptr[2] << 16);
+
+				if (s & 0x00800000) {
+					s |= 0xFF000000;
+				}
+				value = (float)s / 8388608.0f;
+			} else if (audio_format == 1 && bits_per_sample == 32) {
+				int32_t s = sample_ptr[0] | (sample_ptr[1] << 8) | (sample_ptr[2] << 16) | (sample_ptr[3] << 24);
+
+				value = (float)s / 2147483648.0f;
+			} else if (audio_format == 3 && bits_per_sample == 32) {
+				float f_val;
+
+				memcpy(&f_val, sample_ptr, sizeof(float));
+				value = f_val;
+			}
+			mixed += value;
+		}
+		mono_samples[i] = mixed / (float)channels;
+	}
+
+	free(data_chunk);
+
+	uint32_t *durations = NULL;
+	uint32_t count = 0;
+	bool initial_level = false;
+
+	if (!pcm_to_durations(mono_samples, frame_count, sample_rate, &durations, &count, &initial_level)) {
+		free(mono_samples);
+		return false;
+	}
+
+	free(mono_samples);
+
+	if (aci->durations) {
+		free(aci->durations);
+	}
+
+	aci->durations = durations;
+	aci->num_durations = count;
+	aci->playback_index = 0;
+	aci->current_cycle = 0;
+	aci->last_read_cycle = 0;
+	aci->cycles_until_toggle = durations[0];
+	aci->input_level = initial_level;
+	aci->initial_level = initial_level;
+	aci->tape_loaded = true;
+	aci->tape_active = true;
+
+	printf("Loaded WAV tape '%s' (%u pulses, sample rate %u Hz)\n", tape_path, count, sample_rate);
+	return true;
+}
+
+static bool
+save_wav_tape(aci_card_t *aci, const char *tape_path)
+{
+	if (aci->recorded_count == 0) {
+		fprintf(stderr, "ACI: No tape output was recorded. Nothing to save.\n");
+		return false;
+	}
+
+	uint32_t wav_sample_rate = 44100;
+	uint64_t total_samples = 0;
+
+	for (uint32_t i = 0; i < aci->recorded_count; i++) {
+		uint32_t duration = aci->recorded_durations[i];
+		uint32_t sample_count = (uint32_t)(((double)duration * (double)wav_sample_rate) / 1023000.0 + 0.5);
+
+		if (sample_count == 0) {
+			sample_count = 1;
+		}
+		total_samples += sample_count;
+	}
+
+	total_samples += wav_sample_rate / 10;
+
+	if (total_samples > UINT32_MAX / 2) {
+		fprintf(stderr, "Error: Recording is too long to save as WAV\n");
+		return false;
+	}
+
+	uint32_t data_size = (uint32_t)(total_samples * sizeof(int16_t));
+	uint32_t riff_size = 36 + data_size;
+
+	FILE *f = fopen(tape_path, "wb");
+
+	if (!f) {
+		fprintf(stderr, "Error: Could not open '%s' for writing\n", tape_path);
+		return false;
+	}
+
+	fwrite("RIFF", 1, 4, f);
+
+	uint8_t bytes[4];
+
+	bytes[0] = riff_size & 0xFF;
+	bytes[1] = (riff_size >> 8) & 0xFF;
+	bytes[2] = (riff_size >> 16) & 0xFF;
+	bytes[3] = (riff_size >> 24) & 0xFF;
+	fwrite(bytes, 1, 4, f);
+
+	fwrite("WAVE", 1, 4, f);
+	fwrite("fmt ", 1, 4, f);
+
+	bytes[0] = 16; bytes[1] = 0; bytes[2] = 0; bytes[3] = 0;
+	fwrite(bytes, 1, 4, f);
+
+	uint8_t word[2];
+
+	word[0] = 1; word[1] = 0;
+	fwrite(word, 1, 2, f);
+
+	word[0] = 1; word[1] = 0;
+	fwrite(word, 1, 2, f);
+
+	bytes[0] = wav_sample_rate & 0xFF;
+	bytes[1] = (wav_sample_rate >> 8) & 0xFF;
+	bytes[2] = (wav_sample_rate >> 16) & 0xFF;
+	bytes[3] = (wav_sample_rate >> 24) & 0xFF;
+	fwrite(bytes, 1, 4, f);
+
+	uint32_t byte_rate = wav_sample_rate * sizeof(int16_t);
+
+	bytes[0] = byte_rate & 0xFF;
+	bytes[1] = (byte_rate >> 8) & 0xFF;
+	bytes[2] = (byte_rate >> 16) & 0xFF;
+	bytes[3] = (byte_rate >> 24) & 0xFF;
+	fwrite(bytes, 1, 4, f);
+
+	word[0] = sizeof(int16_t); word[1] = 0;
+	fwrite(word, 1, 2, f);
+
+	word[0] = 16; word[1] = 0;
+	fwrite(word, 1, 2, f);
+
+	fwrite("data", 1, 4, f);
+
+	bytes[0] = data_size & 0xFF;
+	bytes[1] = (data_size >> 8) & 0xFF;
+	bytes[2] = (data_size >> 16) & 0xFF;
+	bytes[3] = (data_size >> 24) & 0xFF;
+	fwrite(bytes, 1, 4, f);
+
+	bool level = aci->output_initial_level;
+
+	for (uint32_t i = 0; i < aci->recorded_count; i++) {
+		uint32_t duration = aci->recorded_durations[i];
+		uint32_t sample_count = (uint32_t)(((double)duration * (double)wav_sample_rate) / 1023000.0 + 0.5);
+
+		if (sample_count == 0) {
+			sample_count = 1;
+		}
+		int16_t sample = level ? 14000 : -14000;
+
+		for (uint32_t s = 0; s < sample_count; s++) {
+			word[0] = sample & 0xFF;
+			word[1] = (sample >> 8) & 0xFF;
+			fwrite(word, 1, 2, f);
+		}
+		level = !level;
+	}
+
+	int16_t sample = level ? 14000 : -14000;
+	uint32_t trailing_count = wav_sample_rate / 10;
+
+	for (uint32_t s = 0; s < trailing_count; s++) {
+		word[0] = sample & 0xFF;
+		word[1] = (sample >> 8) & 0xFF;
+		fwrite(word, 1, 2, f);
+	}
+
+	fclose(f);
+	printf("Saved ACI tape '%s' as WAV format\n", tape_path);
+	return true;
+}
+
+bool
+aci_load_tape(expansion_card_t *card, const char *tape_path)
+{
+	if (!card || strcmp(card->name, "ACI") != 0) {
+		return false;
+	}
+	aci_card_t *aci = (aci_card_t *)card->ctx;
+
+	return load_wav_tape(aci, tape_path);
+}
+
+bool
+aci_save_tape(expansion_card_t *card, const char *tape_path)
+{
+	if (!card || strcmp(card->name, "ACI") != 0) {
+		return false;
+	}
+	aci_card_t *aci = (aci_card_t *)card->ctx;
+
+	return save_wav_tape(aci, tape_path);
+}
+
+void
+aci_free(expansion_card_t *card)
+{
+	if (card) {
+		if (card->ctx) {
+			aci_card_t *aci = (aci_card_t *)card->ctx;
+			if (aci->durations) {
+				free(aci->durations);
+			}
+			if (aci->recorded_durations) {
+				free(aci->recorded_durations);
+			}
+			free(aci);
+		}
+		free(card);
+	}
+}
+
+uint32_t
+aci_get_recorded_count(expansion_card_t *card)
+{
+	if (!card || strcmp(card->name, "ACI") != 0) {
+		return 0;
+	}
+	aci_card_t *aci = (aci_card_t *)card->ctx;
+	return aci->recorded_count;
+}

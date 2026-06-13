@@ -1,0 +1,13 @@
+# Apple 1 Cassette Library — Program mode infos
+# Format: filename = load address or command
+# Shown on the cassette label so the user knows what to type.
+#
+# ACI load:   type the range in Woz Monitor, then C100R
+# BASIC load: start Integer BASIC (E000R), then type LOAD
+
+# Integer BASIC ROM
+BASIC.aci = E000.EFFF
+BASIC.ogg = E000.EFFF
+
+# Demos
+APPLE50TH.ogg = 0280.0FFF

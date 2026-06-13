@@ -1,0 +1,16 @@
+-bad
+-bap
+-br
+-ce
+-ci4
+-cli0
+-di0
+-i8
+-ip0
+-l79
+-nbc
+-ncdb
+-nlp
+-npcs
+-psl
+-sob

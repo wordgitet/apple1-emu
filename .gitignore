@@ -1,0 +1,34 @@
+# artifacts
+*.o
+apple1
+
+# test binaries
+tests/test_cpu
+tests/test_aci
+tests/test_dualram
+tests/6502_functional_test.bin
+
+# runtime generated files
+apple1_trace.txt
+recorded_tape.aci
+*.wav
+
+
+# junk from ides
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS... why?
+.DS_Store
+
+# ── Cassette tapes recorded during sessions ────────────────────────────────────
+# Keep cassettes/ dir (with its committed .aci files) but ignore anything
+# recorded at runtime into the project root or a temp location
+/recorded_tape.aci
+
+# using as inspiration
+
+POM1/
