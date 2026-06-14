@@ -320,10 +320,10 @@ test_dummy_write_side_effects(CPU *cpu, Bus *bus)
 	assert(bus->pia.kbd_control & 0x80);
 
 	printf("[DEBUG] Before DCP: kbd_control = 0x%02X\n",
-		bus->pia.kbd_control);
+	    bus->pia.kbd_control);
 	cpu_step(cpu); // Exec DCP $D011
 	printf("[DEBUG] After DCP: kbd_control = 0x%02X\n",
-		bus->pia.kbd_control);
+	    bus->pia.kbd_control);
 	// Dummy write to $D011 must have cleared key-ready strobe!
 	assert(!(bus->pia.kbd_control & 0x80));
 
@@ -332,10 +332,10 @@ test_dummy_write_side_effects(CPU *cpu, Bus *bus)
 	assert(!(bus->pia.dsp_control & 0x80));
 
 	printf("[DEBUG] Before SLO: dsp_control = 0x%02X\n",
-		bus->pia.dsp_control);
+	    bus->pia.dsp_control);
 	cpu_step(cpu); // Exec SLO $D012
 	printf("[DEBUG] After SLO: dsp_control = 0x%02X\n",
-		bus->pia.dsp_control);
+	    bus->pia.dsp_control);
 	// Dummy write to $D012 must have triggered display ready (bit 7 set)!
 	assert(bus->pia.dsp_control & 0x80);
 }
@@ -554,7 +554,7 @@ test_reset_vectors(void)
 	// 1. Load real wozmon.bin ROM
 	if (!bus_load_rom(&bus, "wozmon.bin")) {
 		fprintf(stderr,
-			"Failed to load wozmon.bin for Reset Vectors test\n");
+		    "Failed to load wozmon.bin for Reset Vectors test\n");
 		bus_free(&bus);
 		exit(1);
 	}
@@ -709,7 +709,7 @@ test_cpu_breakpoint_smoke(void)
 		assert(cpu.pc == kSpin);
 		assert(cpu.a == 0x04);
 		assert(dbg_has_breakpoint(&dbg,
-			kBpAddr)); // still armed for any future hit
+		    kBpAddr)); // still armed for any future hit
 
 		bus_free(&bus);
 	}
@@ -737,7 +737,8 @@ test_cpu_breakpoint_smoke(void)
 	}
 }
 
-static void test_cpu_watchpoint_smoke(void);
+static void
+test_cpu_watchpoint_smoke(void);
 
 int
 main(void)
@@ -773,12 +774,14 @@ main(void)
 static void
 test_cpu_watchpoint_smoke(void)
 {
+	/* clang-format off */
 	static const uint8_t wp_program[] = {
 		0xA9, 0x42,       // LDA #$42
 		0x8D, 0x00, 0x02, // STA $0200
 		0xAD, 0x00, 0x02, // LDA $0200
 		0x4C, 0x08, 0x04  // JMP $0408
 	};
+	/* clang-format on */
 
 	// ---- Test 1: Write watchpoint fires on STA -----
 	{

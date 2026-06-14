@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 /* ------------------------------------------------------------------ */
 /* Memory helpers                                                       */
 /* ------------------------------------------------------------------ */
@@ -269,7 +268,7 @@ do_branch(CPU *cpu, bool cond)
 
 		cpu->pc += off;
 		return (uint8_t)(1 +
-			((old & 0xFF00) != (cpu->pc & 0xFF00) ? 1 : 0));
+		    ((old & 0xFF00) != (cpu->pc & 0xFF00) ? 1 : 0));
 	}
 	return 0;
 }
@@ -299,8 +298,8 @@ adc_bcd(CPU *cpu, uint8_t m)
 	set_flag(cpu, FLAG_ZERO, (bin_sum & 0xFF) == 0);
 	set_flag(cpu, FLAG_NEGATIVE, (bin_sum & 0x80) != 0);
 	set_flag(cpu,
-		FLAG_OVERFLOW,
-		(~(cpu->a ^ m) & (cpu->a ^ bin_sum) & 0x80) != 0);
+	    FLAG_OVERFLOW,
+	    (~(cpu->a ^ m) & (cpu->a ^ bin_sum) & 0x80) != 0);
 	cpu->a = ((hn & 0x0F) << 4) | (ln & 0x0F);
 }
 
@@ -322,8 +321,8 @@ sbc_bcd(CPU *cpu, uint8_t m)
 	set_flag(cpu, FLAG_ZERO, (bin_diff & 0xFF) == 0);
 	set_flag(cpu, FLAG_NEGATIVE, (bin_diff & 0x80) != 0);
 	set_flag(cpu,
-		FLAG_OVERFLOW,
-		((cpu->a ^ m) & (cpu->a ^ bin_diff) & 0x80) != 0);
+	    FLAG_OVERFLOW,
+	    ((cpu->a ^ m) & (cpu->a ^ bin_diff) & 0x80) != 0);
 	cpu->a = ((hn & 0x0F) << 4) | (ln & 0x0F);
 }
 
@@ -336,8 +335,8 @@ adc_bin(CPU *cpu, uint8_t m)
 	set_flag(cpu, FLAG_CARRY, sum > 0xFF);
 	set_flag(cpu, FLAG_ZERO, (sum & 0xFF) == 0);
 	set_flag(cpu,
-		FLAG_OVERFLOW,
-		(~(cpu->a ^ m) & (cpu->a ^ sum) & 0x80) != 0);
+	    FLAG_OVERFLOW,
+	    (~(cpu->a ^ m) & (cpu->a ^ sum) & 0x80) != 0);
 	set_flag(cpu, FLAG_NEGATIVE, (sum & 0x80) != 0);
 	cpu->a = sum & 0xFF;
 }
@@ -352,8 +351,8 @@ sbc_bin(CPU *cpu, uint8_t m)
 	set_flag(cpu, FLAG_CARRY, sum > 0xFF);
 	set_flag(cpu, FLAG_ZERO, (sum & 0xFF) == 0);
 	set_flag(cpu,
-		FLAG_OVERFLOW,
-		(~(cpu->a ^ val) & (cpu->a ^ sum) & 0x80) != 0);
+	    FLAG_OVERFLOW,
+	    (~(cpu->a ^ val) & (cpu->a ^ sum) & 0x80) != 0);
 	set_flag(cpu, FLAG_NEGATIVE, (sum & 0x80) != 0);
 	cpu->a = sum & 0xFF;
 }
@@ -2163,10 +2162,10 @@ op_jam(CPU *cpu)
 	cpu->pc--; /* PC stays on the JAM opcode */
 	cpu->halted = true;
 	fprintf(stderr,
-		"\nJAM: CPU halted by opcode 0x%02X at PC=0x%04X. "
-		"RESET required.\n",
-		opcode,
-		(uint16_t)cpu->pc);
+	    "\nJAM: CPU halted by opcode 0x%02X at PC=0x%04X. "
+	    "RESET required.\n",
+	    opcode,
+	    (uint16_t)cpu->pc);
 	cpu->last_cycles = 1;
 }
 
@@ -2267,7 +2266,7 @@ op_xaa(CPU *cpu)
 {
 	uint8_t val = read_byte(cpu, cpu->pc++);
 	uint8_t magic =
-		0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 
 	cpu->a = (cpu->a | magic) & cpu->x & val;
 	update_nz(cpu, cpu->a);
@@ -2280,7 +2279,7 @@ op_lxa(CPU *cpu)
 {
 	uint8_t val = read_byte(cpu, cpu->pc++);
 	uint8_t magic =
-		0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 
 	cpu->a = cpu->x = (cpu->a | magic) & val;
 	update_nz(cpu, cpu->a);
@@ -2676,10 +2675,10 @@ cpu_step(CPU *cpu)
 		cpu->pc--;
 		cpu->halted = true;
 		fprintf(stderr,
-			"\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
-			"RESET required.\n",
-			opcode,
-			(uint16_t)cpu->pc);
+		    "\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
+		    "RESET required.\n",
+		    opcode,
+		    (uint16_t)cpu->pc);
 		cpu->last_cycles = 1;
 	}
 

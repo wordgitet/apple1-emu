@@ -7,11 +7,7 @@
 #define MAX_BREAKPOINTS 32
 #define MAX_WATCHPOINTS 32
 
-typedef enum {
-	WP_READ = 1,
-	WP_WRITE = 2,
-	WP_ACCESS = 3
-} wp_type_t;
+typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
 
 typedef struct {
 	uint16_t addr;

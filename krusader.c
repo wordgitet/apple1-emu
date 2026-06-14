@@ -28,8 +28,8 @@ krusader_create(const char *rom_path)
 
 	if (!f) {
 		fprintf(stderr,
-			"Error: Could not open Krusader ROM file '%s'\n",
-			rom_path);
+		    "Error: Could not open Krusader ROM file '%s'\n",
+		    rom_path);
 		return NULL;
 	}
 
@@ -40,10 +40,10 @@ krusader_create(const char *rom_path)
 
 	if (size <= 0 || size > 4096) {
 		fprintf(stderr,
-			"Error: Krusader ROM file '%s' is %ld bytes. Must be "
-			"between 1 and 4096 bytes.\n",
-			rom_path,
-			size);
+		    "Error: Krusader ROM file '%s' is %ld bytes. Must be "
+		    "between 1 and 4096 bytes.\n",
+		    rom_path,
+		    size);
 		fclose(f);
 		return NULL;
 	}
@@ -59,10 +59,10 @@ krusader_create(const char *rom_path)
 
 	if (fread(kru->rom, 1, size, f) != (size_t)size) {
 		fprintf(stderr,
-			"Error: Failed to read %ld bytes from Krusader ROM "
-			"'%s'\n",
-			size,
-			rom_path);
+		    "Error: Failed to read %ld bytes from Krusader ROM "
+		    "'%s'\n",
+		    size,
+		    rom_path);
 		free(kru);
 		fclose(f);
 		return NULL;
@@ -88,7 +88,7 @@ krusader_create(const char *rom_path)
 	card->ctx = kru;
 
 	printf("Registered Krusader card: ROM loaded at 0xE000 - 0x%04X\n",
-		(uint16_t)(0xE000 + size - 1));
+	    (uint16_t)(0xE000 + size - 1));
 	return card;
 }
 

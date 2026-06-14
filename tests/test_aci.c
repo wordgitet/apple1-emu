@@ -89,7 +89,11 @@ reset_kbd_queue(void)
 }
 
 static int
-run_roundtrip_test(const char *tape_path, const uint8_t *pattern, int size, uint16_t from, uint16_t to)
+run_roundtrip_test(const char *tape_path,
+    const uint8_t *pattern,
+    int size,
+    uint16_t from,
+    uint16_t to)
 {
 	printf("Running ACI roundtrip test for path: %s\n", tape_path);
 
@@ -167,11 +171,15 @@ run_roundtrip_test(const char *tape_path, const uint8_t *pattern, int size, uint
 		}
 	}
 
-	printf("  Phase 1 Complete: Ran %lld cycles, captured %u transitions.\n",
-		(long long)total_cycles, last_transition_count);
+	printf("  Phase 1 Complete: Ran %lld cycles, captured %u "
+	       "transitions.\n",
+	    (long long)total_cycles,
+	    last_transition_count);
 
 	if (last_transition_count < 100) {
-		fprintf(stderr, "FAIL: ACI WRITE failed to record enough transitions.\n");
+		fprintf(stderr,
+		    "FAIL: ACI WRITE failed to record enough "
+		    "transitions.\n");
 		aci_free(aci_card);
 		bus_free(&bus);
 		return 1;
@@ -222,7 +230,9 @@ run_roundtrip_test(const char *tape_path, const uint8_t *pattern, int size, uint
 	bus_add_card(&read_bus, read_aci_card);
 
 	if (!aci_load_tape(read_aci_card, tape_path)) {
-		fprintf(stderr, "FAIL: Failed to load ACI tape file '%s'\n", tape_path);
+		fprintf(stderr,
+		    "FAIL: Failed to load ACI tape file '%s'\n",
+		    tape_path);
 		aci_free(read_aci_card);
 		bus_free(&read_bus);
 		unlink(tape_path);
@@ -267,7 +277,8 @@ run_roundtrip_test(const char *tape_path, const uint8_t *pattern, int size, uint
 	}
 
 	printf("  Phase 3 Complete: Ran %lld cycles, matched=%s\n",
-		(long long)total_cycles, matched ? "yes" : "no");
+	    (long long)total_cycles,
+	    matched ? "yes" : "no");
 
 	if (!matched) {
 		fprintf(stderr, "FAIL: Memory pattern mismatch after read.\n");
@@ -299,7 +310,8 @@ main(void)
 	}
 
 	// WAV roundtrip test (only supported format)
-	if (run_roundtrip_test("/tmp/test_tape.wav", pattern, size, from, to) != 0) {
+	if (run_roundtrip_test("/tmp/test_tape.wav", pattern, size, from, to) !=
+	    0) {
 		return 1;
 	}
 

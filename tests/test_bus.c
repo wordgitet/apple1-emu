@@ -1,8 +1,8 @@
+#include "../bus.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include "../bus.h"
 
 int
 main(void)
@@ -16,7 +16,8 @@ main(void)
 	// Create a temporary wozmon dump
 	const char *tmp_txt = "test_wozmon.txt";
 	FILE *f = fopen(tmp_txt, "w");
-	if (!f) return 1;
+	if (!f)
+		return 1;
 
 	// Wozmon dump with spaces, address change, and R command
 	fprintf(f, "0300: A9 01 8D 00  04\n");
@@ -46,7 +47,7 @@ main(void)
 	assert(bus.ram[0x0309] == 0x04);
 
 	remove(tmp_txt);
-	
+
 	// Create another dump with merged address+data and turbo/X blocks to test edge cases
 	f = fopen(tmp_txt, "w");
 	fprintf(f, "0200:00 01 02\n");

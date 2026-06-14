@@ -26,7 +26,6 @@ CPU *g_cpu = NULL;
 debugger_t *g_dbg = NULL;
 char *g_argv0 = NULL;
 
-
 static void
 handle_signal(int sig)
 {
@@ -44,7 +43,7 @@ print_usage(const char *prog_name)
 {
 	printf("Apple 1 Emulator in C\n");
 	printf("Usage: %s -r <rom_path> [options] [flat_binary]\n\n",
-		prog_name);
+	    prog_name);
 	printf("Required (unless --flat-bus is specified):\n");
 	printf("  -r <rom_path>         Path to exactly 256-byte Woz Monitor "
 	       "ROM file.\n\n");
@@ -68,8 +67,10 @@ print_usage(const char *prog_name)
 	printf("  -g, --debug           Enable interactive debugger (pauses on "
 	       "start).\n");
 	printf("  -e, --tape <file>     Load WAV tape (.wav) for playback.\n");
-	printf("  -E, --save-tape <f>  Save ACI tape output as WAV file on exit.\n");
-	printf("  -x                    Enable destructive backspace (cursor moves back and erases).\n");
+	printf("  -E, --save-tape <f>  Save ACI tape output as WAV file on "
+	       "exit.\n");
+	printf("  -x                    Enable destructive backspace (cursor "
+	       "moves back and erases).\n");
 }
 
 static void
@@ -93,11 +94,17 @@ get_xdg_config_path(char *out_path, size_t max_len)
 {
 	const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
 	if (xdg_config_home && xdg_config_home[0] != '\0') {
-		snprintf(out_path, max_len, "%s/apple1/apple1.conf", xdg_config_home);
+		snprintf(out_path,
+		    max_len,
+		    "%s/apple1/apple1.conf",
+		    xdg_config_home);
 	} else {
 		const char *home = getenv("HOME");
 		if (home && home[0] != '\0') {
-			snprintf(out_path, max_len, "%s/.config/apple1/apple1.conf", home);
+			snprintf(out_path,
+			    max_len,
+			    "%s/.config/apple1/apple1.conf",
+			    home);
 		} else {
 			// fallback to current directory
 			snprintf(out_path, max_len, "apple1.conf");
@@ -107,23 +114,23 @@ get_xdg_config_path(char *out_path, size_t max_len)
 
 static void
 load_config_file(const char *path,
-		 char **rom_path,
-		 uint32_t *ram_size,
-		 char **bin_path,
-		 uint16_t *bin_address,
-		 bool *opt_uncapped,
-		 bool *opt_throttle_pia,
-		 bool *opt_emulate_dram,
-		 bool *opt_emulate_bounce,
-		 bool *opt_randomize_cold,
-		 bool *opt_flat_bus,
-		 bool *opt_headless,
-		 bool *opt_debug,
-		 bool *opt_trace,
-		 char **aci_path,
-		 char **tape_path,
-		 char **save_tape_path,
-		 char **krusader_path)
+    char **rom_path,
+    uint32_t *ram_size,
+    char **bin_path,
+    uint16_t *bin_address,
+    bool *opt_uncapped,
+    bool *opt_throttle_pia,
+    bool *opt_emulate_dram,
+    bool *opt_emulate_bounce,
+    bool *opt_randomize_cold,
+    bool *opt_flat_bus,
+    bool *opt_headless,
+    bool *opt_debug,
+    bool *opt_trace,
+    char **aci_path,
+    char **tape_path,
+    char **save_tape_path,
+    char **krusader_path)
 {
 	FILE *fp = fopen(path, "r");
 	if (!fp) {
@@ -134,7 +141,9 @@ load_config_file(const char *path,
 	while (fgets(line, sizeof(line), fp)) {
 		// Strip trailing newline/whitespace
 		size_t len = strlen(line);
-		while (len > 0 && (line[len - 1] == '\r' || line[len - 1] == '\n' || line[len - 1] == ' ' || line[len - 1] == '\t')) {
+		while (len > 0 &&
+		    (line[len - 1] == '\r' || line[len - 1] == '\n' ||
+			line[len - 1] == ' ' || line[len - 1] == '\t')) {
 			line[--len] = '\0';
 		}
 		// Strip leading whitespace
@@ -159,7 +168,8 @@ load_config_file(const char *path,
 			switch (flag) {
 			case 'r':
 				if (has_val) {
-					if (*rom_path) free(*rom_path);
+					if (*rom_path)
+						free(*rom_path);
 					*rom_path = strdup(val);
 				}
 				break;
@@ -177,9 +187,11 @@ load_config_file(const char *path,
 					char *at = strchr(val_dup, '@');
 					if (at) {
 						*at = '\0';
-						if (*bin_path) free(*bin_path);
+						if (*bin_path)
+							free(*bin_path);
 						*bin_path = strdup(val_dup);
-						*bin_address = (uint16_t)strtol(at + 1, NULL, 16);
+						*bin_address = (uint16_t)
+						    strtol(at + 1, NULL, 16);
 					}
 					free(val_dup);
 				}
@@ -213,25 +225,29 @@ load_config_file(const char *path,
 				break;
 			case 'a':
 				if (has_val) {
-					if (*aci_path) free(*aci_path);
+					if (*aci_path)
+						free(*aci_path);
 					*aci_path = strdup(val);
 				}
 				break;
 			case 'e':
 				if (has_val) {
-					if (*tape_path) free(*tape_path);
+					if (*tape_path)
+						free(*tape_path);
 					*tape_path = strdup(val);
 				}
 				break;
 			case 'E':
 				if (has_val) {
-					if (*save_tape_path) free(*save_tape_path);
+					if (*save_tape_path)
+						free(*save_tape_path);
 					*save_tape_path = strdup(val);
 				}
 				break;
 			case 'k':
 				if (has_val) {
-					if (*krusader_path) free(*krusader_path);
+					if (*krusader_path)
+						free(*krusader_path);
 					*krusader_path = strdup(val);
 				}
 				break;
@@ -280,23 +296,23 @@ main(int argc, char *argv[])
 	}
 
 	load_config_file(config_path,
-					 &rom_path,
-					 &ram_size,
-					 &bin_path,
-					 &bin_address,
-					 &opt_uncapped,
-					 &opt_throttle_pia,
-					 &opt_emulate_dram,
-					 &opt_emulate_bounce,
-					 &opt_randomize_cold,
-					 &opt_flat_bus,
-					 &opt_headless,
-					 &opt_debug,
-					 &opt_trace,
-					 &aci_path,
-					 &tape_path,
-					 &save_tape_path,
-					 &krusader_path);
+	    &rom_path,
+	    &ram_size,
+	    &bin_path,
+	    &bin_address,
+	    &opt_uncapped,
+	    &opt_throttle_pia,
+	    &opt_emulate_dram,
+	    &opt_emulate_bounce,
+	    &opt_randomize_cold,
+	    &opt_flat_bus,
+	    &opt_headless,
+	    &opt_debug,
+	    &opt_trace,
+	    &aci_path,
+	    &tape_path,
+	    &save_tape_path,
+	    &krusader_path);
 
 	// Pre-process argv to convert --flat-bus to -f, --debug to -g, --trace to -t, --tape to -e, --save-tape to -E, and -wm to -w
 	for (int i = 1; i < argc; i++) {
@@ -318,7 +334,8 @@ main(int argc, char *argv[])
 	// Parse CLI arguments
 	int opt;
 
-	while ((opt = getopt(argc, argv, "r:m:l:w:cpdbshfHa:k:gte:E:x")) != -1) {
+	while (
+	    (opt = getopt(argc, argv, "r:m:l:w:cpdbshfHa:k:gte:E:x")) != -1) {
 		switch (opt) {
 		case 'r':
 			rom_path = optarg;
@@ -328,8 +345,8 @@ main(int argc, char *argv[])
 
 			if (kb < 4 || kb > 64) {
 				fprintf(stderr,
-					"Error: RAM size must be between 4 and "
-					"64 KB.\n");
+				    "Error: RAM size must be between 4 and "
+				    "64 KB.\n");
 				return 1;
 			}
 			ram_size = kb * 1024;
@@ -340,9 +357,9 @@ main(int argc, char *argv[])
 
 			if (!at) {
 				fprintf(stderr,
-					"Error: Invalid binary load format. "
-					"Use <file>@<hex_addr> (e.g. "
-					"basic.bin@E000).\n");
+				    "Error: Invalid binary load format. "
+				    "Use <file>@<hex_addr> (e.g. "
+				    "basic.bin@E000).\n");
 				return 1;
 			}
 			*at = '\0';
@@ -403,9 +420,13 @@ main(int argc, char *argv[])
 
 	/* Validate required config values — fall back to embedded ROM if not present */
 	if (!opt_flat_bus) {
-		if (!rom_path || rom_path[0] == '\0' || access(rom_path, F_OK) != 0) {
+		if (!rom_path || rom_path[0] == '\0' ||
+		    access(rom_path, F_OK) != 0) {
 			if (rom_path && rom_path[0] != '\0') {
-				fprintf(stderr, "Warning: ROM file '%s' not found. Using embedded Wozmon ROM.\n", rom_path);
+				fprintf(stderr,
+				    "Warning: ROM file '%s' not found. "
+				    "Using embedded Wozmon ROM.\n",
+				    rom_path);
 			} else {
 				printf("Using embedded Wozmon ROM.\n");
 			}
@@ -413,13 +434,16 @@ main(int argc, char *argv[])
 		}
 	}
 	if (ram_size == 0) {
-		fprintf(stderr, "Error: RAM size not set in config. "
-			"Open the emulator and go to CONFIG to set it.\n");
+		fprintf(stderr,
+		    "Error: RAM size not set in config. "
+		    "Open the emulator and go to CONFIG to set it.\n");
 		return 1;
 	}
 
 	if (tape_path && opt_uncapped) {
-		fprintf(stderr, "Error: ACI tape loading requires capped CPU speed. Please run with the -c flag.\n");
+		fprintf(stderr,
+		    "Error: ACI tape loading requires capped CPU speed. "
+		    "Please run with the -c flag.\n");
 		return 1;
 	}
 
@@ -446,8 +470,8 @@ main(int argc, char *argv[])
 			flat_bin_path = argv[optind];
 		} else {
 			fprintf(stderr,
-				"Error: Flat binary file path is required when "
-				"--flat-bus is enabled.\n");
+			    "Error: Flat binary file path is required when "
+			    "--flat-bus is enabled.\n");
 			print_usage(argv[0]);
 			return 1;
 		}
@@ -515,7 +539,10 @@ main(int argc, char *argv[])
 	if (wozmon_txt_path) {
 		uint16_t run_addr;
 		bool has_run_addr;
-		if (!bus_load_wozmon_txt(&bus, wozmon_txt_path, &run_addr, &has_run_addr)) {
+		if (!bus_load_wozmon_txt(&bus,
+			wozmon_txt_path,
+			&run_addr,
+			&has_run_addr)) {
 			bus_free(&bus);
 			return 1;
 		}
@@ -538,7 +565,9 @@ main(int argc, char *argv[])
 			}
 			bus_add_card(&bus, aci_card);
 		} else if (tape_path || save_tape_path) {
-			fprintf(stderr, "Error: ACI tape operations requested, but ACI ROM could not be loaded.\n");
+			fprintf(stderr,
+			    "Error: ACI tape operations requested, but ACI "
+			    "ROM could not be loaded.\n");
 			bus_free(&bus);
 			return 1;
 		}
@@ -547,7 +576,7 @@ main(int argc, char *argv[])
 	// Load Krusader expansion card if path is specified
 	if (krusader_path) {
 		expansion_card_t *krusader_card = krusader_create(
-			krusader_path);
+		    krusader_path);
 		if (!krusader_card) {
 			cleanup_cards(&bus, NULL);
 			bus_free(&bus);
@@ -587,9 +616,11 @@ main(int argc, char *argv[])
 	int loop_count = 0;
 
 	while (true) {
-		if (!bus.opts.headless && (!term_is_powered() || (term_is_paused() && !term_should_step()))) {
+		if (!bus.opts.headless &&
+		    (!term_is_powered() ||
+			(term_is_paused() && !term_should_step()))) {
 			term_poll();
-			struct timespec req = {0, 10000000}; // 10ms
+			struct timespec req = { 0, 10000000 }; // 10ms
 			nanosleep(&req, NULL);
 			continue;
 		}
@@ -608,7 +639,7 @@ main(int argc, char *argv[])
 		// Check if we should break into the debugger before executing the instruction
 		if (g_debug_enabled) {
 			if (g_debug_break || dbg.step_mode ||
-				dbg_has_breakpoint(&dbg, cpu.pc)) {
+			    dbg_has_breakpoint(&dbg, cpu.pc)) {
 				g_debug_break = 0;
 				if (bus.opts.headless) {
 					dbg_interactive_loop(&dbg);
@@ -616,7 +647,8 @@ main(int argc, char *argv[])
 					dbg.step_mode = true;
 					term_poll();
 					if (!term_should_step()) {
-						struct timespec req = {0, 1000000}; // 1ms
+						struct timespec req = { 0,
+							1000000 }; // 1ms
 						nanosleep(&req, NULL);
 						continue;
 					}
@@ -635,21 +667,29 @@ main(int argc, char *argv[])
 				sprintf(hex_bytes, "%02X      ", op);
 			} else if (len == 2) {
 				sprintf(hex_bytes,
-					"%02X %02X   ",
-					op,
-					bus_read(&bus, cpu.pc + 1));
+				    "%02X %02X   ",
+				    op,
+				    bus_read(&bus, cpu.pc + 1));
 			} else {
 				sprintf(hex_bytes,
-					"%02X %02X %02X",
-					op,
-					bus_read(&bus, cpu.pc + 1),
-					bus_read(&bus, cpu.pc + 2));
+				    "%02X %02X %02X",
+				    op,
+				    bus_read(&bus, cpu.pc + 1),
+				    bus_read(&bus, cpu.pc + 2));
 			}
 			char trace_line[160];
-			snprintf(trace_line, sizeof(trace_line),
-				"$%04X  %s  %-20s A:%02X X:%02X Y:%02X SP:%02X P:%02X",
-				cpu.pc, hex_bytes, disasm_buf,
-				cpu.a, cpu.x, cpu.y, cpu.s, cpu.p);
+			snprintf(trace_line,
+			    sizeof(trace_line),
+			    "$%04X  %s  %-20s A:%02X X:%02X Y:%02X SP:%02X "
+			    "P:%02X",
+			    cpu.pc,
+			    hex_bytes,
+			    disasm_buf,
+			    cpu.a,
+			    cpu.x,
+			    cpu.y,
+			    cpu.s,
+			    cpu.p);
 			if (!bus.opts.headless && term_trace_active()) {
 				term_trace_push(trace_line);
 			} else {
@@ -693,9 +733,9 @@ main(int argc, char *argv[])
 						return 0;
 					} else {
 						fprintf(stderr,
-							"FAIL: CPU trapped at "
-							"$%04X\n",
-							cpu.pc);
+						    "FAIL: CPU trapped at "
+						    "$%04X\n",
+						    cpu.pc);
 						bus_free(&bus);
 						return 1;
 					}
@@ -708,17 +748,17 @@ main(int argc, char *argv[])
 
 		// 3. Timing throttler (capped mode)
 		if (!bus.opts.uncapped && !bus.opts.headless &&
-			cycle_accumulator >= CYCLES_PER_MS) {
+		    cycle_accumulator >= CYCLES_PER_MS) {
 			struct timespec current_time;
 
 			clock_gettime(CLOCK_MONOTONIC, &current_time);
 
 			long elapsed_ns =
-				(current_time.tv_sec - last_time.tv_sec) *
-					1000000000L +
-				(current_time.tv_nsec - last_time.tv_nsec);
+			    (current_time.tv_sec - last_time.tv_sec) *
+				1000000000L +
+			    (current_time.tv_nsec - last_time.tv_nsec);
 			long expected_ns =
-				1000000L; // 1 millisecond in nanoseconds
+			    1000000L; // 1 millisecond in nanoseconds
 
 			if (elapsed_ns < expected_ns) {
 				struct timespec sleep_time;

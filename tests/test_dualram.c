@@ -35,7 +35,8 @@ test_pia_mirroring(void)
 	Bus bus;
 
 	if (!bus_init(&bus, 8192)) {
-		fprintf(stderr, "Failed to initialize bus for PIA mirroring test\n");
+		fprintf(stderr,
+		    "Failed to initialize bus for PIA mirroring test\n");
 		exit(1);
 	}
 

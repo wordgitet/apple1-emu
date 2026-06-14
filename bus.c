@@ -1,11 +1,11 @@
 #include "bus.h"
-#include "io.h"
 #include "embedded_roms.h"
+#include "io.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <ctype.h>
 
 static void
 delay_nanoseconds(long ns)
@@ -16,7 +16,7 @@ delay_nanoseconds(long ns)
 	while (1) {
 		clock_gettime(CLOCK_MONOTONIC, &current);
 		long elapsed = (current.tv_sec - start.tv_sec) * 1000000000L +
-			(current.tv_nsec - start.tv_nsec);
+		    (current.tv_nsec - start.tv_nsec);
 		if (elapsed >= ns) {
 			break;
 		}
@@ -28,8 +28,10 @@ bus_is_ram_address(Bus *bus, uint16_t address)
 {
 	if (bus->ram_size == 8192) {
 		// 8KB split mode: 0x0000-0x0FFF and 0xE000-0xEFFF
-		if (address < 0x1000) return true;
-		if (address >= 0xE000 && address < 0xF000) return true;
+		if (address < 0x1000)
+			return true;
+		if (address >= 0xE000 && address < 0xF000)
+			return true;
 		return false;
 	}
 	return (uint32_t)address < bus->ram_size;
@@ -83,8 +85,8 @@ bus_load_rom(Bus *bus, const char *rom_path)
 
 	if (!f) {
 		fprintf(stderr,
-			"Warning: '%s' not found, using embedded Wozmon ROM.\n",
-			rom_path);
+		    "Warning: '%s' not found, using embedded Wozmon ROM.\n",
+		    rom_path);
 		memcpy(bus->rom, embedded_wozmon, 256);
 		bus->rom_loaded = true;
 		return true;
@@ -97,10 +99,10 @@ bus_load_rom(Bus *bus, const char *rom_path)
 
 	if (size != 256) {
 		fprintf(stderr,
-			"Error: ROM file '%s' is %ld bytes. Apple 1 Monitor "
-			"ROM must be exactly 256 bytes.\n",
-			rom_path,
-			size);
+		    "Error: ROM file '%s' is %ld bytes. Apple 1 Monitor "
+		    "ROM must be exactly 256 bytes.\n",
+		    rom_path,
+		    size);
 		fclose(f);
 		return false;
 	}
@@ -111,8 +113,8 @@ bus_load_rom(Bus *bus, const char *rom_path)
 
 	if (read_bytes != 256) {
 		fprintf(stderr,
-			"Error: Failed to read 256 bytes from '%s'\n",
-			rom_path);
+		    "Error: Failed to read 256 bytes from '%s'\n",
+		    rom_path);
 		return false;
 	}
 
@@ -127,8 +129,8 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 
 	if (!f) {
 		fprintf(stderr,
-			"Error: Could not open binary file '%s'\n",
-			bin_path);
+		    "Error: Could not open binary file '%s'\n",
+		    bin_path);
 		return false;
 	}
 
@@ -139,8 +141,8 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 
 	if (size <= 0) {
 		fprintf(stderr,
-			"Error: Binary file '%s' is empty.\n",
-			bin_path);
+		    "Error: Binary file '%s' is empty.\n",
+		    bin_path);
 		fclose(f);
 		return false;
 	}
@@ -148,12 +150,13 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 	for (uint32_t addr = address; addr < (uint32_t)address + size; addr++) {
 		if (addr > 0xFFFF || !bus_is_ram_address(bus, (uint16_t)addr)) {
 			fprintf(stderr,
-				"Error: Binary file '%s' (size %ld bytes) loaded at "
-				"0x%04X exceeds configured RAM size (%u KB).\n",
-				bin_path,
-				size,
-				address,
-				bus->ram_size / 1024);
+			    "Error: Binary file '%s' (size %ld bytes) "
+			    "loaded at "
+			    "0x%04X exceeds configured RAM size (%u KB).\n",
+			    bin_path,
+			    size,
+			    address,
+			    bus->ram_size / 1024);
 			fclose(f);
 			return false;
 		}
@@ -165,34 +168,42 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 
 	if (read_bytes != (size_t)size) {
 		fprintf(stderr,
-			"Error: Failed to read entire binary file '%s'\n",
-			bin_path);
+		    "Error: Failed to read entire binary file '%s'\n",
+		    bin_path);
 		return false;
 	}
 
 	printf("Loaded '%s' (%ld bytes) into RAM at 0x%04X - 0x%04X\n",
-		bin_path,
-		size,
-		address,
-		(uint16_t)(address + size - 1));
+	    bin_path,
+	    size,
+	    address,
+	    (uint16_t)(address + size - 1));
 	return true;
 }
 
 static inline int
 hex_val(char c)
 {
-	if (c >= '0' && c <= '9') return c - '0';
-	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
 	return 0;
 }
 
 bool
-bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool *has_run_address)
+bus_load_wozmon_txt(Bus *bus,
+    const char *txt_path,
+    uint16_t *run_address,
+    bool *has_run_address)
 {
 	FILE *f = fopen(txt_path, "r");
 	if (!f) {
-		fprintf(stderr, "Error: Could not open text file '%s'\n", txt_path);
+		fprintf(stderr,
+		    "Error: Could not open text file '%s'\n",
+		    txt_path);
 		return false;
 	}
 
@@ -231,14 +242,16 @@ bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool 
 			cleaned[w++] = content[i];
 			continue;
 		}
-		if (in_comment) continue;
+		if (in_comment)
+			continue;
 
 		// Start of comment
 		if (content[i] == '#' || content[i] == ';') {
 			in_comment = true;
 			continue;
 		}
-		if (content[i] == '/' && i + 1 < read_bytes && content[i+1] == '/') {
+		if (content[i] == '/' && i + 1 < read_bytes &&
+		    content[i + 1] == '/') {
 			in_comment = true;
 			continue;
 		}
@@ -252,41 +265,60 @@ bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool 
 	int total_bytes = 0;
 	size_t i = 0;
 
-	if (has_run_address) *has_run_address = false;
+	if (has_run_address)
+		*has_run_address = false;
 
 	while (i < w) {
 		char c = cleaned[i];
 
-		if (isspace((unsigned char)c)) { i++; continue; }
-
-		// 'T' prefix (turbo) - skip
-		if (toupper((unsigned char)c) == 'T' && i + 1 < w && isxdigit((unsigned char)cleaned[i + 1])) {
-			i++; continue;
-		}
-
-		// 'X' marker - skip X + hex addr
-		if (toupper((unsigned char)c) == 'X' && i + 1 < w && isxdigit((unsigned char)cleaned[i + 1])) {
+		if (isspace((unsigned char)c)) {
 			i++;
-			while (i < w && isxdigit((unsigned char)cleaned[i])) i++;
 			continue;
 		}
 
-		if (c == ':') { i++; continue; }
+		// 'T' prefix (turbo) - skip
+		if (toupper((unsigned char)c) == 'T' && i + 1 < w &&
+		    isxdigit((unsigned char)cleaned[i + 1])) {
+			i++;
+			continue;
+		}
+
+		// 'X' marker - skip X + hex addr
+		if (toupper((unsigned char)c) == 'X' && i + 1 < w &&
+		    isxdigit((unsigned char)cleaned[i + 1])) {
+			i++;
+			while (i < w && isxdigit((unsigned char)cleaned[i]))
+				i++;
+			continue;
+		}
+
+		if (c == ':') {
+			i++;
+			continue;
+		}
 
 		if (isxdigit((unsigned char)c)) {
 			size_t hex_start = i;
-			while (i < w && isxdigit((unsigned char)cleaned[i])) i++;
+			while (i < w && isxdigit((unsigned char)cleaned[i]))
+				i++;
 			size_t hex_len = i - hex_start;
 
 			size_t peek = i;
-			while (peek < w && isspace((unsigned char)cleaned[peek])) peek++;
+			while (
+			    peek < w && isspace((unsigned char)cleaned[peek]))
+				peek++;
 
-			if (i < w && toupper((unsigned char)cleaned[i]) == 'R') {
+			if (i < w &&
+			    toupper((unsigned char)cleaned[i]) == 'R') {
 				// run command
 				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (size_t j = 0; j + 1 < data_len; j += 2) {
-					uint8_t val = (hex_val(cleaned[hex_start + j]) << 4) | hex_val(cleaned[hex_start + j + 1]);
-					if (bus_is_ram_address(bus, current_addr)) {
+					uint8_t val =
+					    (hex_val(cleaned[hex_start + j])
+						<< 4) |
+					    hex_val(cleaned[hex_start + j + 1]);
+					if (bus_is_ram_address(bus,
+						current_addr)) {
 						bus->ram[current_addr] = val;
 					}
 					current_addr++;
@@ -294,11 +326,16 @@ bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool 
 				}
 				if (hex_len >= 4) {
 					char addr_str[5];
-					strncpy(addr_str, &cleaned[hex_start + data_len], 4);
+					strncpy(addr_str,
+					    &cleaned[hex_start + data_len],
+					    4);
 					addr_str[4] = '\0';
-					uint16_t raddr = (uint16_t)strtol(addr_str, NULL, 16);
-					if (run_address) *run_address = raddr;
-					if (has_run_address) *has_run_address = true;
+					uint16_t raddr = (uint16_t)
+					    strtol(addr_str, NULL, 16);
+					if (run_address)
+						*run_address = raddr;
+					if (has_run_address)
+						*has_run_address = true;
 				}
 				i++; // skip R
 				continue;
@@ -308,17 +345,24 @@ bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool 
 				// Address change (and possibly some data bytes before it in merged strings)
 				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (size_t j = 0; j + 1 < data_len; j += 2) {
-					uint8_t val = (hex_val(cleaned[hex_start + j]) << 4) | hex_val(cleaned[hex_start + j + 1]);
-					if (bus_is_ram_address(bus, current_addr)) {
+					uint8_t val =
+					    (hex_val(cleaned[hex_start + j])
+						<< 4) |
+					    hex_val(cleaned[hex_start + j + 1]);
+					if (bus_is_ram_address(bus,
+						current_addr)) {
 						bus->ram[current_addr] = val;
 					}
 					current_addr++;
 					total_bytes++;
 				}
-				char addr_str[5] = {0};
+				char addr_str[5] = { 0 };
 				size_t addr_digits = hex_len > 4 ? 4 : hex_len;
-				strncpy(addr_str, &cleaned[hex_start + hex_len - addr_digits], addr_digits);
-				current_addr = (uint16_t)strtol(addr_str, NULL, 16);
+				strncpy(addr_str,
+				    &cleaned[hex_start + hex_len - addr_digits],
+				    addr_digits);
+				current_addr =
+				    (uint16_t)strtol(addr_str, NULL, 16);
 				if (first_addr) {
 					first_addr = false;
 				}
@@ -328,7 +372,9 @@ bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool 
 
 			// Data bytes
 			for (size_t j = 0; j + 1 < hex_len; j += 2) {
-				uint8_t val = (hex_val(cleaned[hex_start + j]) << 4) | hex_val(cleaned[hex_start + j + 1]);
+				uint8_t val =
+				    (hex_val(cleaned[hex_start + j]) << 4) |
+				    hex_val(cleaned[hex_start + j + 1]);
 				if (bus_is_ram_address(bus, current_addr)) {
 					bus->ram[current_addr] = val;
 				} else {
@@ -350,7 +396,9 @@ bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool 
 		return false;
 	}
 
-	printf("Loaded '%s' (%d bytes) via Woz Monitor text format\n", txt_path, total_bytes);
+	printf("Loaded '%s' (%d bytes) via Woz Monitor text format\n",
+	    txt_path,
+	    total_bytes);
 	return true;
 }
 
@@ -395,7 +443,7 @@ pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		} else {
 			// Real writes cannot modify bit 7 (status flag is read-only)
 			bus->pia.kbd_control = (bus->pia.kbd_control & 0x80) |
-				(value & 0x7F);
+			    (value & 0x7F);
 		}
 		break;
 	case 0xD012:
@@ -414,7 +462,7 @@ pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 	case 0xD013:
 		// Real writes cannot modify bit 7 (status flag is read-only)
 		bus->pia.dsp_control = (bus->pia.dsp_control & 0x80) |
-			(value & 0x7F);
+		    (value & 0x7F);
 		break;
 	}
 }
@@ -433,13 +481,14 @@ bus_read(Bus *bus, uint16_t address)
 			address = 0xD010 | (address & 0x03);
 
 		if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		    !bus->opts.headless &&
-		    address >= 0xD010 && address <= 0xD013)
+		    !bus->opts.headless && address >= 0xD010 &&
+		    address <= 0xD013)
 			delay_nanoseconds(977);
 
 		if (address >= 0xFF00) {
 			if (bus->rom_loaded)
-				bus->last_bus_value = bus->rom[address - 0xFF00];
+				bus->last_bus_value =
+				    bus->rom[address - 0xFF00];
 			result = bus->last_bus_value;
 		} else if (address >= 0xD010 && address <= 0xD013) {
 			result = pia_read(bus, address);
@@ -451,7 +500,9 @@ bus_read(Bus *bus, uint16_t address)
 				if ((address & card->mask) == card->base) {
 					if (card->read)
 						bus->last_bus_value =
-							card->read(card->ctx, address, false);
+						    card->read(card->ctx,
+							address,
+							false);
 					result = bus->last_bus_value;
 					card_hit = true;
 					break;
@@ -491,8 +542,8 @@ bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			address = 0xD010 | (address & 0x03);
 
 		if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		    !bus->opts.headless &&
-		    address >= 0xD010 && address <= 0xD013)
+		    !bus->opts.headless && address >= 0xD010 &&
+		    address <= 0xD013)
 			delay_nanoseconds(977);
 
 		if (address >= 0xFF00) {
@@ -505,8 +556,10 @@ bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 				expansion_card_t *card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
 					if (!card->rom_only && card->write)
-						card->write(card->ctx, address, value,
-						            is_dummy);
+						card->write(card->ctx,
+						    address,
+						    value,
+						    is_dummy);
 					card_hit = true;
 					break;
 				}
@@ -569,8 +622,8 @@ bus_update_keyboard(Bus *bus)
 				 * inter-key settle time.
 				 */
 				if (bus->opts.emulate_kbd_bounce) {
-					bus->kbd_bounce_cycles =
-						1250 + (uint32_t)(rand() % 2500);
+					bus->kbd_bounce_cycles = 1250 +
+					    (uint32_t)(rand() % 2500);
 				}
 			}
 		}
@@ -594,7 +647,7 @@ bus_add_card(Bus *bus, expansion_card_t *card)
 		bus->cards[bus->num_cards++] = card;
 	} else {
 		fprintf(stderr,
-			"Error: Maximum number of expansion cards (8) "
-			"exceeded.\n");
+		    "Error: Maximum number of expansion cards (8) "
+		    "exceeded.\n");
 	}
 }

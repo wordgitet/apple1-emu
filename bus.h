@@ -2,15 +2,15 @@
 #define BUS_H
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /* Callback fired on every non-dummy bus read and write.
  * addr     — the final (post-alias-resolution) address accessed
  * is_write — true for writes, false for reads
  * val      — the byte written or read */
-typedef void (*bus_access_cb_t)(void *ctx, uint16_t addr, bool is_write,
-                                uint8_t val);
+typedef void (
+    *bus_access_cb_t)(void *ctx, uint16_t addr, bool is_write, uint8_t val);
 
 typedef struct {
 	uint8_t kbd_data;    // 0xD010: Keyboard Data
@@ -57,7 +57,7 @@ typedef struct {
 	/* Optional callback fired on every non-dummy bus access (read or write).
 	 * Set to NULL to disable.  Used by the debugger for watchpoints. */
 	bus_access_cb_t access_cb;
-	void           *access_cb_ctx;
+	void *access_cb_ctx;
 } Bus;
 
 // Initialize the memory bus with a configured RAM size
@@ -79,7 +79,10 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address);
 // Load Woz Monitor formatted text file into RAM. Returns true on success.
 // If run_address is not NULL, it will be set to the R (run) address if specified in the file.
 bool
-bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool *has_run_address);
+bus_load_wozmon_txt(Bus *bus,
+    const char *txt_path,
+    uint16_t *run_address,
+    bool *has_run_address);
 
 // Read a byte from the bus
 uint8_t

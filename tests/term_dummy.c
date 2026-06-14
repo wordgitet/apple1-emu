@@ -1,8 +1,8 @@
+#include "../bus.h"
 #include "../term_apple1.h"
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
-#include "../bus.h"
+#include <stdint.h>
 
 Bus *g_bus = NULL;
 
