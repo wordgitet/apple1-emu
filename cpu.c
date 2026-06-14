@@ -130,9 +130,9 @@ cpu_reset(CPU *cpu)
 	cpu->irq_pending = false;
 	cpu->halted = false; /* RESET always un-freezes the CPU */
 
-	/* Read start address from the Reset Vector (0xFFFC-0xFFFD) */
-	uint8_t lo = bus_read(cpu->bus, 0xFFFC);
-	uint8_t hi = bus_read(cpu->bus, 0xFFFD);
+	/* Read start address from the Reset Vector (RESET_VECTOR/RESET_VECTOR+1) */
+	uint8_t lo = bus_read(cpu->bus, RESET_VECTOR);
+	uint8_t hi = bus_read(cpu->bus, RESET_VECTOR + 1);
 
 	cpu->pc = (hi << 8) | lo;
 

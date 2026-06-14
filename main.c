@@ -523,8 +523,8 @@ main(int argc, char *argv[])
 			return 1;
 		}
 		// Overwrite Reset Vector to point to $0400
-		bus.ram[0xFFFC] = 0x00;
-		bus.ram[0xFFFD] = 0x04;
+		bus.ram[RESET_VECTOR] = 0x00;
+		bus.ram[RESET_VECTOR + 1] = 0x04;
 	}
 
 	// Load additional binary into RAM if specified
@@ -547,8 +547,8 @@ main(int argc, char *argv[])
 			return 1;
 		}
 		if (has_run_addr) {
-			bus.ram[0xFFFC] = run_addr & 0xFF;
-			bus.ram[0xFFFD] = run_addr >> 8;
+			bus.ram[RESET_VECTOR] = run_addr & 0xFF;
+			bus.ram[RESET_VECTOR + 1] = run_addr >> 8;
 		}
 	}
 

@@ -561,7 +561,7 @@ test_reset_vectors(void)
 
 	// 2. Read and verify authentic vectors
 	uint16_t nmi = bus_read(&bus, 0xFFFA) | (bus_read(&bus, 0xFFFB) << 8);
-	uint16_t res = bus_read(&bus, 0xFFFC) | (bus_read(&bus, 0xFFFD) << 8);
+	uint16_t res = bus_read(&bus, RESET_VECTOR) | (bus_read(&bus, RESET_VECTOR + 1) << 8);
 	uint16_t irq = bus_read(&bus, 0xFFFE) | (bus_read(&bus, 0xFFFF) << 8);
 
 	assert(res == 0xFF00);

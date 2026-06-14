@@ -406,7 +406,7 @@ static uint8_t
 pia_read(Bus *bus, uint16_t address)
 {
 	switch (address) {
-	case 0xD010: {
+	case PIA_BASE: {
 		if (bus->pia.kbd_control & 0x04) {
 			uint8_t data = bus->pia.kbd_data;
 
@@ -418,12 +418,12 @@ pia_read(Bus *bus, uint16_t address)
 			return 0x00;
 		}
 	}
-	case 0xD011:
+	case PIA_BASE + 1:
 		return bus->pia.kbd_control;
-	case 0xD012:
+	case PIA_BASE + 2:
 		// Always return 0x00 so that Wozmon doesn't hang in a busy loop
 		return 0x00;
-	case 0xD013:
+	case PIA_BASE + 3:
 		return bus->pia.dsp_control;
 	}
 	return 0x00;
@@ -433,10 +433,10 @@ static void
 pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 {
 	switch (address) {
-	case 0xD010:
+	case PIA_BASE:
 		// Keyboard data is read-only
 		break;
-	case 0xD011:
+	case PIA_BASE + 1:
 		if (is_dummy) {
 			// DCP $D011 dummy write clears key-ready bit (bit 7)
 			bus->pia.kbd_control &= ~0x80;
@@ -446,7 +446,7 @@ pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			    (value & 0x7F);
 		}
 		break;
-	case 0xD012:
+	case PIA_BASE + 2:
 		if (bus->pia.dsp_control & 0x04) {
 			if (is_dummy) {
 				// SLO $D012 dummy write triggers display ready
@@ -459,7 +459,7 @@ pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			// Accessing DDRA (DDR for Port B/Display)
 		}
 		break;
-	case 0xD013:
+	case PIA_BASE + 3:
 		// Real writes cannot modify bit 7 (status flag is read-only)
 		bus->pia.dsp_control = (bus->pia.dsp_control & 0x80) |
 		    (value & 0x7F);
@@ -478,19 +478,19 @@ bus_read(Bus *bus, uint16_t address)
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
 		if ((address & 0xF000) == 0xD000)
-			address = 0xD010 | (address & 0x03);
+			address = PIA_BASE | (address & 0x03);
 
 		if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		    !bus->opts.headless && address >= 0xD010 &&
-		    address <= 0xD013)
+		    !bus->opts.headless && address >= PIA_BASE &&
+		    address <= (PIA_BASE + 3))
 			delay_nanoseconds(977);
 
-		if (address >= 0xFF00) {
+		if (address >= ROM_BASE) {
 			if (bus->rom_loaded)
 				bus->last_bus_value =
-				    bus->rom[address - 0xFF00];
+				    bus->rom[address - ROM_BASE];
 			result = bus->last_bus_value;
-		} else if (address >= 0xD010 && address <= 0xD013) {
+		} else if (address >= PIA_BASE && address <= (PIA_BASE + 3)) {
 			result = pia_read(bus, address);
 			bus->last_bus_value = result;
 		} else {
@@ -539,16 +539,16 @@ bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
 		if ((address & 0xF000) == 0xD000)
-			address = 0xD010 | (address & 0x03);
+			address = PIA_BASE | (address & 0x03);
 
 		if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		    !bus->opts.headless && address >= 0xD010 &&
-		    address <= 0xD013)
+		    !bus->opts.headless && address >= PIA_BASE &&
+		    address <= (PIA_BASE + 3))
 			delay_nanoseconds(977);
 
-		if (address >= 0xFF00) {
+		if (address >= ROM_BASE) {
 			/* ROM is read-only — silently ignore */
-		} else if (address >= 0xD010 && address <= 0xD013) {
+		} else if (address >= PIA_BASE && address <= (PIA_BASE + 3)) {
 			pia_write(bus, address, value, is_dummy);
 		} else {
 			bool card_hit = false;

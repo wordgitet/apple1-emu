@@ -1,6 +1,10 @@
 #ifndef BUS_H
 #define BUS_H
 
+#define PIA_BASE      0xD010
+#define ROM_BASE      0xFF00
+#define RESET_VECTOR  0xFFFC
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

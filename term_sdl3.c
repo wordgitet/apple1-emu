@@ -1656,8 +1656,8 @@ load_wozmon_txt_gui(void)
 	if (g_bus &&
 	    bus_load_wozmon_txt(g_bus, picked, &run_addr, &has_run_addr)) {
 		if (has_run_addr) {
-			g_bus->ram[0xFFFC] = run_addr & 0xFF;
-			g_bus->ram[0xFFFD] = run_addr >> 8;
+			g_bus->ram[RESET_VECTOR] = run_addr & 0xFF;
+			g_bus->ram[RESET_VECTOR + 1] = run_addr >> 8;
 			reset_pending = true;
 			snprintf(status_text,
 			    sizeof(status_text),
