@@ -24,6 +24,7 @@ bool g_debug_enabled = false;
 Bus *g_bus = NULL;
 CPU *g_cpu = NULL;
 debugger_t *g_dbg = NULL;
+char *g_argv0 = NULL;
 
 
 static void
@@ -247,6 +248,7 @@ load_config_file(const char *path,
 int
 main(int argc, char *argv[])
 {
+	g_argv0 = argv[0];
 	srand(time(NULL));
 
 	char *rom_path = NULL;

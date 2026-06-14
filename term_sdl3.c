@@ -22,6 +22,7 @@
 extern Bus *g_bus;
 extern CPU *g_cpu;
 extern bool g_debug_enabled;
+extern char *g_argv0;
 
 /* ── CONSTANTS & PALETTES ────────────────────────────────────────────────── */
 
@@ -360,8 +361,8 @@ static void
 reboot_emulator(void)
 {
 	term_shutdown();
-	char *args[] = { "apple1", NULL };
-	execv("/proc/self/exe", args);
+	char *args[] = { g_argv0 ? g_argv0 : "apple1", NULL };
+	execvp(args[0], args);
 	perror("reboot failed");
 	exit(1);
 }
