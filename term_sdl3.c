@@ -2295,8 +2295,9 @@ handle_key_event(const SDL_KeyboardEvent *key)
 			strncpy(status_text, "VRAM CLEARED.", sizeof(status_text) - 1);
 			return;
 		}
-		if (sym == SDLK_C) {
-			exit(0);
+		if (sym >= SDLK_A && sym <= SDLK_Z) {
+			buffered_key_sdl = (uint8_t)((sym - SDLK_A + 1) | 0x80);
+			return;
 		}
 		/* Swallow other Ctrl combos so they don't feed text input */
 		return;
