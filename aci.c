@@ -250,10 +250,10 @@ pcm_to_durations(const float *mono,
 
 		if (new_level != current_level) {
 			uint32_t delta_samples = i - last_transition;
-			uint32_t cycles =
-			    (uint32_t)(((double)delta_samples * 1023000.0) /
-				    (double)sample_rate +
-				0.5);
+			uint32_t cycles = (uint32_t)(((double)delta_samples *
+							 (double)ACI_CLOCK) /
+				(double)sample_rate +
+			    0.5);
 
 			if (cycles == 0) {
 				cycles = 1;
@@ -512,7 +512,7 @@ save_wav_tape(aci_card_t *aci, const char *tape_path)
 		uint32_t duration = aci->recorded_durations[i];
 		uint32_t sample_count =
 		    (uint32_t)(((double)duration * (double)wav_sample_rate) /
-			    1023000.0 +
+			    (double)ACI_CLOCK +
 			0.5);
 
 		if (sample_count == 0) {
@@ -606,7 +606,7 @@ save_wav_tape(aci_card_t *aci, const char *tape_path)
 		uint32_t duration = aci->recorded_durations[i];
 		uint32_t sample_count =
 		    (uint32_t)(((double)duration * (double)wav_sample_rate) /
-			    1023000.0 +
+			    (double)ACI_CLOCK +
 			0.5);
 
 		if (sample_count == 0) {

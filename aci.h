@@ -1,6 +1,8 @@
 #ifndef ACI_H
 #define ACI_H
 
+#define ACI_CLOCK 1022727
+
 #include "bus.h"
 
 // Create and initialize the ACI cassette interface card
