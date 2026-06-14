@@ -860,7 +860,7 @@ draw_file_dropdown(void)
 	int drop_y = MENU_BAR_H;
 	int drop_w = 260;
 	int item_h = 30;
-	int num_items = 4;
+	int num_items = 5;
 	int drop_h = item_h * num_items + 6;
 
 	/* Background and border */
@@ -880,6 +880,7 @@ draw_file_dropdown(void)
 		"LOAD TAPE (.ACI)",
 		"LOAD ROM TO RAM...",
 		"LOAD WOZMON",
+		"LOAD WOZMON TXT...",
 		"QUIT"
 	};
 
@@ -1259,6 +1260,30 @@ load_any_rom(void)
 	}
 }
 
+static void
+load_wozmon_txt_gui(void)
+{
+	char picked[512] = {0};
+	// Allow all files since user requested it, but we can default filter to *.*
+	if (!pick_file_dialog(picked, sizeof(picked), "Select Woz Monitor Text Dump", "*.*")) {
+		return;
+	}
+	uint16_t run_addr;
+	bool has_run_addr;
+	if (g_bus && bus_load_wozmon_txt(g_bus, picked, &run_addr, &has_run_addr)) {
+		if (has_run_addr) {
+			g_bus->ram[0xFFFC] = run_addr & 0xFF;
+			g_bus->ram[0xFFFD] = run_addr >> 8;
+			reset_pending = true;
+			snprintf(status_text, sizeof(status_text), "WOZMON TXT LOADED - RUNNING AT $%04X", run_addr);
+		} else {
+			strncpy(status_text, "WOZMON TXT LOADED", sizeof(status_text) - 1);
+		}
+	} else {
+		strncpy(status_text, "WOZMON TXT LOAD FAILED", sizeof(status_text) - 1);
+	}
+}
+
 static bool load_wozmon_fn(const char *path, void *ctx)
 {
 	(void)ctx;
@@ -1284,7 +1309,10 @@ handle_file_menu_action(int idx)
 		              "ERROR: FAILED TO LOAD WOZMON ROM",
 		              load_wozmon_fn, NULL);
 		break;
-	case 3: /* QUIT */
+	case 3: /* LOAD WOZMON TXT... */
+		load_wozmon_txt_gui();
+		break;
+	case 4: /* QUIT */
 		exit(0);
 		break;
 	}

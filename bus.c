@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 static void
 delay_nanoseconds(long ns)
@@ -174,6 +175,182 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 		size,
 		address,
 		(uint16_t)(address + size - 1));
+	return true;
+}
+
+static inline int
+hex_val(char c)
+{
+	if (c >= '0' && c <= '9') return c - '0';
+	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	return 0;
+}
+
+bool
+bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool *has_run_address)
+{
+	FILE *f = fopen(txt_path, "r");
+	if (!f) {
+		fprintf(stderr, "Error: Could not open text file '%s'\n", txt_path);
+		return false;
+	}
+
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	if (size <= 0) {
+		fprintf(stderr, "Error: Text file '%s' is empty.\n", txt_path);
+		fclose(f);
+		return false;
+	}
+
+	char *content = malloc(size + 1);
+	if (!content) {
+		fclose(f);
+		return false;
+	}
+
+	size_t read_bytes = fread(content, 1, size, f);
+	content[read_bytes] = '\0';
+	fclose(f);
+
+	// Strip inline comments
+	char *cleaned = malloc(size + 1);
+	if (!cleaned) {
+		free(content);
+		return false;
+	}
+
+	size_t w = 0;
+	bool in_comment = false;
+	for (size_t i = 0; i < read_bytes; i++) {
+		if (content[i] == '\n' || content[i] == '\r') {
+			in_comment = false;
+			cleaned[w++] = content[i];
+			continue;
+		}
+		if (in_comment) continue;
+
+		// Start of comment
+		if (content[i] == '#' || content[i] == ';') {
+			in_comment = true;
+			continue;
+		}
+		if (content[i] == '/' && i + 1 < read_bytes && content[i+1] == '/') {
+			in_comment = true;
+			continue;
+		}
+		cleaned[w++] = content[i];
+	}
+	cleaned[w] = '\0';
+	free(content);
+
+	uint16_t current_addr = 0;
+	bool first_addr = true;
+	int total_bytes = 0;
+	size_t i = 0;
+
+	if (has_run_address) *has_run_address = false;
+
+	while (i < w) {
+		char c = cleaned[i];
+
+		if (isspace((unsigned char)c)) { i++; continue; }
+
+		// 'T' prefix (turbo) - skip
+		if (toupper((unsigned char)c) == 'T' && i + 1 < w && isxdigit((unsigned char)cleaned[i + 1])) {
+			i++; continue;
+		}
+
+		// 'X' marker - skip X + hex addr
+		if (toupper((unsigned char)c) == 'X' && i + 1 < w && isxdigit((unsigned char)cleaned[i + 1])) {
+			i++;
+			while (i < w && isxdigit((unsigned char)cleaned[i])) i++;
+			continue;
+		}
+
+		if (c == ':') { i++; continue; }
+
+		if (isxdigit((unsigned char)c)) {
+			size_t hex_start = i;
+			while (i < w && isxdigit((unsigned char)cleaned[i])) i++;
+			size_t hex_len = i - hex_start;
+
+			size_t peek = i;
+			while (peek < w && isspace((unsigned char)cleaned[peek])) peek++;
+
+			if (i < w && toupper((unsigned char)cleaned[i]) == 'R') {
+				// run command
+				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
+				for (size_t j = 0; j + 1 < data_len; j += 2) {
+					uint8_t val = (hex_val(cleaned[hex_start + j]) << 4) | hex_val(cleaned[hex_start + j + 1]);
+					if (bus_is_ram_address(bus, current_addr)) {
+						bus->ram[current_addr] = val;
+					}
+					current_addr++;
+					total_bytes++;
+				}
+				if (hex_len >= 4) {
+					char addr_str[5];
+					strncpy(addr_str, &cleaned[hex_start + data_len], 4);
+					addr_str[4] = '\0';
+					uint16_t raddr = (uint16_t)strtol(addr_str, NULL, 16);
+					if (run_address) *run_address = raddr;
+					if (has_run_address) *has_run_address = true;
+				}
+				i++; // skip R
+				continue;
+			}
+
+			if (peek < w && cleaned[peek] == ':' && hex_len >= 3) {
+				// Address change (and possibly some data bytes before it in merged strings)
+				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
+				for (size_t j = 0; j + 1 < data_len; j += 2) {
+					uint8_t val = (hex_val(cleaned[hex_start + j]) << 4) | hex_val(cleaned[hex_start + j + 1]);
+					if (bus_is_ram_address(bus, current_addr)) {
+						bus->ram[current_addr] = val;
+					}
+					current_addr++;
+					total_bytes++;
+				}
+				char addr_str[5] = {0};
+				size_t addr_digits = hex_len > 4 ? 4 : hex_len;
+				strncpy(addr_str, &cleaned[hex_start + hex_len - addr_digits], addr_digits);
+				current_addr = (uint16_t)strtol(addr_str, NULL, 16);
+				if (first_addr) {
+					first_addr = false;
+				}
+				i = peek + 1; // skip ':'
+				continue;
+			}
+
+			// Data bytes
+			for (size_t j = 0; j + 1 < hex_len; j += 2) {
+				uint8_t val = (hex_val(cleaned[hex_start + j]) << 4) | hex_val(cleaned[hex_start + j + 1]);
+				if (bus_is_ram_address(bus, current_addr)) {
+					bus->ram[current_addr] = val;
+				} else {
+					// Also print warning if write exceeds bounds or write is not to RAM?
+				}
+				current_addr++;
+				total_bytes++;
+			}
+			continue;
+		}
+
+		i++;
+	}
+
+	free(cleaned);
+
+	if (total_bytes == 0 && first_addr) {
+		// Nothing loaded, completely invalid format or empty
+		return false;
+	}
+
+	printf("Loaded '%s' (%d bytes) via Woz Monitor text format\n", txt_path, total_bytes);
 	return true;
 }
 

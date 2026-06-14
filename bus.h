@@ -76,6 +76,11 @@ bus_load_rom(Bus *bus, const char *rom_path);
 bool
 bus_load_bin(Bus *bus, const char *bin_path, uint16_t address);
 
+// Load Woz Monitor formatted text file into RAM. Returns true on success.
+// If run_address is not NULL, it will be set to the R (run) address if specified in the file.
+bool
+bus_load_wozmon_txt(Bus *bus, const char *txt_path, uint16_t *run_address, bool *has_run_address);
+
 // Read a byte from the bus
 uint8_t
 bus_read(Bus *bus, uint16_t address);

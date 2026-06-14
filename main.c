@@ -253,6 +253,7 @@ main(int argc, char *argv[])
 
 	char *rom_path = NULL;
 	char *bin_path = NULL;
+	char *wozmon_txt_path = NULL;
 	char *aci_path = NULL;
 	char *tape_path = NULL;
 	char *save_tape_path = NULL;
@@ -297,7 +298,7 @@ main(int argc, char *argv[])
 					 &save_tape_path,
 					 &krusader_path);
 
-	// Pre-process argv to convert --flat-bus to -f, --debug to -g, --trace to -t, --tape to -e, --save-tape to -E
+	// Pre-process argv to convert --flat-bus to -f, --debug to -g, --trace to -t, --tape to -e, --save-tape to -E, and -wm to -w
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--flat-bus") == 0) {
 			argv[i] = "-f";
@@ -309,13 +310,15 @@ main(int argc, char *argv[])
 			argv[i] = "-e";
 		} else if (strcmp(argv[i], "--save-tape") == 0) {
 			argv[i] = "-E";
+		} else if (strcmp(argv[i], "-wm") == 0) {
+			argv[i] = "-w";
 		}
 	}
 
 	// Parse CLI arguments
 	int opt;
 
-	while ((opt = getopt(argc, argv, "r:m:l:cpdbshfHa:k:gte:E:x")) != -1) {
+	while ((opt = getopt(argc, argv, "r:m:l:w:cpdbshfHa:k:gte:E:x")) != -1) {
 		switch (opt) {
 		case 'r':
 			rom_path = optarg;
@@ -347,6 +350,9 @@ main(int argc, char *argv[])
 			bin_address = (uint16_t)strtol(at + 1, NULL, 16);
 			break;
 		}
+		case 'w':
+			wozmon_txt_path = optarg;
+			break;
 		case 'c':
 			opt_uncapped = false;
 			break;
@@ -502,6 +508,20 @@ main(int argc, char *argv[])
 		if (!bus_load_bin(&bus, bin_path, bin_address)) {
 			bus_free(&bus);
 			return 1;
+		}
+	}
+
+	// Load Woz Monitor text dump if specified
+	if (wozmon_txt_path) {
+		uint16_t run_addr;
+		bool has_run_addr;
+		if (!bus_load_wozmon_txt(&bus, wozmon_txt_path, &run_addr, &has_run_addr)) {
+			bus_free(&bus);
+			return 1;
+		}
+		if (has_run_addr) {
+			bus.ram[0xFFFC] = run_addr & 0xFF;
+			bus.ram[0xFFFD] = run_addr >> 8;
 		}
 	}
 
