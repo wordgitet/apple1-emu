@@ -25,10 +25,16 @@ DORMANN_URL = https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master
 
 all: $(GUI_TARGET)
 
-$(GUI_TARGET): $(CORE_OBJS) term_sdl3.o main.o
+$(GUI_TARGET): $(CORE_OBJS) term_sdl3.o term_config.o term_debug.o main.o
 	$(CC) $(CFLAGS) -o $@ $^ $(shell pkg-config --libs sdl3)
 
 term_sdl3.o: term_sdl3.c
+	$(CC) $(CFLAGS) $(shell pkg-config --cflags sdl3) -c $< -o $@
+
+term_config.o: term_config.c
+	$(CC) $(CFLAGS) $(shell pkg-config --cflags sdl3) -c $< -o $@
+
+term_debug.o: term_debug.c
 	$(CC) $(CFLAGS) $(shell pkg-config --cflags sdl3) -c $< -o $@
 
 %.o: %.c
@@ -82,5 +88,5 @@ test-illegal: $(GUI_TARGET)
 	curl -L -o $@ $(DORMANN_URL)
 
 clean:
-	rm -f $(CORE_OBJS) term_sdl3.o main.o $(GUI_TARGET) $(TEST_OBJS) $(TEST_TARGET) $(ACI_TEST_OBJS) $(ACI_TEST_TARGET) $(DUALRAM_TEST_OBJS) $(DUALRAM_TEST_TARGET) $(BUS_TEST_OBJS) $(BUS_TEST_TARGET) 6502_functional_test.bin
+	rm -f $(CORE_OBJS) term_sdl3.o term_config.o term_debug.o main.o $(GUI_TARGET) $(TEST_OBJS) $(TEST_TARGET) $(ACI_TEST_OBJS) $(ACI_TEST_TARGET) $(DUALRAM_TEST_OBJS) $(DUALRAM_TEST_TARGET) $(BUS_TEST_OBJS) $(BUS_TEST_TARGET) 6502_functional_test.bin
 
