@@ -575,19 +575,15 @@ static const uint16_t kEntry = 0x0400;
 static const uint16_t kBpAddr = 0x0404;
 static const uint16_t kSpin = 0x0408;
 
+/* clang-format off */
 static const uint8_t kProgram[] = {
-	0xA9,
-	0x01, // LDA #$01
-	0xA9,
-	0x02, // LDA #$02
-	0xA9,
-	0x03, // LDA #$03      <-- breakpoint
-	0xA9,
-	0x04, // LDA #$04
-	0x4C,
-	0x08,
-	0x04, // JMP $0408
+	0xA9, 0x01,       // LDA #$01
+	0xA9, 0x02,       // LDA #$02
+	0xA9, 0x03,       // LDA #$03      <-- breakpoint
+	0xA9, 0x04,       // LDA #$04
+	0x4C, 0x08, 0x04, // JMP $0408
 };
+/* clang-format on */
 
 static void
 load_program(Bus *bus)
