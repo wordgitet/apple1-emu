@@ -260,6 +260,13 @@ pcm_to_durations(const float *mono,
 			}
 
 			if (count >= cap) {
+				if (cap > (UINT32_MAX / 2) / sizeof(uint32_t)) {
+					fprintf(stderr,
+					    "Error: Cassette signal durations "
+					    "array overflow\n");
+					free(durations);
+					return false;
+				}
 				cap *= 2;
 				uint32_t *new_buf =
 				    realloc(durations, cap * sizeof(uint32_t));
@@ -406,6 +413,13 @@ load_wav_tape(aci_card_t *aci, const char *tape_path)
 	}
 
 	uint32_t frame_count = data_size / (bytes_per_sample * channels);
+	if (frame_count > UINT32_MAX / sizeof(float)) {
+		fprintf(stderr,
+		    "Error: WAV file is too large (integer overflow "
+		    "prevention)\n");
+		free(data_chunk);
+		return false;
+	}
 	float *mono_samples = malloc(frame_count * sizeof(float));
 
 	if (!mono_samples) {
