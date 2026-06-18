@@ -2187,7 +2187,6 @@ term_init(void)
 		}
 		cx = 0;
 		cy = 0;
-		vram[cy][cx] = 0x00; /* start active cursor at 0,0 */
 		boot_sweep = true;
 		vram_initialized = true;
 	}
