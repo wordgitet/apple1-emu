@@ -17,15 +17,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 extern Bus *g_bus;
 extern CPU *g_cpu;
 extern bool g_debug_enabled;
 extern char *g_argv0;
+extern bool
+io_has_buffered_key(void);
 
 /* ── CONSTANTS & PALETTES ────────────────────────────────────────────────── */
 const Palette PALETTES[] = {
@@ -58,6 +64,11 @@ int charmap_size = 2048;
 static uint64_t last_redraw_ms = 0;
 static uint8_t buffered_key_sdl = 0;
 
+/* paste buffer */
+static char paste_buf[4096];
+static int paste_pos = 0;
+static int paste_len = 0;
+
 /* ── GUI INTERACTIVE SETTINGS ────────────────────────────────────────────── */
 MonitorTint monitor_tint = MONITOR_GREEN;
 bool scanlines_enabled = true;
@@ -77,6 +88,11 @@ static bool display_menu_open = false;
 static bool debug_menu_open = false;
 static bool trace_menu_open = false;
 static bool help_menu_open = false;
+
+/* context menu */
+static bool context_menu_open = false;
+static int context_menu_x = 0;
+static int context_menu_y = 0;
 
 /* ── INTERNAL HELPERS ────────────────────────────────────────────────────── */
 
@@ -1069,6 +1085,7 @@ static void
 handle_menu_click(int x, int y)
 {
 	(void)y;
+	context_menu_open = false;
 	bool any_open = file_menu_open || config_modal_open ||
 	    emulation_menu_open || display_menu_open || debug_menu_open ||
 	    trace_menu_open || help_menu_open;
@@ -1140,6 +1157,380 @@ pick_file_dialog(char *out_path,
 	}
 	pclose(p);
 	return ok;
+}
+
+static bool
+pick_save_dialog(char *out_path,
+    size_t max_len,
+    const char *title,
+    const char *ext)
+{
+	char cmd[512];
+	snprintf(cmd,
+	    sizeof(cmd),
+	    "zenity --file-selection --save --confirm-overwrite --title='%s' "
+	    "--file-filter='%s | %s' "
+	    "2>/dev/null "
+	    "|| kdialog --getsavefilename . '%s' 2>/dev/null",
+	    title,
+	    title,
+	    ext,
+	    ext);
+	FILE *p = popen(cmd, "r");
+	if (!p)
+		return false;
+	bool ok = false;
+	if (fgets(out_path, (int)max_len, p)) {
+		out_path[strcspn(out_path, "\n")] = '\0';
+		ok = strlen(out_path) > 0;
+	}
+	pclose(p);
+	return ok;
+}
+
+static void
+show_error_dialog(const char *title, const char *message)
+{
+	char cmd[1024];
+	snprintf(cmd,
+	    sizeof(cmd),
+	    "zenity --error --title='%s' --text='%s' --no-markup 2>/dev/null "
+	    "|| kdialog --title '%s' --error '%s' 2>/dev/null",
+	    title,
+	    message,
+	    title,
+	    message);
+	FILE *p = popen(cmd, "r");
+	if (p) {
+		pclose(p);
+	}
+}
+
+/*
+ * Build a plain-text snapshot of the screen using the same per-cell
+ * decoding rules as render_gui:
+ *   0x00  cursor (@)   → treated as a space (position marker, not content)
+ *   0xFF  sweep  (_)   → treated as a space (boot animation, not content)
+ *   0x20  blank        → space
+ *   else               → the ASCII glyph stored directly in VRAM
+ *
+ * Each row is right-trimmed; trailing blank rows are stripped.  The
+ * result is pushed to the system clipboard via native tools (xclip,
+ * xsel, wl-copy) so we don't depend on SDL's X11/Wayland selection
+ * ownership mechanism.
+ */
+static void
+do_copy_screen(void)
+{
+	/* TERM_ROWS rows × (TERM_COLS chars + 1 newline) + NUL */
+	char buf[TERM_ROWS * (TERM_COLS + 1) + 1];
+	int pos = 0;
+
+	for (int r = 0; r < TERM_ROWS; r++) {
+		/* Right-trim: find the last column with a real glyph. */
+		int last_col = -1;
+		for (int c = 0; c < TERM_COLS; c++) {
+			uint8_t v = vram[r][c];
+			if (v != 0x00 && v != 0xFF && v != 0x20)
+				last_col = c;
+		}
+		/* Emit characters up to last_col. */
+		for (int c = 0; c <= last_col; c++) {
+			uint8_t v = vram[r][c];
+			buf[pos++] = (v == 0x00 || v == 0xFF) ? ' ' : (char)v;
+		}
+		buf[pos++] = '\n';
+	}
+	/* Strip trailing blank rows. */
+	while (pos > 0 && buf[pos - 1] == '\n')
+		pos--;
+	buf[pos] = '\0';
+
+	/*
+	 * Push to system clipboard using native tools — SDL_SetClipboardText
+	 * is deliberately not used here as it produces garbage on X11/Wayland.
+	 * Error is shown in the status bar, NOT on stdout/stderr.
+	 */
+	bool ok = false;
+	const char *tools[] = { "xclip -selection clipboard",
+		"xsel --clipboard --input",
+		"wl-copy",
+		NULL };
+	for (int i = 0; tools[i] && !ok; i++) {
+		FILE *p = popen(tools[i], "w");
+		if (p) {
+			fputs(buf, p);
+			ok = (pclose(p) == 0);
+		}
+	}
+	if (ok) {
+		snprintf(status_text,
+		    sizeof(status_text),
+		    "COPIED %d CHARS.",
+		    pos);
+	} else {
+		strncpy(status_text,
+		    "COPY FAILED: INSTALL xclip, xsel OR wl-clipboard.",
+		    sizeof(status_text) - 1);
+		show_error_dialog("Clipboard Error",
+		    "Could not copy text to clipboard. Please install xclip, "
+		    "xsel, or wl-clipboard.");
+	}
+}
+
+static char *
+get_system_clipboard(bool *success)
+{
+	const char *tools[] = { "xclip -selection clipboard -o",
+		"xsel --clipboard --output",
+		"wl-paste -n",
+		NULL };
+	static char clip_buf[65536];
+	*success = false;
+	for (int i = 0; tools[i]; i++) {
+		char cmd[256];
+		snprintf(cmd, sizeof(cmd), "%s 2>/dev/null", tools[i]);
+		FILE *p = popen(cmd, "r");
+		if (p) {
+			size_t total = 0;
+			size_t n;
+			while (total < sizeof(clip_buf) - 1 &&
+			    (n = fread(clip_buf + total,
+				 1,
+				 sizeof(clip_buf) - total - 1,
+				 p)) > 0) {
+				total += n;
+			}
+			clip_buf[total] = '\0';
+			int status = pclose(p);
+			if (status == 0) {
+				*success = true;
+				return clip_buf;
+			}
+		}
+	}
+	return NULL;
+}
+
+static void
+do_paste(void)
+{
+	bool success = false;
+	char *text = get_system_clipboard(&success);
+	if (!success) {
+		strncpy(status_text,
+		    "PASTE FAILED: INSTALL xclip, xsel OR wl-clipboard.",
+		    sizeof(status_text) - 1);
+		show_error_dialog("Clipboard Error",
+		    "Could not paste text from clipboard. Please install "
+		    "xclip, "
+		    "xsel, or wl-clipboard.");
+		return;
+	}
+	if (!text || text[0] == '\0') {
+		return;
+	}
+	int len = 0;
+	for (int i = 0; text[i] && len < (int)sizeof(paste_buf) - 1; i++) {
+		char c = text[i];
+		if (c == '\n' || c == '\r') {
+			paste_buf[len++] = '\r';
+			continue;
+		}
+		if (c >= 'a' && c <= 'z') {
+			c -= 32; /* force uppercase */
+		}
+		if (c >= 0x20 && c <= 0x7E) {
+			paste_buf[len++] = c;
+		}
+	}
+	paste_buf[len] = '\0';
+	paste_pos = 0;
+	paste_len = len;
+	strncpy(status_text, "PASTING CLIPBOARD...", sizeof(status_text) - 1);
+}
+
+static bool
+save_png(const char *filename, SDL_Surface *surface)
+{
+	SDL_Surface *converted =
+	    SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGB24);
+	if (!converted) {
+		return false;
+	}
+	int ret = stbi_write_png(filename,
+	    converted->w,
+	    converted->h,
+	    3,
+	    converted->pixels,
+	    converted->pitch);
+	SDL_DestroySurface(converted);
+	return ret != 0;
+}
+
+static void
+do_save_screenshot(void)
+{
+	char picked[512];
+	if (!pick_save_dialog(picked,
+		sizeof(picked),
+		"Save Screenshot — use .bmp or .png extension",
+		"*.png *.bmp")) {
+		return;
+	}
+
+	SDL_Surface *surface = SDL_RenderReadPixels(renderer, NULL);
+	if (!surface) {
+		strncpy(status_text,
+		    "SCREENSHOT FAILED.",
+		    sizeof(status_text) - 1);
+		return;
+	}
+
+	char filename[512];
+	strncpy(filename, picked, sizeof(filename) - 1);
+	filename[sizeof(filename) - 1] = '\0';
+
+	size_t len = strlen(filename);
+	bool is_png = false;
+	bool is_bmp = false;
+	bool unknown_ext = false;
+
+	if (len >= 4) {
+		const char *ext = filename + len - 4;
+		if (strcasecmp(ext, ".png") == 0) {
+			is_png = true;
+		} else if (strcasecmp(ext, ".bmp") == 0) {
+			is_bmp = true;
+		} else {
+			unknown_ext = true;
+		}
+	} else {
+		unknown_ext = true;
+	}
+
+	if (unknown_ext) {
+		strncat(filename, ".bmp", sizeof(filename) - len - 1);
+		is_bmp = true;
+	}
+
+	bool success = false;
+	if (is_png) {
+		success = save_png(filename, surface);
+	} else if (is_bmp) {
+		success = SDL_SaveBMP(surface, filename);
+	}
+
+	SDL_DestroySurface(surface);
+
+	if (success) {
+		const char *base = strrchr(filename, '/');
+		if (base) {
+			base++;
+		} else {
+			base = filename;
+		}
+
+		if (unknown_ext) {
+			snprintf(status_text,
+			    sizeof(status_text),
+			    "UNKNOWN EXT — SAVED AS BMP: %s",
+			    base);
+		} else {
+			snprintf(status_text,
+			    sizeof(status_text),
+			    "SCREENSHOT SAVED: %s",
+			    base);
+		}
+	} else {
+		strncpy(status_text,
+		    "SCREENSHOT FAILED.",
+		    sizeof(status_text) - 1);
+	}
+}
+
+static void
+draw_context_menu(void)
+{
+	SDL_Color bg = { 18, 18, 24, 255 };
+	SDL_Color border = { 51, 255, 51, 255 };
+	SDL_Color text_color = { 220, 220, 220, 255 };
+	SDL_Color hover_color = { 51, 255, 51, 255 };
+	SDL_Color hover_bg = { 30, 55, 30, 255 };
+
+	int drop_x = context_menu_x;
+	int drop_y = context_menu_y;
+	int drop_w = 260;
+	int drop_h = 134;
+
+	if (drop_x + drop_w > SCREEN_W) {
+		drop_x = SCREEN_W - drop_w - 2;
+	}
+	if (drop_y + drop_h > SCREEN_H) {
+		drop_y = SCREEN_H - drop_h - 2;
+	}
+	if (drop_x < 0)
+		drop_x = 0;
+	if (drop_y < MENU_BAR_H)
+		drop_y = MENU_BAR_H;
+
+	context_menu_x = drop_x;
+	context_menu_y = drop_y;
+
+	SDL_FRect drop_rect = { (float)drop_x,
+		(float)drop_y,
+		(float)drop_w,
+		(float)drop_h };
+	SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, bg.a);
+	SDL_RenderFillRect(renderer, &drop_rect);
+	SDL_SetRenderDrawColor(renderer, border.r, border.g, border.b, border.a);
+	SDL_RenderRect(renderer, &drop_rect);
+
+	float mx_f, my_f;
+	SDL_GetMouseState(&mx_f, &my_f);
+	int mx = (int)mx_f;
+	int my = (int)my_f;
+
+	const char *items[] = { "COPY SCREEN TEXT",
+		"PASTE TO KEYBOARD",
+		"SELECT ALL",
+		"SAVE SCREENSHOT..." };
+
+	for (int i = 0; i < 4; i++) {
+		int iy = drop_y + 3 + i * 30;
+		if (i == 3) {
+			iy += 8;
+		}
+		bool hover = (mx >= drop_x + 3 && mx < drop_x + drop_w - 3 &&
+		    my >= iy && my < iy + 30);
+
+		if (hover) {
+			SDL_FRect h_rect = { (float)(drop_x + 3),
+				(float)iy,
+				(float)(drop_w - 6),
+				30.0f };
+			SDL_SetRenderDrawColor(renderer,
+			    hover_bg.r,
+			    hover_bg.g,
+			    hover_bg.b,
+			    hover_bg.a);
+			SDL_RenderFillRect(renderer, &h_rect);
+		}
+
+		draw_text_2x(renderer,
+		    items[i],
+		    drop_x + 10,
+		    iy + 7,
+		    hover ? hover_color : text_color);
+	}
+
+	SDL_SetRenderDrawColor(renderer, 45, 45, 50, 255);
+	int sep_y = drop_y + 3 + 90 + 4;
+	SDL_RenderLine(renderer,
+	    (float)(drop_x + 3),
+	    (float)sep_y,
+	    (float)(drop_x + drop_w - 3),
+	    (float)sep_y);
 }
 
 void
@@ -1495,6 +1886,10 @@ render_gui(void)
 		term_config_modal_render(renderer);
 	}
 
+	if (context_menu_open) {
+		draw_context_menu();
+	}
+
 	SDL_RenderPresent(renderer);
 }
 
@@ -1503,11 +1898,59 @@ render_gui(void)
 static void
 handle_mouse_event(const SDL_MouseButtonEvent *button)
 {
+	if (button->button == SDL_BUTTON_RIGHT) {
+		/* Only open over the CRT area */
+		int adj_y = (int)button->y - MENU_BAR_H;
+		if (adj_y >= 0 && (int)button->x < CRT_DISP_W) {
+			context_menu_open = true;
+			context_menu_x = (int)button->x;
+			context_menu_y = (int)button->y;
+			/* close any open top-bar menus */
+			file_menu_open = emulation_menu_open =
+			    display_menu_open = debug_menu_open =
+				trace_menu_open = help_menu_open = false;
+		}
+		return;
+	}
+
 	if (button->button != SDL_BUTTON_LEFT)
 		return;
 
 	int x = (int)button->x;
 	int y = (int)button->y;
+
+	if (context_menu_open) {
+		/* hit-test each item, dispatch action, close menu */
+		int drop_x = context_menu_x;
+		int drop_y = context_menu_y;
+		int drop_w = 260;
+		int drop_h = 134;
+
+		if (drop_x + drop_w > SCREEN_W) {
+			drop_x = SCREEN_W - drop_w - 2;
+		}
+		if (drop_y + drop_h > SCREEN_H) {
+			drop_y = SCREEN_H - drop_h - 2;
+		}
+		if (drop_x < 0)
+			drop_x = 0;
+		if (drop_y < MENU_BAR_H)
+			drop_y = MENU_BAR_H;
+
+		if (x >= drop_x + 3 && x < drop_x + drop_w - 3) {
+			if (y >= drop_y + 3 && y < drop_y + 33) {
+				do_copy_screen();
+			} else if (y >= drop_y + 33 && y < drop_y + 63) {
+				do_paste();
+			} else if (y >= drop_y + 63 && y < drop_y + 93) {
+				do_copy_screen(); /* Select All = Copy */
+			} else if (y >= drop_y + 101 && y < drop_y + 131) {
+				do_save_screenshot();
+			}
+		}
+		context_menu_open = false;
+		return;
+	}
 
 	if (config_modal_open) {
 		bool dummy = false;
@@ -1573,7 +2016,6 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 						}
 						cx = 0;
 						cy = 0;
-						vram[cy][cx] = 0x00;
 						boot_sweep = true;
 						if (g_cpu) {
 							g_cpu->halted = true;
@@ -2407,6 +2849,29 @@ term_poll(void)
 			} else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
 				handle_mouse_event(&event.button);
 			}
+		}
+	}
+
+	bool can_paste = false;
+	if (g_bus) {
+		if (!(g_bus->pia.kbd_control & 0x80) &&
+		    g_bus->kbd_bounce_cycles == 0 && !io_has_buffered_key()) {
+			can_paste = true;
+		}
+	} else {
+		if (!io_has_buffered_key()) {
+			can_paste = true;
+		}
+	}
+
+	if (paste_len > 0 && buffered_key_sdl == 0 && can_paste) {
+		char c = paste_buf[paste_pos++];
+		paste_len--;
+		buffered_key_sdl = (uint8_t)(c | 0x80);
+		if (paste_len == 0) {
+			strncpy(status_text,
+			    "PASTE COMPLETE.",
+			    sizeof(status_text) - 1);
 		}
 	}
 

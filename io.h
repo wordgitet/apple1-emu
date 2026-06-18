@@ -32,6 +32,10 @@ io_set_welcome(const char *msg1, const char *msg2);
 bool
 io_reset_pending(void);
 
+// Check if a keyboard key is currently buffered
+bool
+io_has_buffered_key(void);
+
 // Reset keyboard buffer
 void
 io_reset(void);

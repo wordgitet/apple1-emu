@@ -64,3 +64,9 @@ io_reset(void)
 {
 	buffered_key = 0;
 }
+
+bool
+io_has_buffered_key(void)
+{
+	return buffered_key != 0;
+}
