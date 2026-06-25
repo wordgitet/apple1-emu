@@ -2840,18 +2840,27 @@ cpu_step(CPU *cpu)
 
 	/* 1. Check for hardware interrupts before instruction fetch.
 	 *
-	 * NMOS 6502 BRK/IRQ hijacking: if an IRQ arrives while the next
-	 * instruction is BRK ($00), the CPU fetches BRK's opcode byte but
-	 * uses the IRQ vector ($FFFE) and clears the B flag in the pushed
-	 * status register — exactly as a hardware IRQ would.  We detect
-	 * this by peeking at the next opcode before committing to either
-	 * path.
+	 * Real NMOS 6502 interrupt mechanism (per Visual6502 / NESdev):
+	 *
+	 * After the previous instruction completes, the CPU samples its
+	 * interrupt lines.  If an interrupt is pending it performs the
+	 * opcode fetch for the *next* instruction (cycle 1) but discards
+	 * the byte and forces $00 (BRK) into the instruction register
+	 * regardless of what was in memory.  The PC is NOT incremented
+	 * during this fetch, so when the ISR eventually RTIs, execution
+	 * resumes at exactly the preempted instruction's address.
+	 *
+	 * The "hijacking" term refers to a *different* edge case: an NMI
+	 * that arrives while a BRK/IRQ sequence is already mid-flight
+	 * (during the vector pull) takes over the vector — our 7-cycle
+	 * handler is atomic at the step level so we don't model that
+	 * sub-instruction race here.
+	 *
+	 * Either way: no peek at memory, no conditional pc++.
 	 */
 	if (cpu->nmi_pending) {
 		cpu->nmi_pending = false;
-		/* Consume BRK opcode byte if it is next (hijacking) */
-		if (read_byte(cpu, cpu->pc) == 0x00)
-			cpu->pc++;
+		read_byte(cpu, cpu->pc); /* cycle 1: fetch discarded, PC held */
 		push_word(cpu, cpu->pc);
 		push_byte(cpu, (cpu->p & ~FLAG_BREAK) | FLAG_UNUSED);
 		set_flag(cpu, FLAG_INTERRUPT, true);
@@ -2860,9 +2869,7 @@ cpu_step(CPU *cpu)
 	}
 	if (cpu->irq_pending && !(cpu->p & FLAG_INTERRUPT)) {
 		cpu->irq_pending = false;
-		/* Consume BRK opcode byte if it is next (hijacking) */
-		if (read_byte(cpu, cpu->pc) == 0x00)
-			cpu->pc++;
+		read_byte(cpu, cpu->pc); /* cycle 1: fetch discarded, PC held */
 		push_word(cpu, cpu->pc);
 		push_byte(cpu, (cpu->p & ~FLAG_BREAK) | FLAG_UNUSED);
 		set_flag(cpu, FLAG_INTERRUPT, true);
