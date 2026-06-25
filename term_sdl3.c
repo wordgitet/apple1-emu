@@ -1122,7 +1122,7 @@ handle_file_menu_action(int idx)
 	case 2: /* LOAD WOZMON */
 		load_rom_pick("Select Wozmon ROM",
 		    "*.rom *.bin",
-		    "WOZMON LOADED - RESETTING CPU",
+		    "WOZMON LOADED.",
 		    "ERROR: FAILED TO LOAD WOZMON ROM",
 		    load_wozmon_fn,
 		    NULL);
@@ -2163,7 +2163,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 				case 2: /* Reset */
 					reset_pending = true;
 					strncpy(status_text,
-					    "RESETTING CPU...",
+					    "CPU RESET.",
 					    sizeof(status_text) - 1);
 					break;
 				case 3: /* Clear screen */
@@ -2366,7 +2366,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 	if (x >= sx && x < sx + 115 && y >= 166 && y < 166 + 28) {
 		reset_pending = true;
 		strncpy(status_text,
-		    "RESETTING CPU...",
+		    "CPU RESET.",
 		    sizeof(status_text) - 1);
 		return;
 	}
@@ -2576,7 +2576,7 @@ handle_key_event(const SDL_KeyboardEvent *key)
 		if (sym == SDLK_R) {
 			reset_pending = true;
 			strncpy(status_text,
-			    "RESETTING CPU...",
+			    "CPU RESET.",
 			    sizeof(status_text) - 1);
 			return;
 		}
@@ -2841,7 +2841,25 @@ term_write(uint8_t val)
 void
 term_update(void)
 {
+	static char last_status_text[128] = "";
+	static uint64_t status_clear_ticks = 0;
 	uint64_t now = SDL_GetTicks();
+
+	if (strcmp(status_text, last_status_text) != 0) {
+		strcpy(last_status_text, status_text);
+		if (status_text[0] != '\0') {
+			status_clear_ticks = now + 3000;
+		} else {
+			status_clear_ticks = 0;
+		}
+	}
+
+	if (status_clear_ticks != 0 && now >= status_clear_ticks) {
+		status_text[0] = '\0';
+		last_status_text[0] = '\0';
+		status_clear_ticks = 0;
+	}
+
 	if (now - last_redraw_ms >= 16) {
 		render_gui();
 		if (term_debug_is_open()) {
