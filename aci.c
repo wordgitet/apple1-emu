@@ -91,7 +91,9 @@ aci_read(void *ctx, uint16_t addr, bool is_dummy)
 			aci->tape_active = true;
 		}
 		aci->last_read_cycle = aci->current_cycle;
-		return aci->input_level ? 0x80 : 0x00;
+		uint8_t result = aci->input_level ? 0x80 : 0x00;
+		aci_record_toggle(aci); /* C081 access also toggles output FF */
+		return result;
 	}
 
 	// Other $C000 - $C0FF addresses toggle ACI output level
