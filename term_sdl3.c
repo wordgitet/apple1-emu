@@ -875,9 +875,49 @@ draw_help_dropdown(void)
 
 /* ── FILE MENU ACTIONS ───────────────────────────────────────────────────── */
 
+#ifdef __APPLE__
+static void
+convert_ext_to_applescript(const char *ext, char *out_types, size_t max_len)
+{
+	out_types[0] = '\0';
+	if (!ext || strcmp(ext, "*.*") == 0) {
+		return;
+	}
+	size_t len = 0;
+	len += snprintf(out_types + len, max_len - len, "of type {");
+	const char *p = ext;
+	bool first = true;
+	while (*p) {
+		while (*p && (*p == ' ' || *p == '*')) {
+			p++;
+		}
+		if (!*p) break;
+		if (*p == '.') {
+			p++;
+		}
+		char type[32];
+		int t_idx = 0;
+		while (*p && *p != ' ' && t_idx < 31) {
+			type[t_idx++] = *p++;
+		}
+		type[t_idx] = '\0';
+		
+		if (!first) {
+			len += snprintf(out_types + len, max_len - len, ", ");
+		}
+		first = false;
+		len += snprintf(out_types + len, max_len - len, "\"%s\"", type);
+	}
+	len += snprintf(out_types + len, max_len - len, "}");
+}
+#endif
+
 static void
 trigger_sel_tape(void)
 {
+#ifdef __APPLE__
+	FILE *pipe = popen("osascript -e 'POSIX path of (choose file with prompt \"Select ACI Cassette Tape\" of type {\"aci\"})' 2>/dev/null", "r");
+#else
 	/* Try zenity first (GNOME), then kdialog (KDE) */
 	FILE *pipe = popen("zenity --file-selection"
 			   " --title='Select ACI Cassette Tape'"
@@ -886,6 +926,7 @@ trigger_sel_tape(void)
 			   " || kdialog --getopenfilename . '*.aci'"
 			   " 2>/dev/null",
 	    "r");
+#endif
 	if (pipe) {
 		char path[512] = { 0 };
 		if (fgets(path, sizeof(path), pipe)) {
@@ -953,6 +994,14 @@ prompt_hex_address(const char *title,
     uint16_t *out_val)
 {
 	char cmd[512];
+#ifdef __APPLE__
+	snprintf(cmd,
+	    sizeof(cmd),
+	    "osascript -e 'text returned of (display dialog \"%s\" default answer \"%s\" with title \"%s\")' 2>/dev/null",
+	    msg,
+	    default_val,
+	    title);
+#else
 	snprintf(cmd,
 	    sizeof(cmd),
 	    "zenity --entry --title='%s' --text='%s' --entry-text='%s' "
@@ -963,6 +1012,7 @@ prompt_hex_address(const char *title,
 	    default_val,
 	    msg,
 	    default_val);
+#endif
 	FILE *p = popen(cmd, "r");
 	if (!p)
 		return false;
@@ -1138,6 +1188,15 @@ pick_file_dialog(char *out_path,
     const char *ext)
 {
 	char cmd[512];
+#ifdef __APPLE__
+	char types_clause[256];
+	convert_ext_to_applescript(ext, types_clause, sizeof(types_clause));
+	snprintf(cmd,
+	    sizeof(cmd),
+	    "osascript -e 'POSIX path of (choose file with prompt \"%s\" %s)' 2>/dev/null",
+	    title,
+	    types_clause);
+#else
 	snprintf(cmd,
 	    sizeof(cmd),
 	    "zenity --file-selection --title='%s' --file-filter='%s | %s' "
@@ -1147,6 +1206,7 @@ pick_file_dialog(char *out_path,
 	    title,
 	    ext,
 	    ext);
+#endif
 	FILE *p = popen(cmd, "r");
 	if (!p)
 		return false;
@@ -1166,6 +1226,13 @@ pick_save_dialog(char *out_path,
     const char *ext)
 {
 	char cmd[512];
+#ifdef __APPLE__
+	(void)ext;
+	snprintf(cmd,
+	    sizeof(cmd),
+	    "osascript -e 'POSIX path of (choose file name with prompt \"%s\")' 2>/dev/null",
+	    title);
+#else
 	snprintf(cmd,
 	    sizeof(cmd),
 	    "zenity --file-selection --save --confirm-overwrite --title='%s' "
@@ -1176,6 +1243,7 @@ pick_save_dialog(char *out_path,
 	    title,
 	    ext,
 	    ext);
+#endif
 	FILE *p = popen(cmd, "r");
 	if (!p)
 		return false;
@@ -1192,6 +1260,13 @@ static void
 show_error_dialog(const char *title, const char *message)
 {
 	char cmd[1024];
+#ifdef __APPLE__
+	snprintf(cmd,
+	    sizeof(cmd),
+	    "osascript -e 'display dialog \"%s\" with title \"%s\" buttons {\"OK\"} default button \"OK\" with icon stop' 2>/dev/null",
+	    message,
+	    title);
+#else
 	snprintf(cmd,
 	    sizeof(cmd),
 	    "zenity --error --title='%s' --text='%s' --no-markup 2>/dev/null "
@@ -1200,6 +1275,7 @@ show_error_dialog(const char *title, const char *message)
 	    message,
 	    title,
 	    message);
+#endif
 	FILE *p = popen(cmd, "r");
 	if (p) {
 		pclose(p);
@@ -1252,10 +1328,14 @@ do_copy_screen(void)
 	 * Error is shown in the status bar, NOT on stdout/stderr.
 	 */
 	bool ok = false;
+#ifdef __APPLE__
+	const char *tools[] = { "pbcopy", NULL };
+#else
 	const char *tools[] = { "xclip -selection clipboard",
 		"xsel --clipboard --input",
 		"wl-copy",
 		NULL };
+#endif
 	for (int i = 0; tools[i] && !ok; i++) {
 		FILE *p = popen(tools[i], "w");
 		if (p) {
@@ -1281,10 +1361,14 @@ do_copy_screen(void)
 static char *
 get_system_clipboard(bool *success)
 {
+#ifdef __APPLE__
+	const char *tools[] = { "pbpaste", NULL };
+#else
 	const char *tools[] = { "xclip -selection clipboard -o",
 		"xsel --clipboard --output",
 		"wl-paste -n",
 		NULL };
+#endif
 	static char clip_buf[65536];
 	*success = false;
 	for (int i = 0; tools[i]; i++) {

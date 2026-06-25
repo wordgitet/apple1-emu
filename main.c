@@ -92,6 +92,17 @@ cleanup_cards(Bus *bus, const char *save_tape_path)
 static void
 get_xdg_config_path(char *out_path, size_t max_len)
 {
+#ifdef __APPLE__
+	const char *home = getenv("HOME");
+	if (home && home[0] != '\0') {
+		snprintf(out_path,
+		    max_len,
+		    "%s/Library/Application Support/apple1/apple1.conf",
+		    home);
+	} else {
+		snprintf(out_path, max_len, "apple1.conf");
+	}
+#else
 	const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
 	if (xdg_config_home && xdg_config_home[0] != '\0') {
 		snprintf(out_path,
@@ -110,6 +121,7 @@ get_xdg_config_path(char *out_path, size_t max_len)
 			snprintf(out_path, max_len, "apple1.conf");
 		}
 	}
+#endif
 }
 
 static void
