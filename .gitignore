@@ -34,3 +34,28 @@ recorded_tape.aci
 # using as inspiration
 
 POM1/
+
+# Autotools / build filth
+/Makefile
+/Makefile.in
+/aclocal.m4
+/autom4te.cache/
+/configure
+/compile
+/depcomp
+/install-sh
+/missing
+/test-driver
+/config.status
+/config.log
+.deps/
+.dirstamp
+*.log
+*.trs
+
+# Test binaries
+/test_cpu
+/test_aci
+/test_dualram
+/test_bus
+

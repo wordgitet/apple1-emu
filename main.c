@@ -725,12 +725,6 @@ main(int argc, char *argv[])
 						       "PASS\n");
 						bus_free(&bus);
 						return 0;
-					} else if (cpu.pc == 0x0324) {
-						printf("Wolfgang Lorenz "
-						       "illegal opcode test: "
-						       "PASS\n");
-						bus_free(&bus);
-						return 0;
 					} else {
 						fprintf(stderr,
 						    "FAIL: CPU trapped at "
