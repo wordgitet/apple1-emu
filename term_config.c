@@ -622,29 +622,31 @@ term_config_modal_render(SDL_Renderer *rend)
 	    my);
 	draw_config_button(MODAL_X + 400, bby, 100, 34, "CLOSE", RED, mx, my);
 
-	/* Status Message */
+	/* Status message OR field hover hint — shown in the same area */
 	if (SDL_GetTicks() < config_status_until && config_status_msg[0]) {
+		/* Active status takes priority over the hover hint */
 		draw_text_2x(renderer,
 		    config_status_msg,
-		    MODAL_X + 510,
-		    bby + 8,
+		    MODAL_X + 20,
+		    MODAL_Y + MODAL_H - 95,
 		    AMBER);
-	}
-
-	/* Hint for hovered field */
-	for (int idx = 0; idx < VISIBLE_FIELDS; idx++) {
-		int i = config_scroll_offset + idx;
-		if (i >= NF)
-			break;
-		int fy = MODAL_Y + SB_Y + idx * FIELD_H;
-		if (my >= fy && my < fy + FIELD_H - 2 && mx >= MODAL_X + SB_X &&
-		    mx < MODAL_X + SB_X + FIELD_W) {
-			draw_text_2x(renderer,
-			    fields[i].hint,
-			    MODAL_X + 20,
-			    MODAL_Y + MODAL_H - 95,
-			    DIM);
-			break;
+	} else {
+		/* Hint for hovered field */
+		for (int idx = 0; idx < VISIBLE_FIELDS; idx++) {
+			int i = config_scroll_offset + idx;
+			if (i >= NF)
+				break;
+			int fy = MODAL_Y + SB_Y + idx * FIELD_H;
+			if (my >= fy && my < fy + FIELD_H - 2 &&
+			    mx >= MODAL_X + SB_X &&
+			    mx < MODAL_X + SB_X + FIELD_W) {
+				draw_text_2x(renderer,
+				    fields[i].hint,
+				    MODAL_X + 20,
+				    MODAL_Y + MODAL_H - 95,
+				    DIM);
+				break;
+			}
 		}
 	}
 }
@@ -866,7 +868,7 @@ term_run_config_wizard(void)
 	config_modal_open = true;
 
 	/* Banner message: wizard mode — no way out without saving */
-	set_config_status("NO CONFIG FOUND — FILL IN SETTINGS AND CLICK SAVE",
+	set_config_status("NO CONFIG FOUND! FILL IN SETTINGS AND CLICK SAVE",
 	    0xFFFFFFFF);
 	config_status_until = UINT64_MAX;
 

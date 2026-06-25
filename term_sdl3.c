@@ -1117,7 +1117,7 @@ handle_file_menu_action(int idx)
 	case 2: /* LOAD WOZMON */
 		load_rom_pick("Select Wozmon ROM",
 		    "*.rom *.bin",
-		    "WOZMON LOADED — RESETTING CPU",
+		    "WOZMON LOADED - RESETTING CPU",
 		    "ERROR: FAILED TO LOAD WOZMON ROM",
 		    load_wozmon_fn,
 		    NULL);
@@ -1518,7 +1518,7 @@ do_save_screenshot(void)
 		if (unknown_ext) {
 			snprintf(status_text,
 			    sizeof(status_text),
-			    "UNKNOWN EXT — SAVED AS BMP: %s",
+			    "UNKNOWN EXT - SAVED AS BMP: %s",
 			    base);
 		} else {
 			snprintf(status_text,
