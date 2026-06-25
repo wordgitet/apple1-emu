@@ -891,7 +891,8 @@ convert_ext_to_applescript(const char *ext, char *out_types, size_t max_len)
 		while (*p && (*p == ' ' || *p == '*')) {
 			p++;
 		}
-		if (!*p) break;
+		if (!*p)
+			break;
 		if (*p == '.') {
 			p++;
 		}
@@ -901,7 +902,7 @@ convert_ext_to_applescript(const char *ext, char *out_types, size_t max_len)
 			type[t_idx++] = *p++;
 		}
 		type[t_idx] = '\0';
-		
+
 		if (!first) {
 			len += snprintf(out_types + len, max_len - len, ", ");
 		}
@@ -916,7 +917,10 @@ static void
 trigger_sel_tape(void)
 {
 #ifdef __APPLE__
-	FILE *pipe = popen("osascript -e 'POSIX path of (choose file with prompt \"Select ACI Cassette Tape\" of type {\"aci\"})' 2>/dev/null", "r");
+	FILE *pipe = popen("osascript -e 'POSIX path of (choose file with "
+			   "prompt \"Select ACI Cassette Tape\" of type "
+			   "{\"aci\"})' 2>/dev/null",
+	    "r");
 #else
 	/* Try zenity first (GNOME), then kdialog (KDE) */
 	FILE *pipe = popen("zenity --file-selection"
@@ -997,7 +1001,8 @@ prompt_hex_address(const char *title,
 #ifdef __APPLE__
 	snprintf(cmd,
 	    sizeof(cmd),
-	    "osascript -e 'text returned of (display dialog \"%s\" default answer \"%s\" with title \"%s\")' 2>/dev/null",
+	    "osascript -e 'text returned of (display dialog \"%s\" default "
+	    "answer \"%s\" with title \"%s\")' 2>/dev/null",
 	    msg,
 	    default_val,
 	    title);
@@ -1193,7 +1198,8 @@ pick_file_dialog(char *out_path,
 	convert_ext_to_applescript(ext, types_clause, sizeof(types_clause));
 	snprintf(cmd,
 	    sizeof(cmd),
-	    "osascript -e 'POSIX path of (choose file with prompt \"%s\" %s)' 2>/dev/null",
+	    "osascript -e 'POSIX path of (choose file with prompt \"%s\" %s)' "
+	    "2>/dev/null",
 	    title,
 	    types_clause);
 #else
@@ -1230,7 +1236,8 @@ pick_save_dialog(char *out_path,
 	(void)ext;
 	snprintf(cmd,
 	    sizeof(cmd),
-	    "osascript -e 'POSIX path of (choose file name with prompt \"%s\")' 2>/dev/null",
+	    "osascript -e 'POSIX path of (choose file name with prompt "
+	    "\"%s\")' 2>/dev/null",
 	    title);
 #else
 	snprintf(cmd,
@@ -1263,7 +1270,8 @@ show_error_dialog(const char *title, const char *message)
 #ifdef __APPLE__
 	snprintf(cmd,
 	    sizeof(cmd),
-	    "osascript -e 'display dialog \"%s\" with title \"%s\" buttons {\"OK\"} default button \"OK\" with icon stop' 2>/dev/null",
+	    "osascript -e 'display dialog \"%s\" with title \"%s\" buttons "
+	    "{\"OK\"} default button \"OK\" with icon stop' 2>/dev/null",
 	    message,
 	    title);
 #else
@@ -2925,17 +2933,21 @@ term_poll(void)
 						const char *t = event.text.text;
 						while (*t) {
 							char c = *t++;
-							if (c >= 'a' && c <= 'z')
+							if (c >= 'a' &&
+							    c <= 'z')
 								c -= 32;
 							buffered_key_sdl =
 							    (uint8_t)(c | 0x80);
 						}
 					}
-				} else if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+				} else if (event.type ==
+				    SDL_EVENT_MOUSE_WHEEL) {
 					if (config_modal_open) {
-						term_config_scroll(-(int)event.wheel.y);
+						term_config_scroll(
+						    -(int)event.wheel.y);
 					}
-				} else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+				} else if (event.type ==
+				    SDL_EVENT_MOUSE_BUTTON_DOWN) {
 					handle_mouse_event(&event.button);
 				}
 			}
