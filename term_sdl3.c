@@ -2890,48 +2890,54 @@ get_event_window(const SDL_Event *ev)
 uint8_t
 term_poll(void)
 {
-	term_update();
+	static uint64_t last_poll_ms = 0;
+	uint64_t now = SDL_GetTicks();
 
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		SDL_Window *win = get_event_window(&event);
-		if (term_debug_is_window(win)) {
-			term_debug_handle_event(&event);
-		} else if (term_trace_is_window(win)) {
-			term_trace_handle_event(&event);
-		} else {
-			if (event.type == SDL_EVENT_QUIT) {
-				exit(0);
-			} else if (event.type ==
-			    SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
-				exit(0);
-			} else if (event.type == SDL_EVENT_KEY_DOWN) {
-				if (config_modal_open) {
-					term_config_modal_handle_key(
-					    &event.key);
-				} else {
-					handle_key_event(&event.key);
-				}
-			} else if (event.type == SDL_EVENT_TEXT_INPUT) {
-				if (config_modal_open) {
-					term_config_modal_handle_text_input(
-					    event.text.text);
-				} else {
-					const char *t = event.text.text;
-					while (*t) {
-						char c = *t++;
-						if (c >= 'a' && c <= 'z')
-							c -= 32;
-						buffered_key_sdl =
-						    (uint8_t)(c | 0x80);
+	if (now - last_poll_ms >= 5 || now < last_poll_ms) {
+		last_poll_ms = now;
+		term_update();
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event)) {
+			SDL_Window *win = get_event_window(&event);
+			if (term_debug_is_window(win)) {
+				term_debug_handle_event(&event);
+			} else if (term_trace_is_window(win)) {
+				term_trace_handle_event(&event);
+			} else {
+				if (event.type == SDL_EVENT_QUIT) {
+					exit(0);
+				} else if (event.type ==
+				    SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+					exit(0);
+				} else if (event.type == SDL_EVENT_KEY_DOWN) {
+					if (config_modal_open) {
+						term_config_modal_handle_key(
+						    &event.key);
+					} else {
+						handle_key_event(&event.key);
 					}
+				} else if (event.type == SDL_EVENT_TEXT_INPUT) {
+					if (config_modal_open) {
+						term_config_modal_handle_text_input(
+						    event.text.text);
+					} else {
+						const char *t = event.text.text;
+						while (*t) {
+							char c = *t++;
+							if (c >= 'a' && c <= 'z')
+								c -= 32;
+							buffered_key_sdl =
+							    (uint8_t)(c | 0x80);
+						}
+					}
+				} else if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+					if (config_modal_open) {
+						term_config_scroll(-(int)event.wheel.y);
+					}
+				} else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+					handle_mouse_event(&event.button);
 				}
-			} else if (event.type == SDL_EVENT_MOUSE_WHEEL) {
-				if (config_modal_open) {
-					term_config_scroll(-(int)event.wheel.y);
-				}
-			} else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-				handle_mouse_event(&event.button);
 			}
 		}
 	}
