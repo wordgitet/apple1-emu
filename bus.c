@@ -569,8 +569,8 @@ bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		}
 	}
 
-	/* Fire watchpoint callback for real (non-phantom) writes only */
-	if (!is_dummy && bus->access_cb)
+	/* Fire watchpoint callback for real (non-phantom) writes only (unless flat_bus is enabled) */
+	if ((!is_dummy || bus->opts.flat_bus) && bus->access_cb)
 		bus->access_cb(bus->access_cb_ctx, address, true, value);
 }
 
