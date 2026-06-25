@@ -280,50 +280,59 @@ do_branch(CPU *cpu, bool cond)
 static void
 adc_bcd(CPU *cpu, uint8_t m)
 {
-	int c = (cpu->p & FLAG_CARRY) ? 1 : 0;
-	int bin_sum = cpu->a + m + c;
-	int ln = (cpu->a & 0x0F) + (m & 0x0F) + c;
-	int hn = (cpu->a >> 4) + (m >> 4);
+	uint8_t carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	uint8_t bin_result = cpu->a + m + carry;
+	set_flag(cpu, FLAG_ZERO, bin_result == 0);
 
-	if (ln > 9) {
-		ln -= 10;
-		hn += 1;
+	uint8_t low = (cpu->a & 0x0F) + (m & 0x0F) + carry;
+	uint8_t high = (cpu->a >> 4) + (m >> 4);
+	if (low > 9) {
+		low -= 10;
+		high++;
 	}
-	if (hn > 9) {
-		hn -= 10;
+
+	uint8_t result = (high << 4) | (low & 0x0F);
+	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW, (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
+
+	if (high > 9) {
+		result -= 0xA0; // 10 * 16
 		set_flag(cpu, FLAG_CARRY, true);
 	} else {
 		set_flag(cpu, FLAG_CARRY, false);
 	}
-	set_flag(cpu, FLAG_ZERO, (bin_sum & 0xFF) == 0);
-	set_flag(cpu, FLAG_NEGATIVE, (bin_sum & 0x80) != 0);
-	set_flag(cpu,
-	    FLAG_OVERFLOW,
-	    (~(cpu->a ^ m) & (cpu->a ^ bin_sum) & 0x80) != 0);
-	cpu->a = ((hn & 0x0F) << 4) | (ln & 0x0F);
+
+	cpu->a = result;
 }
 
 static void
 sbc_bcd(CPU *cpu, uint8_t m)
 {
-	int c = (cpu->p & FLAG_CARRY) ? 1 : 0;
-	int bin_diff = cpu->a - m - (1 - c);
-	int ln = (cpu->a & 0x0F) - (m & 0x0F) - (1 - c);
-	int hn = (cpu->a >> 4) - (m >> 4);
+	uint8_t carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	uint8_t bin_result = cpu->a + (m ^ 0xFF) + carry;
+	set_flag(cpu, FLAG_ZERO, bin_result == 0);
 
-	if (ln < 0) {
-		ln += 10;
-		hn -= 1;
+	int8_t carry_inv = (carry == 0) ? 1 : 0;
+	int8_t low = (int8_t)(cpu->a & 0x0F) - (int8_t)(m & 0x0F) - carry_inv;
+	int8_t high = (int8_t)(cpu->a >> 4) - (int8_t)(m >> 4);
+
+	if (low < 0) {
+		low += 10;
+		high--;
 	}
-	if (hn < 0)
-		hn += 10;
-	set_flag(cpu, FLAG_CARRY, bin_diff >= 0);
-	set_flag(cpu, FLAG_ZERO, (bin_diff & 0xFF) == 0);
-	set_flag(cpu, FLAG_NEGATIVE, (bin_diff & 0x80) != 0);
-	set_flag(cpu,
-	    FLAG_OVERFLOW,
-	    ((cpu->a ^ m) & (cpu->a ^ bin_diff) & 0x80) != 0);
-	cpu->a = ((hn & 0x0F) << 4) | (ln & 0x0F);
+
+	uint8_t result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
+	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW, ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
+
+	if (high < 0) {
+		result += 0xA0; // 10 * 16
+		set_flag(cpu, FLAG_CARRY, false);
+	} else {
+		set_flag(cpu, FLAG_CARRY, true);
+	}
+
+	cpu->a = result;
 }
 
 static void
@@ -2364,13 +2373,31 @@ static void
 op_arr(CPU *cpu)
 {
 	uint8_t m = read_byte(cpu, cpu->pc++);
-	uint8_t tmp = cpu->a & m;
+	uint8_t value = cpu->a & m;
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	uint8_t result = (value >> 1) | (old_c << 7);
 
-	cpu->a = (tmp >> 1) | (old_c << 7);
-	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x40) != 0);
-	set_flag(cpu, FLAG_OVERFLOW, ((cpu->a >> 6) ^ (cpu->a >> 5)) & 1);
-	update_nz(cpu, cpu->a);
+	// Compute binary flags first
+	set_flag(cpu, FLAG_CARRY, (result & 0x40) != 0);
+	set_flag(cpu, FLAG_ZERO, result == 0);
+	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW, ((result >> 6) ^ (result >> 5)) & 1);
+
+	if (cpu->p & FLAG_DECIMAL) {
+		uint8_t adjusted = result;
+		if (((value & 0x0F) + (value & 0x01)) > 5) {
+			adjusted = (adjusted & 0xF0) | ((adjusted + 0x06) & 0x0F);
+		}
+		if (((value & 0xF0) + (value & 0x10)) > 0x50) {
+			adjusted += 0x60;
+			set_flag(cpu, FLAG_CARRY, true);
+		} else {
+			set_flag(cpu, FLAG_CARRY, false);
+		}
+		cpu->a = adjusted;
+	} else {
+		cpu->a = result;
+	}
 	cpu->last_cycles = 2;
 }
 

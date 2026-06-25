@@ -736,6 +736,9 @@ test_cpu_breakpoint_smoke(void)
 static void
 test_cpu_watchpoint_smoke(void);
 
+static void
+test_bruce_clark_decimal(void);
+
 int
 main(void)
 {
@@ -762,6 +765,9 @@ main(void)
 
 	test_cpu_watchpoint_smoke();
 	printf("Test PASS: CPU Watchpoint Smoke\n");
+
+	test_bruce_clark_decimal();
+	printf("Test PASS: Bruce Clark Decimal Test\n");
 
 	printf("\nAll CPU tests passed successfully!\n");
 	return 0;
@@ -840,4 +846,47 @@ test_cpu_watchpoint_smoke(void)
 
 		bus_free(&bus);
 	}
+}
+
+static void
+test_bruce_clark_decimal(void)
+{
+	Bus bus;
+	if (!bus_init(&bus, 65536)) {
+		fprintf(stderr, "Failed to init 64KB bus for Bruce Clark Decimal Test\n");
+		exit(1);
+	}
+	bus.opts.flat_bus = true;
+
+	if (!bus_load_bin(&bus, "tests/6502_decimal_test.bin", 0x0400)) {
+		fprintf(stderr, "Failed to load tests/6502_decimal_test.bin\n");
+		exit(1);
+	}
+
+	CPU cpu;
+	cpu_init(&cpu, &bus);
+	cpu.halted = false;
+	cpu.pc = 0x0400;
+
+	uint16_t prev_pc = 0;
+	int limit = 100000000;
+	int steps = 0;
+	while (steps < limit) {
+		cpu_step(&cpu);
+		steps++;
+		if (cpu.pc == prev_pc) {
+			break;
+		}
+		prev_pc = cpu.pc;
+	}
+
+	uint8_t error = bus.ram[0x000B];
+	if (error != 0) {
+		fprintf(stderr, "Bruce Clark Decimal Test FAILED: ERROR = %d\n", error);
+		fprintf(stderr, "N1=%02X, N2=%02X, actual=%02X, predicted=%02X\n",
+		    bus.ram[0x0000], bus.ram[0x0001], bus.ram[0x0004], bus.ram[0x0006]);
+		exit(1);
+	}
+
+	bus_free(&bus);
 }
