@@ -529,6 +529,7 @@ op_asl_zp(CPU *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t <<= 1;
 	write_byte(cpu, a, t);
@@ -540,6 +541,7 @@ op_asl_zpx(CPU *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t <<= 1;
 	write_byte(cpu, a, t);
@@ -551,6 +553,7 @@ op_asl_abs(CPU *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t <<= 1;
 	write_byte(cpu, a, t);
@@ -563,6 +566,7 @@ op_asl_absx(CPU *cpu)
 	bool px = false;
 	uint16_t a = addr_absx(cpu, &px);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t <<= 1;
 	write_byte(cpu, a, t);
@@ -816,27 +820,36 @@ static void
 op_dec_zp(CPU *cpu)
 {
 	uint16_t a = addr_zp(cpu);
-	uint8_t t = read_byte(cpu, a) - 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig - 1);
+	update_nz(cpu, orig - 1);
 	cpu->last_cycles = 5;
 }
 static void
 op_dec_zpx(CPU *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
-	uint8_t t = read_byte(cpu, a) - 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig - 1);
+	update_nz(cpu, orig - 1);
 	cpu->last_cycles = 6;
 }
 static void
 op_dec_abs(CPU *cpu)
 {
 	uint16_t a = addr_abs(cpu);
-	uint8_t t = read_byte(cpu, a) - 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig - 1);
+	update_nz(cpu, orig - 1);
 	cpu->last_cycles = 6;
 }
 static void
@@ -844,9 +857,12 @@ op_dec_absx(CPU *cpu)
 {
 	bool px = false;
 	uint16_t a = addr_absx(cpu, &px);
-	uint8_t t = read_byte(cpu, a) - 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig - 1);
+	update_nz(cpu, orig - 1);
 	cpu->last_cycles = 7;
 }
 
@@ -932,27 +948,36 @@ static void
 op_inc_zp(CPU *cpu)
 {
 	uint16_t a = addr_zp(cpu);
-	uint8_t t = read_byte(cpu, a) + 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig + 1);
+	update_nz(cpu, orig + 1);
 	cpu->last_cycles = 5;
 }
 static void
 op_inc_zpx(CPU *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
-	uint8_t t = read_byte(cpu, a) + 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig + 1);
+	update_nz(cpu, orig + 1);
 	cpu->last_cycles = 6;
 }
 static void
 op_inc_abs(CPU *cpu)
 {
 	uint16_t a = addr_abs(cpu);
-	uint8_t t = read_byte(cpu, a) + 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig + 1);
+	update_nz(cpu, orig + 1);
 	cpu->last_cycles = 6;
 }
 static void
@@ -960,9 +985,12 @@ op_inc_absx(CPU *cpu)
 {
 	bool px = false;
 	uint16_t a = addr_absx(cpu, &px);
-	uint8_t t = read_byte(cpu, a) + 1;
-	write_byte(cpu, a, t);
-	update_nz(cpu, t);
+	uint8_t orig = read_byte(cpu, a);
+	write_byte_dummy(cpu,
+	    a,
+	    orig); /* NMOS dummy write of unmodified value */
+	write_byte(cpu, a, orig + 1);
+	update_nz(cpu, orig + 1);
 	cpu->last_cycles = 7;
 }
 
@@ -1170,6 +1198,7 @@ op_lsr_zp(CPU *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t >>= 1;
 	write_byte(cpu, a, t);
@@ -1181,6 +1210,7 @@ op_lsr_zpx(CPU *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t >>= 1;
 	write_byte(cpu, a, t);
@@ -1192,6 +1222,7 @@ op_lsr_abs(CPU *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t >>= 1;
 	write_byte(cpu, a, t);
@@ -1204,6 +1235,7 @@ op_lsr_absx(CPU *cpu)
 	bool px = false;
 	uint16_t a = addr_absx(cpu, &px);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t >>= 1;
 	write_byte(cpu, a, t);
@@ -1321,6 +1353,7 @@ op_rol_zp(CPU *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
@@ -1333,6 +1366,7 @@ op_rol_zpx(CPU *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
@@ -1345,6 +1379,7 @@ op_rol_abs(CPU *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
@@ -1358,6 +1393,7 @@ op_rol_absx(CPU *cpu)
 	bool px = false;
 	uint16_t a = addr_absx(cpu, &px);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
@@ -1381,6 +1417,7 @@ op_ror_zp(CPU *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
@@ -1393,6 +1430,7 @@ op_ror_zpx(CPU *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
@@ -1405,6 +1443,7 @@ op_ror_abs(CPU *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
@@ -1418,6 +1457,7 @@ op_ror_absx(CPU *cpu)
 	bool px = false;
 	uint16_t a = addr_absx(cpu, &px);
 	uint8_t t = read_byte(cpu, a);
+	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
@@ -2366,262 +2406,262 @@ op_usbc(CPU *cpu)
 
 static const opcode_fn dispatch[256] = {
 	/* 0x00 */ [0x00] = op_brk,
-	/* 0x01 */[0x01] = op_ora_izx,
-	/* 0x02 */[0x02] = op_jam,
-	/* 0x03 */[0x03] = op_slo_izx,
-	/* 0x04 */[0x04] = op_nop_zp,
-	/* 0x05 */[0x05] = op_ora_zp,
-	/* 0x06 */[0x06] = op_asl_zp,
-	/* 0x07 */[0x07] = op_slo_zp,
-	/* 0x08 */[0x08] = op_php,
-	/* 0x09 */[0x09] = op_ora_imm,
-	/* 0x0A */[0x0A] = op_asl_acc,
-	/* 0x0B */[0x0B] = op_anc,
-	/* 0x0C */[0x0C] = op_nop_abs,
-	/* 0x0D */[0x0D] = op_ora_abs,
-	/* 0x0E */[0x0E] = op_asl_abs,
-	/* 0x0F */[0x0F] = op_slo_abs,
-	/* 0x10 */[0x10] = op_bpl,
-	/* 0x11 */[0x11] = op_ora_izy,
-	/* 0x12 */[0x12] = op_jam,
-	/* 0x13 */[0x13] = op_slo_izy,
-	/* 0x14 */[0x14] = op_nop_zpx,
-	/* 0x15 */[0x15] = op_ora_zpx,
-	/* 0x16 */[0x16] = op_asl_zpx,
-	/* 0x17 */[0x17] = op_slo_zpx,
-	/* 0x18 */[0x18] = op_clc,
-	/* 0x19 */[0x19] = op_ora_absy,
-	/* 0x1A */[0x1A] = op_nop_imp,
-	/* 0x1B */[0x1B] = op_slo_absy,
-	/* 0x1C */[0x1C] = op_nop_absx,
-	/* 0x1D */[0x1D] = op_ora_absx,
-	/* 0x1E */[0x1E] = op_asl_absx,
-	/* 0x1F */[0x1F] = op_slo_absx,
-	/* 0x20 */[0x20] = op_jsr,
-	/* 0x21 */[0x21] = op_and_izx,
-	/* 0x22 */[0x22] = op_jam,
-	/* 0x23 */[0x23] = op_rla_izx,
-	/* 0x24 */[0x24] = op_bit_zp,
-	/* 0x25 */[0x25] = op_and_zp,
-	/* 0x26 */[0x26] = op_rol_zp,
-	/* 0x27 */[0x27] = op_rla_zp,
-	/* 0x28 */[0x28] = op_plp,
-	/* 0x29 */[0x29] = op_and_imm,
-	/* 0x2A */[0x2A] = op_rol_acc,
-	/* 0x2B */[0x2B] = op_anc,
-	/* 0x2C */[0x2C] = op_bit_abs,
-	/* 0x2D */[0x2D] = op_and_abs,
-	/* 0x2E */[0x2E] = op_rol_abs,
-	/* 0x2F */[0x2F] = op_rla_abs,
-	/* 0x30 */[0x30] = op_bmi,
-	/* 0x31 */[0x31] = op_and_izy,
-	/* 0x32 */[0x32] = op_jam,
-	/* 0x33 */[0x33] = op_rla_izy,
-	/* 0x34 */[0x34] = op_nop_zpx,
-	/* 0x35 */[0x35] = op_and_zpx,
-	/* 0x36 */[0x36] = op_rol_zpx,
-	/* 0x37 */[0x37] = op_rla_zpx,
-	/* 0x38 */[0x38] = op_sec,
-	/* 0x39 */[0x39] = op_and_absy,
-	/* 0x3A */[0x3A] = op_nop_imp,
-	/* 0x3B */[0x3B] = op_rla_absy,
-	/* 0x3C */[0x3C] = op_nop_absx,
-	/* 0x3D */[0x3D] = op_and_absx,
-	/* 0x3E */[0x3E] = op_rol_absx,
-	/* 0x3F */[0x3F] = op_rla_absx,
-	/* 0x40 */[0x40] = op_rti,
-	/* 0x41 */[0x41] = op_eor_izx,
-	/* 0x42 */[0x42] = op_jam,
-	/* 0x43 */[0x43] = op_sre_izx,
-	/* 0x44 */[0x44] = op_nop_zp,
-	/* 0x45 */[0x45] = op_eor_zp,
-	/* 0x46 */[0x46] = op_lsr_zp,
-	/* 0x47 */[0x47] = op_sre_zp,
-	/* 0x48 */[0x48] = op_pha,
-	/* 0x49 */[0x49] = op_eor_imm,
-	/* 0x4A */[0x4A] = op_lsr_acc,
-	/* 0x4B */[0x4B] = op_alr,
-	/* 0x4C */[0x4C] = op_jmp_abs,
-	/* 0x4D */[0x4D] = op_eor_abs,
-	/* 0x4E */[0x4E] = op_lsr_abs,
-	/* 0x4F */[0x4F] = op_sre_abs,
-	/* 0x50 */[0x50] = op_bvc,
-	/* 0x51 */[0x51] = op_eor_izy,
-	/* 0x52 */[0x52] = op_jam,
-	/* 0x53 */[0x53] = op_sre_izy,
-	/* 0x54 */[0x54] = op_nop_zpx,
-	/* 0x55 */[0x55] = op_eor_zpx,
-	/* 0x56 */[0x56] = op_lsr_zpx,
-	/* 0x57 */[0x57] = op_sre_zpx,
-	/* 0x58 */[0x58] = op_cli,
-	/* 0x59 */[0x59] = op_eor_absy,
-	/* 0x5A */[0x5A] = op_nop_imp,
-	/* 0x5B */[0x5B] = op_sre_absy,
-	/* 0x5C */[0x5C] = op_nop_absx,
-	/* 0x5D */[0x5D] = op_eor_absx,
-	/* 0x5E */[0x5E] = op_lsr_absx,
-	/* 0x5F */[0x5F] = op_sre_absx,
-	/* 0x60 */[0x60] = op_rts,
-	/* 0x61 */[0x61] = op_adc_izx,
-	/* 0x62 */[0x62] = op_jam,
-	/* 0x63 */[0x63] = op_rra_izx,
-	/* 0x64 */[0x64] = op_nop_zp,
-	/* 0x65 */[0x65] = op_adc_zp,
-	/* 0x66 */[0x66] = op_ror_zp,
-	/* 0x67 */[0x67] = op_rra_zp,
-	/* 0x68 */[0x68] = op_pla,
-	/* 0x69 */[0x69] = op_adc_imm,
-	/* 0x6A */[0x6A] = op_ror_acc,
-	/* 0x6B */[0x6B] = op_arr,
-	/* 0x6C */[0x6C] = op_jmp_ind,
-	/* 0x6D */[0x6D] = op_adc_abs,
-	/* 0x6E */[0x6E] = op_ror_abs,
-	/* 0x6F */[0x6F] = op_rra_abs,
-	/* 0x70 */[0x70] = op_bvs,
-	/* 0x71 */[0x71] = op_adc_izy,
-	/* 0x72 */[0x72] = op_jam,
-	/* 0x73 */[0x73] = op_rra_izy,
-	/* 0x74 */[0x74] = op_nop_zpx,
-	/* 0x75 */[0x75] = op_adc_zpx,
-	/* 0x76 */[0x76] = op_ror_zpx,
-	/* 0x77 */[0x77] = op_rra_zpx,
-	/* 0x78 */[0x78] = op_sei,
-	/* 0x79 */[0x79] = op_adc_absy,
-	/* 0x7A */[0x7A] = op_nop_imp,
-	/* 0x7B */[0x7B] = op_rra_absy,
-	/* 0x7C */[0x7C] = op_nop_absx,
-	/* 0x7D */[0x7D] = op_adc_absx,
-	/* 0x7E */[0x7E] = op_ror_absx,
-	/* 0x7F */[0x7F] = op_rra_absx,
-	/* 0x80 */[0x80] = op_skb,
-	/* 0x81 */[0x81] = op_sta_izx,
-	/* 0x82 */[0x82] = op_skb,
-	/* 0x83 */[0x83] = op_sax_izx,
-	/* 0x84 */[0x84] = op_sty_zp,
-	/* 0x85 */[0x85] = op_sta_zp,
-	/* 0x86 */[0x86] = op_stx_zp,
-	/* 0x87 */[0x87] = op_sax_zp,
-	/* 0x88 */[0x88] = op_dey,
-	/* 0x89 */[0x89] = op_skb,
-	/* 0x8A */[0x8A] = op_txa,
-	/* 0x8B */[0x8B] = op_xaa,
-	/* 0x8C */[0x8C] = op_sty_abs,
-	/* 0x8D */[0x8D] = op_sta_abs,
-	/* 0x8E */[0x8E] = op_stx_abs,
-	/* 0x8F */[0x8F] = op_sax_abs,
-	/* 0x90 */[0x90] = op_bcc,
-	/* 0x91 */[0x91] = op_sta_izy,
-	/* 0x92 */[0x92] = op_jam,
-	/* 0x93 */[0x93] = op_ahx_izy,
-	/* 0x94 */[0x94] = op_sty_zpx,
-	/* 0x95 */[0x95] = op_sta_zpx,
-	/* 0x96 */[0x96] = op_stx_zpy,
-	/* 0x97 */[0x97] = op_sax_zpy,
-	/* 0x98 */[0x98] = op_tya,
-	/* 0x99 */[0x99] = op_sta_absy,
-	/* 0x9A */[0x9A] = op_txs,
-	/* 0x9B */[0x9B] = op_tas,
-	/* 0x9C */[0x9C] = op_shy,
-	/* 0x9D */[0x9D] = op_sta_absx,
-	/* 0x9E */[0x9E] = op_shx,
-	/* 0x9F */[0x9F] = op_ahx_absy,
-	/* 0xA0 */[0xA0] = op_ldy_imm,
-	/* 0xA1 */[0xA1] = op_lda_izx,
-	/* 0xA2 */[0xA2] = op_ldx_imm,
-	/* 0xA3 */[0xA3] = op_lax_izx,
-	/* 0xA4 */[0xA4] = op_ldy_zp,
-	/* 0xA5 */[0xA5] = op_lda_zp,
-	/* 0xA6 */[0xA6] = op_ldx_zp,
-	/* 0xA7 */[0xA7] = op_lax_zp,
-	/* 0xA8 */[0xA8] = op_tay,
-	/* 0xA9 */[0xA9] = op_lda_imm,
-	/* 0xAA */[0xAA] = op_tax,
-	/* 0xAB */[0xAB] = op_lxa,
-	/* 0xAC */[0xAC] = op_ldy_abs,
-	/* 0xAD */[0xAD] = op_lda_abs,
-	/* 0xAE */[0xAE] = op_ldx_abs,
-	/* 0xAF */[0xAF] = op_lax_abs,
-	/* 0xB0 */[0xB0] = op_bcs,
-	/* 0xB1 */[0xB1] = op_lda_izy,
-	/* 0xB2 */[0xB2] = op_jam,
-	/* 0xB3 */[0xB3] = op_lax_izy,
-	/* 0xB4 */[0xB4] = op_ldy_zpx,
-	/* 0xB5 */[0xB5] = op_lda_zpx,
-	/* 0xB6 */[0xB6] = op_ldx_zpy,
-	/* 0xB7 */[0xB7] = op_lax_zpy,
-	/* 0xB8 */[0xB8] = op_clv,
-	/* 0xB9 */[0xB9] = op_lda_absy,
-	/* 0xBA */[0xBA] = op_tsx,
-	/* 0xBB */[0xBB] = op_las_unstable,
+	/* 0x01 */ [0x01] = op_ora_izx,
+	/* 0x02 */ [0x02] = op_jam,
+	/* 0x03 */ [0x03] = op_slo_izx,
+	/* 0x04 */ [0x04] = op_nop_zp,
+	/* 0x05 */ [0x05] = op_ora_zp,
+	/* 0x06 */ [0x06] = op_asl_zp,
+	/* 0x07 */ [0x07] = op_slo_zp,
+	/* 0x08 */ [0x08] = op_php,
+	/* 0x09 */ [0x09] = op_ora_imm,
+	/* 0x0A */ [0x0A] = op_asl_acc,
+	/* 0x0B */ [0x0B] = op_anc,
+	/* 0x0C */ [0x0C] = op_nop_abs,
+	/* 0x0D */ [0x0D] = op_ora_abs,
+	/* 0x0E */ [0x0E] = op_asl_abs,
+	/* 0x0F */ [0x0F] = op_slo_abs,
+	/* 0x10 */ [0x10] = op_bpl,
+	/* 0x11 */ [0x11] = op_ora_izy,
+	/* 0x12 */ [0x12] = op_jam,
+	/* 0x13 */ [0x13] = op_slo_izy,
+	/* 0x14 */ [0x14] = op_nop_zpx,
+	/* 0x15 */ [0x15] = op_ora_zpx,
+	/* 0x16 */ [0x16] = op_asl_zpx,
+	/* 0x17 */ [0x17] = op_slo_zpx,
+	/* 0x18 */ [0x18] = op_clc,
+	/* 0x19 */ [0x19] = op_ora_absy,
+	/* 0x1A */ [0x1A] = op_nop_imp,
+	/* 0x1B */ [0x1B] = op_slo_absy,
+	/* 0x1C */ [0x1C] = op_nop_absx,
+	/* 0x1D */ [0x1D] = op_ora_absx,
+	/* 0x1E */ [0x1E] = op_asl_absx,
+	/* 0x1F */ [0x1F] = op_slo_absx,
+	/* 0x20 */ [0x20] = op_jsr,
+	/* 0x21 */ [0x21] = op_and_izx,
+	/* 0x22 */ [0x22] = op_jam,
+	/* 0x23 */ [0x23] = op_rla_izx,
+	/* 0x24 */ [0x24] = op_bit_zp,
+	/* 0x25 */ [0x25] = op_and_zp,
+	/* 0x26 */ [0x26] = op_rol_zp,
+	/* 0x27 */ [0x27] = op_rla_zp,
+	/* 0x28 */ [0x28] = op_plp,
+	/* 0x29 */ [0x29] = op_and_imm,
+	/* 0x2A */ [0x2A] = op_rol_acc,
+	/* 0x2B */ [0x2B] = op_anc,
+	/* 0x2C */ [0x2C] = op_bit_abs,
+	/* 0x2D */ [0x2D] = op_and_abs,
+	/* 0x2E */ [0x2E] = op_rol_abs,
+	/* 0x2F */ [0x2F] = op_rla_abs,
+	/* 0x30 */ [0x30] = op_bmi,
+	/* 0x31 */ [0x31] = op_and_izy,
+	/* 0x32 */ [0x32] = op_jam,
+	/* 0x33 */ [0x33] = op_rla_izy,
+	/* 0x34 */ [0x34] = op_nop_zpx,
+	/* 0x35 */ [0x35] = op_and_zpx,
+	/* 0x36 */ [0x36] = op_rol_zpx,
+	/* 0x37 */ [0x37] = op_rla_zpx,
+	/* 0x38 */ [0x38] = op_sec,
+	/* 0x39 */ [0x39] = op_and_absy,
+	/* 0x3A */ [0x3A] = op_nop_imp,
+	/* 0x3B */ [0x3B] = op_rla_absy,
+	/* 0x3C */ [0x3C] = op_nop_absx,
+	/* 0x3D */ [0x3D] = op_and_absx,
+	/* 0x3E */ [0x3E] = op_rol_absx,
+	/* 0x3F */ [0x3F] = op_rla_absx,
+	/* 0x40 */ [0x40] = op_rti,
+	/* 0x41 */ [0x41] = op_eor_izx,
+	/* 0x42 */ [0x42] = op_jam,
+	/* 0x43 */ [0x43] = op_sre_izx,
+	/* 0x44 */ [0x44] = op_nop_zp,
+	/* 0x45 */ [0x45] = op_eor_zp,
+	/* 0x46 */ [0x46] = op_lsr_zp,
+	/* 0x47 */ [0x47] = op_sre_zp,
+	/* 0x48 */ [0x48] = op_pha,
+	/* 0x49 */ [0x49] = op_eor_imm,
+	/* 0x4A */ [0x4A] = op_lsr_acc,
+	/* 0x4B */ [0x4B] = op_alr,
+	/* 0x4C */ [0x4C] = op_jmp_abs,
+	/* 0x4D */ [0x4D] = op_eor_abs,
+	/* 0x4E */ [0x4E] = op_lsr_abs,
+	/* 0x4F */ [0x4F] = op_sre_abs,
+	/* 0x50 */ [0x50] = op_bvc,
+	/* 0x51 */ [0x51] = op_eor_izy,
+	/* 0x52 */ [0x52] = op_jam,
+	/* 0x53 */ [0x53] = op_sre_izy,
+	/* 0x54 */ [0x54] = op_nop_zpx,
+	/* 0x55 */ [0x55] = op_eor_zpx,
+	/* 0x56 */ [0x56] = op_lsr_zpx,
+	/* 0x57 */ [0x57] = op_sre_zpx,
+	/* 0x58 */ [0x58] = op_cli,
+	/* 0x59 */ [0x59] = op_eor_absy,
+	/* 0x5A */ [0x5A] = op_nop_imp,
+	/* 0x5B */ [0x5B] = op_sre_absy,
+	/* 0x5C */ [0x5C] = op_nop_absx,
+	/* 0x5D */ [0x5D] = op_eor_absx,
+	/* 0x5E */ [0x5E] = op_lsr_absx,
+	/* 0x5F */ [0x5F] = op_sre_absx,
+	/* 0x60 */ [0x60] = op_rts,
+	/* 0x61 */ [0x61] = op_adc_izx,
+	/* 0x62 */ [0x62] = op_jam,
+	/* 0x63 */ [0x63] = op_rra_izx,
+	/* 0x64 */ [0x64] = op_nop_zp,
+	/* 0x65 */ [0x65] = op_adc_zp,
+	/* 0x66 */ [0x66] = op_ror_zp,
+	/* 0x67 */ [0x67] = op_rra_zp,
+	/* 0x68 */ [0x68] = op_pla,
+	/* 0x69 */ [0x69] = op_adc_imm,
+	/* 0x6A */ [0x6A] = op_ror_acc,
+	/* 0x6B */ [0x6B] = op_arr,
+	/* 0x6C */ [0x6C] = op_jmp_ind,
+	/* 0x6D */ [0x6D] = op_adc_abs,
+	/* 0x6E */ [0x6E] = op_ror_abs,
+	/* 0x6F */ [0x6F] = op_rra_abs,
+	/* 0x70 */ [0x70] = op_bvs,
+	/* 0x71 */ [0x71] = op_adc_izy,
+	/* 0x72 */ [0x72] = op_jam,
+	/* 0x73 */ [0x73] = op_rra_izy,
+	/* 0x74 */ [0x74] = op_nop_zpx,
+	/* 0x75 */ [0x75] = op_adc_zpx,
+	/* 0x76 */ [0x76] = op_ror_zpx,
+	/* 0x77 */ [0x77] = op_rra_zpx,
+	/* 0x78 */ [0x78] = op_sei,
+	/* 0x79 */ [0x79] = op_adc_absy,
+	/* 0x7A */ [0x7A] = op_nop_imp,
+	/* 0x7B */ [0x7B] = op_rra_absy,
+	/* 0x7C */ [0x7C] = op_nop_absx,
+	/* 0x7D */ [0x7D] = op_adc_absx,
+	/* 0x7E */ [0x7E] = op_ror_absx,
+	/* 0x7F */ [0x7F] = op_rra_absx,
+	/* 0x80 */ [0x80] = op_skb,
+	/* 0x81 */ [0x81] = op_sta_izx,
+	/* 0x82 */ [0x82] = op_skb,
+	/* 0x83 */ [0x83] = op_sax_izx,
+	/* 0x84 */ [0x84] = op_sty_zp,
+	/* 0x85 */ [0x85] = op_sta_zp,
+	/* 0x86 */ [0x86] = op_stx_zp,
+	/* 0x87 */ [0x87] = op_sax_zp,
+	/* 0x88 */ [0x88] = op_dey,
+	/* 0x89 */ [0x89] = op_skb,
+	/* 0x8A */ [0x8A] = op_txa,
+	/* 0x8B */ [0x8B] = op_xaa,
+	/* 0x8C */ [0x8C] = op_sty_abs,
+	/* 0x8D */ [0x8D] = op_sta_abs,
+	/* 0x8E */ [0x8E] = op_stx_abs,
+	/* 0x8F */ [0x8F] = op_sax_abs,
+	/* 0x90 */ [0x90] = op_bcc,
+	/* 0x91 */ [0x91] = op_sta_izy,
+	/* 0x92 */ [0x92] = op_jam,
+	/* 0x93 */ [0x93] = op_ahx_izy,
+	/* 0x94 */ [0x94] = op_sty_zpx,
+	/* 0x95 */ [0x95] = op_sta_zpx,
+	/* 0x96 */ [0x96] = op_stx_zpy,
+	/* 0x97 */ [0x97] = op_sax_zpy,
+	/* 0x98 */ [0x98] = op_tya,
+	/* 0x99 */ [0x99] = op_sta_absy,
+	/* 0x9A */ [0x9A] = op_txs,
+	/* 0x9B */ [0x9B] = op_tas,
+	/* 0x9C */ [0x9C] = op_shy,
+	/* 0x9D */ [0x9D] = op_sta_absx,
+	/* 0x9E */ [0x9E] = op_shx,
+	/* 0x9F */ [0x9F] = op_ahx_absy,
+	/* 0xA0 */ [0xA0] = op_ldy_imm,
+	/* 0xA1 */ [0xA1] = op_lda_izx,
+	/* 0xA2 */ [0xA2] = op_ldx_imm,
+	/* 0xA3 */ [0xA3] = op_lax_izx,
+	/* 0xA4 */ [0xA4] = op_ldy_zp,
+	/* 0xA5 */ [0xA5] = op_lda_zp,
+	/* 0xA6 */ [0xA6] = op_ldx_zp,
+	/* 0xA7 */ [0xA7] = op_lax_zp,
+	/* 0xA8 */ [0xA8] = op_tay,
+	/* 0xA9 */ [0xA9] = op_lda_imm,
+	/* 0xAA */ [0xAA] = op_tax,
+	/* 0xAB */ [0xAB] = op_lxa,
+	/* 0xAC */ [0xAC] = op_ldy_abs,
+	/* 0xAD */ [0xAD] = op_lda_abs,
+	/* 0xAE */ [0xAE] = op_ldx_abs,
+	/* 0xAF */ [0xAF] = op_lax_abs,
+	/* 0xB0 */ [0xB0] = op_bcs,
+	/* 0xB1 */ [0xB1] = op_lda_izy,
+	/* 0xB2 */ [0xB2] = op_jam,
+	/* 0xB3 */ [0xB3] = op_lax_izy,
+	/* 0xB4 */ [0xB4] = op_ldy_zpx,
+	/* 0xB5 */ [0xB5] = op_lda_zpx,
+	/* 0xB6 */ [0xB6] = op_ldx_zpy,
+	/* 0xB7 */ [0xB7] = op_lax_zpy,
+	/* 0xB8 */ [0xB8] = op_clv,
+	/* 0xB9 */ [0xB9] = op_lda_absy,
+	/* 0xBA */ [0xBA] = op_tsx,
+	/* 0xBB */ [0xBB] = op_las_unstable,
 
-	/* 0xBC */[0xBC] = op_ldy_absx,
-	/* 0xBD */[0xBD] = op_lda_absx,
-	/* 0xBE */[0xBE] = op_ldx_absy,
-	/* 0xBF */[0xBF] = op_lax_absy,
-	/* 0xC0 */[0xC0] = op_cpy_imm,
-	/* 0xC1 */[0xC1] = op_cmp_izx,
-	/* 0xC2 */[0xC2] = op_skb,
-	/* 0xC3 */[0xC3] = op_dcp_izx,
-	/* 0xC4 */[0xC4] = op_cpy_zp,
-	/* 0xC5 */[0xC5] = op_cmp_zp,
-	/* 0xC6 */[0xC6] = op_dec_zp,
-	/* 0xC7 */[0xC7] = op_dcp_zp,
-	/* 0xC8 */[0xC8] = op_iny,
-	/* 0xC9 */[0xC9] = op_cmp_imm,
-	/* 0xCA */[0xCA] = op_dex,
-	/* 0xCB */[0xCB] = op_sbx,
-	/* 0xCC */[0xCC] = op_cpy_abs,
-	/* 0xCD */[0xCD] = op_cmp_abs,
-	/* 0xCE */[0xCE] = op_dec_abs,
-	/* 0xCF */[0xCF] = op_dcp_abs,
-	/* 0xD0 */[0xD0] = op_bne,
-	/* 0xD1 */[0xD1] = op_cmp_izy,
-	/* 0xD2 */[0xD2] = op_jam,
-	/* 0xD3 */[0xD3] = op_dcp_izy,
-	/* 0xD4 */[0xD4] = op_nop_zpx,
-	/* 0xD5 */[0xD5] = op_cmp_zpx,
-	/* 0xD6 */[0xD6] = op_dec_zpx,
-	/* 0xD7 */[0xD7] = op_dcp_zpx,
-	/* 0xD8 */[0xD8] = op_cld,
-	/* 0xD9 */[0xD9] = op_cmp_absy,
-	/* 0xDA */[0xDA] = op_nop_imp,
-	/* 0xDB */[0xDB] = op_dcp_absy,
-	/* 0xDC */[0xDC] = op_nop_absx,
-	/* 0xDD */[0xDD] = op_cmp_absx,
-	/* 0xDE */[0xDE] = op_dec_absx,
-	/* 0xDF */[0xDF] = op_dcp_absx,
-	/* 0xE0 */[0xE0] = op_cpx_imm,
-	/* 0xE1 */[0xE1] = op_sbc_izx,
-	/* 0xE2 */[0xE2] = op_skb,
-	/* 0xE3 */[0xE3] = op_isc_izx,
-	/* 0xE4 */[0xE4] = op_cpx_zp,
-	/* 0xE5 */[0xE5] = op_sbc_zp,
-	/* 0xE6 */[0xE6] = op_inc_zp,
-	/* 0xE7 */[0xE7] = op_isc_zp,
-	/* 0xE8 */[0xE8] = op_inx,
-	/* 0xE9 */[0xE9] = op_sbc_imm,
-	/* 0xEA */[0xEA] = op_nop,
-	/* 0xEB */[0xEB] = op_usbc,
-	/* 0xEC */[0xEC] = op_cpx_abs,
-	/* 0xED */[0xED] = op_sbc_abs,
-	/* 0xEE */[0xEE] = op_inc_abs,
-	/* 0xEF */[0xEF] = op_isc_abs,
-	/* 0xF0 */[0xF0] = op_beq,
-	/* 0xF1 */[0xF1] = op_sbc_izy,
-	/* 0xF2 */[0xF2] = op_jam,
-	/* 0xF3 */[0xF3] = op_isc_izy,
-	/* 0xF4 */[0xF4] = op_nop_zpx,
-	/* 0xF5 */[0xF5] = op_sbc_zpx,
-	/* 0xF6 */[0xF6] = op_inc_zpx,
-	/* 0xF7 */[0xF7] = op_isc_zpx,
-	/* 0xF8 */[0xF8] = op_sed,
-	/* 0xF9 */[0xF9] = op_sbc_absy,
-	/* 0xFA */[0xFA] = op_nop_imp,
-	/* 0xFB */[0xFB] = op_isc_absy,
-	/* 0xFC */[0xFC] = op_nop_absx,
-	/* 0xFD */[0xFD] = op_sbc_absx,
-	/* 0xFE */[0xFE] = op_inc_absx,
-	/* 0xFF */[0xFF] = op_isc_absx,
+	/* 0xBC */ [0xBC] = op_ldy_absx,
+	/* 0xBD */ [0xBD] = op_lda_absx,
+	/* 0xBE */ [0xBE] = op_ldx_absy,
+	/* 0xBF */ [0xBF] = op_lax_absy,
+	/* 0xC0 */ [0xC0] = op_cpy_imm,
+	/* 0xC1 */ [0xC1] = op_cmp_izx,
+	/* 0xC2 */ [0xC2] = op_skb,
+	/* 0xC3 */ [0xC3] = op_dcp_izx,
+	/* 0xC4 */ [0xC4] = op_cpy_zp,
+	/* 0xC5 */ [0xC5] = op_cmp_zp,
+	/* 0xC6 */ [0xC6] = op_dec_zp,
+	/* 0xC7 */ [0xC7] = op_dcp_zp,
+	/* 0xC8 */ [0xC8] = op_iny,
+	/* 0xC9 */ [0xC9] = op_cmp_imm,
+	/* 0xCA */ [0xCA] = op_dex,
+	/* 0xCB */ [0xCB] = op_sbx,
+	/* 0xCC */ [0xCC] = op_cpy_abs,
+	/* 0xCD */ [0xCD] = op_cmp_abs,
+	/* 0xCE */ [0xCE] = op_dec_abs,
+	/* 0xCF */ [0xCF] = op_dcp_abs,
+	/* 0xD0 */ [0xD0] = op_bne,
+	/* 0xD1 */ [0xD1] = op_cmp_izy,
+	/* 0xD2 */ [0xD2] = op_jam,
+	/* 0xD3 */ [0xD3] = op_dcp_izy,
+	/* 0xD4 */ [0xD4] = op_nop_zpx,
+	/* 0xD5 */ [0xD5] = op_cmp_zpx,
+	/* 0xD6 */ [0xD6] = op_dec_zpx,
+	/* 0xD7 */ [0xD7] = op_dcp_zpx,
+	/* 0xD8 */ [0xD8] = op_cld,
+	/* 0xD9 */ [0xD9] = op_cmp_absy,
+	/* 0xDA */ [0xDA] = op_nop_imp,
+	/* 0xDB */ [0xDB] = op_dcp_absy,
+	/* 0xDC */ [0xDC] = op_nop_absx,
+	/* 0xDD */ [0xDD] = op_cmp_absx,
+	/* 0xDE */ [0xDE] = op_dec_absx,
+	/* 0xDF */ [0xDF] = op_dcp_absx,
+	/* 0xE0 */ [0xE0] = op_cpx_imm,
+	/* 0xE1 */ [0xE1] = op_sbc_izx,
+	/* 0xE2 */ [0xE2] = op_skb,
+	/* 0xE3 */ [0xE3] = op_isc_izx,
+	/* 0xE4 */ [0xE4] = op_cpx_zp,
+	/* 0xE5 */ [0xE5] = op_sbc_zp,
+	/* 0xE6 */ [0xE6] = op_inc_zp,
+	/* 0xE7 */ [0xE7] = op_isc_zp,
+	/* 0xE8 */ [0xE8] = op_inx,
+	/* 0xE9 */ [0xE9] = op_sbc_imm,
+	/* 0xEA */ [0xEA] = op_nop,
+	/* 0xEB */ [0xEB] = op_usbc,
+	/* 0xEC */ [0xEC] = op_cpx_abs,
+	/* 0xED */ [0xED] = op_sbc_abs,
+	/* 0xEE */ [0xEE] = op_inc_abs,
+	/* 0xEF */ [0xEF] = op_isc_abs,
+	/* 0xF0 */ [0xF0] = op_beq,
+	/* 0xF1 */ [0xF1] = op_sbc_izy,
+	/* 0xF2 */ [0xF2] = op_jam,
+	/* 0xF3 */ [0xF3] = op_isc_izy,
+	/* 0xF4 */ [0xF4] = op_nop_zpx,
+	/* 0xF5 */ [0xF5] = op_sbc_zpx,
+	/* 0xF6 */ [0xF6] = op_inc_zpx,
+	/* 0xF7 */ [0xF7] = op_isc_zpx,
+	/* 0xF8 */ [0xF8] = op_sed,
+	/* 0xF9 */ [0xF9] = op_sbc_absy,
+	/* 0xFA */ [0xFA] = op_nop_imp,
+	/* 0xFB */ [0xFB] = op_isc_absy,
+	/* 0xFC */ [0xFC] = op_nop_absx,
+	/* 0xFD */ [0xFD] = op_sbc_absx,
+	/* 0xFE */ [0xFE] = op_inc_absx,
+	/* 0xFF */ [0xFF] = op_isc_absx,
 };
 
 /* ================================================================== */
@@ -2647,9 +2687,20 @@ cpu_step(CPU *cpu)
 	cpu->prev_pc = cpu->pc;
 	cpu->prev_pc_valid = true;
 
-	/* 1. Check for hardware interrupts before instruction fetch */
+	/* 1. Check for hardware interrupts before instruction fetch.
+	 *
+	 * NMOS 6502 BRK/IRQ hijacking: if an IRQ arrives while the next
+	 * instruction is BRK ($00), the CPU fetches BRK's opcode byte but
+	 * uses the IRQ vector ($FFFE) and clears the B flag in the pushed
+	 * status register — exactly as a hardware IRQ would.  We detect
+	 * this by peeking at the next opcode before committing to either
+	 * path.
+	 */
 	if (cpu->nmi_pending) {
 		cpu->nmi_pending = false;
+		/* Consume BRK opcode byte if it is next (hijacking) */
+		if (read_byte(cpu, cpu->pc) == 0x00)
+			cpu->pc++;
 		push_word(cpu, cpu->pc);
 		push_byte(cpu, (cpu->p & ~FLAG_BREAK) | FLAG_UNUSED);
 		set_flag(cpu, FLAG_INTERRUPT, true);
@@ -2657,6 +2708,10 @@ cpu_step(CPU *cpu)
 		return 7;
 	}
 	if (cpu->irq_pending && !(cpu->p & FLAG_INTERRUPT)) {
+		cpu->irq_pending = false;
+		/* Consume BRK opcode byte if it is next (hijacking) */
+		if (read_byte(cpu, cpu->pc) == 0x00)
+			cpu->pc++;
 		push_word(cpu, cpu->pc);
 		push_byte(cpu, (cpu->p & ~FLAG_BREAK) | FLAG_UNUSED);
 		set_flag(cpu, FLAG_INTERRUPT, true);
