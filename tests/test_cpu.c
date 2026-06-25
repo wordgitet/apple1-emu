@@ -340,175 +340,17 @@ test_dummy_write_side_effects(CPU *cpu, Bus *bus)
 	assert(bus->pia.dsp_control & 0x80);
 }
 
-/*
- * Interrupts Test (IRQ and NMI)
- *
- * Memory layout:
- *   $1000  preempted code (NOP $EA, then BRK $00)
- *   $1200  IRQ/BRK handler (RTI)
- *   $1300  NMI handler     (RTI)
- *
- * Vectors (ROM shadow offsets from $FF00):
- *   $FFFA/$FFFB  NMI  -> $1300
- *   $FFFE/$FFFF  IRQ  -> $1200
- *
- * Stack starts at S=$FD; 3 pushes leave:
- *   $01FD = PCH  (first push)
- *   $01FC = PCL
- *   $01FB = P    (last push; s+3 below original S)
- *
- * Sources:
- *   NESdev wiki "CPU interrupts" -- cycle table, stack layout, I-flag timing
- *   Michael Steil / pagetable.com -- Visual6502: forced-$00 into IR, PC held
- *   6502.org/tutorials/interrupts -- BRK padding byte, return-address detail
- *   NESdev "The B flag" -- B=0 for IRQ/NMI; B=1 for BRK/PHP; no physical B reg
- */
+/* test_interrupts() has been moved to tests/test_interrupts.c */
+/* and is built as a standalone test_interrupts binary.        */
 static void
 test_interrupts(CPU *cpu, Bus *bus)
 {
-	bus->opts.randomize_cold_boot = false;
-	bus->opts.throttle_pia        = false;
-	memset(bus->ram, 0, bus->ram_size);
-
-	/* Vectors */
-	bus->rom[0xFA] = 0x00; bus->rom[0xFB] = 0x13; /* NMI -> $1300 */
-	bus->rom[0xFE] = 0x00; bus->rom[0xFF] = 0x12; /* IRQ -> $1200 */
-
-	/* ISR stubs: RTI ($40) */
-	bus->ram[0x1200] = 0x40;
-	bus->ram[0x1300] = 0x40;
-
-	/*
-	 * Preempted instruction is NOP ($EA), deliberately NOT $00.
-	 * The real 6502 discards whatever byte is at PC and forces $00
-	 * into the instruction register unconditionally.  Using $EA here
-	 * proves the mechanism is not conditional on the byte being $00.
-	 * (Old buggy code peeked and only advanced PC when byte == $00.)
-	 */
-	bus->ram[0x1000] = 0xEA; /* NOP -- "next instruction" to be preempted */
-
-	/* ------------------------------------------------------------ */
-	/* Test 1: IRQ -- vector jump, cycle count, I flag set          */
-	/* ------------------------------------------------------------ */
-	cpu->pc = 0x1000;
-	cpu->s  = 0xFD;
-	cpu->p &= ~FLAG_INTERRUPT; /* I=0: IRQ unmasked */
-	cpu_irq(cpu, true);
-
-	uint8_t cycles = cpu_step(cpu);
-
-	assert(cycles == 7);        /* IRQ/NMI always 7 cycles (NESdev table) */
-	assert(cpu->pc == 0x1200); /* jumped to IRQ handler */
-	assert(cpu->p & FLAG_INTERRUPT); /* I set by interrupt sequence */
-
-	/* ------------------------------------------------------------ */
-	/* Test 2: PC held -- return address on stack == $1000          */
-	/*                                                              */
-	/* "The CPU suppresses the PC increment on the initial fetch,   */
-	/*  so the saved PC is the address of the instruction that      */
-	/*  would have run next." -- Steil / Visual6502                 */
-	/*                                                              */
-	/* Stack layout (S started at $FD, 3 pushes):                   */
-	/*   $01FD = PCH   $01FC = PCL   $01FB = P                      */
-	/* ------------------------------------------------------------ */
-	uint8_t  stk_pch = bus->ram[0x01FD];
-	uint8_t  stk_pcl = bus->ram[0x01FC];
-	uint16_t stk_pc  = ((uint16_t)stk_pch << 8) | stk_pcl;
-	assert(stk_pc == 0x1000); /* preempted NOP, NOT $1001 */
-
-	/* ------------------------------------------------------------ */
-	/* Test 3: B=0, UNUSED=1 in pushed P for hardware IRQ          */
-	/*                                                              */
-	/* "The CPU pushes 0 for hardware interrupts, 1 for BRK/PHP."  */
-	/* -- NESdev "The B flag".  Bit 5 (UNUSED) is always 1 on push.*/
-	/* ------------------------------------------------------------ */
-	uint8_t stk_p = bus->ram[0x01FB];
-	assert(!(stk_p & FLAG_BREAK));  /* B=0 for hardware IRQ */
-	assert(stk_p   & FLAG_UNUSED);  /* bit 5 always 1 on push */
-
-	/* ------------------------------------------------------------ */
-	/* Test 4: IRQ masked when I=1 -- CPU must run the real opcode  */
-	/* ------------------------------------------------------------ */
-	cpu->pc = 0x1000;  /* I is still set from the interrupt above */
-	cpu->s  = 0xFD;
-	assert(cpu->p & FLAG_INTERRUPT); /* confirm I=1 */
-	cpu_irq(cpu, true); /* assert IRQ while masked */
-
-	cycles = cpu_step(cpu); /* must execute NOP, not service IRQ */
-	assert(cycles == 2);        /* NOP = 2 cycles; 7 would mean IRQ fired */
-	assert(cpu->pc == 0x1001); /* advanced past NOP */
-	cpu_irq(cpu, false);
-
-	/* ------------------------------------------------------------ */
-	/* Test 5: NMI is non-maskable -- fires even when I=1           */
-	/* ------------------------------------------------------------ */
-	cpu->pc = 0x1000;
-	cpu->s  = 0xFD;
-	cpu->p |= FLAG_INTERRUPT; /* I=1, would suppress IRQ */
-	cpu_nmi(cpu);
-
-	cycles = cpu_step(cpu);
-	assert(cycles == 7);
-	assert(cpu->pc == 0x1300); /* NMI handler */
-
-	stk_p = bus->ram[0x01FB];
-	assert(!(stk_p & FLAG_BREAK));  /* B=0 for NMI */
-	assert(stk_p   & FLAG_UNUSED);
-
-	stk_pc = ((uint16_t)bus->ram[0x01FD] << 8) | bus->ram[0x01FC];
-	assert(stk_pc == 0x1000); /* PC still held for NMI too */
-
-	/* ------------------------------------------------------------ */
-	/* Test 6: BRK pushes B=1 and returns to BRK+2                  */
-	/*                                                              */
-	/* BRK reads opcode (PC++) then reads padding byte (PC++) before */
-	/* pushing, so stacked PC = BRK+2.  B=1 lets the ISR tell BRK  */
-	/* from IRQ on the shared $FFFE vector.                         */
-	/* Source: 6502.org/tutorials/interrupts                         */
-	/* ------------------------------------------------------------ */
-	bus->ram[0x1000] = 0x00; /* BRK */
-	bus->ram[0x1001] = 0x42; /* padding byte (signature, discarded) */
-
-	cpu->pc = 0x1000;
-	cpu->s  = 0xFD;
-	cpu->p &= ~FLAG_INTERRUPT;
-
-	cycles = cpu_step(cpu);
-	assert(cycles == 7);
-	assert(cpu->pc == 0x1200); /* IRQ/BRK shared vector */
-
-	stk_pc = ((uint16_t)bus->ram[0x01FD] << 8) | bus->ram[0x01FC];
-	assert(stk_pc == 0x1002); /* BRK+2: past opcode AND padding byte */
-
-	stk_p = bus->ram[0x01FB];
-	assert(stk_p & FLAG_BREAK);   /* B=1 for BRK */
-	assert(stk_p & FLAG_UNUSED);  /* bit 5 always 1 */
-
-	/* ------------------------------------------------------------ */
-	/* Test 7: RTI round-trip -- IRQ -> ISR -> RTI -> preempted addr */
-	/*                                                              */
-	/* RTI pops P, PCL, PCH (reverse push order) and resumes.      */
-	/* The B bit read from the stack is discarded by RTI -- there   */
-	/* is no physical B register inside the CPU (Visual6502).       */
-	/* ------------------------------------------------------------ */
-	bus->ram[0x1000] = 0xEA; /* restore NOP */
-
-	cpu->pc = 0x1000;
-	cpu->s  = 0xFD;
-	cpu->p  = FLAG_UNUSED;    /* I=0, all other flags clear */
-	cpu_irq(cpu, true);
-
-	/* Step 1: IRQ fires, jumps to $1200 */
-	cycles = cpu_step(cpu);
-	assert(cycles == 7);
-	assert(cpu->pc == 0x1200);
-	cpu_irq(cpu, false); /* deassert before RTI restores I=0 */
-
-	/* Step 2: RTI at $1200 restores P (clears I) and pops return PC */
-	cycles = cpu_step(cpu);
-	assert(cycles == 6);       /* RTI is 6 cycles */
-	assert(cpu->pc == 0x1000); /* back at the preempted NOP */
+	(void)cpu;
+	(void)bus;
+	/* All interrupt tests are in the test_interrupts binary. */
 }
+
+
 
 static uint8_t mock_read_val = 0;
 static uint16_t mock_last_read_addr = 0;
@@ -858,7 +700,7 @@ main(void)
 	run_test("Open Bus Memory Model", test_open_bus);
 	run_test("Illegal Instructions", test_illegal_instructions);
 	run_test("Dummy Write Side-Effects", test_dummy_write_side_effects);
-	run_test("Interrupts (IRQ & NMI)", test_interrupts);
+	/* Interrupts: see test_interrupts binary (tests/test_interrupts.c) */
 	run_test("Expansion Cards System", test_expansion_cards);
 	run_test("Disassembler and Breakpoints", test_disasm_and_breakpoints);
 

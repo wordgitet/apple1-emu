@@ -8,11 +8,14 @@ apple1_SOURCES = main.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c term_sd
 apple1_CFLAGS = $(AM_CFLAGS) $(SDL3_CFLAGS)
 apple1_LDADD = $(SDL3_LIBS)
 
-check_PROGRAMS = test_cpu test_aci test_dualram test_bus test_tomharte
+check_PROGRAMS = test_cpu test_aci test_dualram test_bus test_tomharte test_interrupts
 TESTS = $(check_PROGRAMS)
 
 test_cpu_SOURCES = tests/test_cpu.c tests/term_dummy.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
 test_cpu_CFLAGS = $(AM_CFLAGS)
+
+test_interrupts_SOURCES = tests/test_interrupts.c tests/term_dummy.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
+test_interrupts_CFLAGS = $(AM_CFLAGS)
 
 test_aci_SOURCES = tests/test_aci.c tests/term_dummy.c cpu.c bus.c aci.c krusader.c disasm.c dbg.c
 test_aci_CFLAGS = $(AM_CFLAGS)
