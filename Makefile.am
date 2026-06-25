@@ -8,7 +8,7 @@ apple1_SOURCES = main.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c term_sd
 apple1_CFLAGS = $(AM_CFLAGS) $(SDL3_CFLAGS)
 apple1_LDADD = $(SDL3_LIBS)
 
-check_PROGRAMS = test_cpu test_aci test_dualram test_bus
+check_PROGRAMS = test_cpu test_aci test_dualram test_bus test_tomharte
 TESTS = $(check_PROGRAMS)
 
 test_cpu_SOURCES = tests/test_cpu.c tests/term_dummy.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
@@ -22,6 +22,9 @@ test_dualram_CFLAGS = $(AM_CFLAGS)
 
 test_bus_SOURCES = tests/test_bus.c tests/term_dummy.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
 test_bus_CFLAGS = $(AM_CFLAGS)
+
+test_tomharte_SOURCES = tests/test_tomharte.c tests/term_dummy.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
+test_tomharte_CFLAGS = $(AM_CFLAGS)
 
 # Functional Test Suite Targets
 DORMANN_URL = https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master/bin_files/6502_functional_test.bin

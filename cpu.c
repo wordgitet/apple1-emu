@@ -173,13 +173,17 @@ addr_zp(CPU *cpu)
 static uint16_t
 addr_zpx(CPU *cpu)
 {
-	return (read_byte(cpu, cpu->pc++) + cpu->x) & 0xFF;
+	uint8_t base = read_byte(cpu, cpu->pc++);
+	read_byte(cpu, base); /* cycle 3: dummy read of unindexed zp address */
+	return (base + cpu->x) & 0xFF;
 }
 
 static uint16_t
 addr_zpy(CPU *cpu)
 {
-	return (read_byte(cpu, cpu->pc++) + cpu->y) & 0xFF;
+	uint8_t base = read_byte(cpu, cpu->pc++);
+	read_byte(cpu, base); /* cycle 3: dummy read of unindexed zp address */
+	return (base + cpu->y) & 0xFF;
 }
 
 static uint16_t
@@ -200,6 +204,23 @@ addr_absx(CPU *cpu, bool *px)
 	uint16_t a = base + cpu->x;
 
 	*px = (base & 0xFF00) != (a & 0xFF00);
+	if (*px) {
+		/* cycle 4: dummy read of uncorrected address */
+		read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
+	}
+	return a;
+}
+
+static uint16_t
+addr_absx_always(CPU *cpu)
+{
+	uint16_t base = read_word(cpu, cpu->pc);
+
+	cpu->pc += 2;
+	uint16_t a = base + cpu->x;
+
+	/* cycle 4: dummy read of uncorrected address */
+	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
 	return a;
 }
 
@@ -212,6 +233,23 @@ addr_absy(CPU *cpu, bool *px)
 	uint16_t a = base + cpu->y;
 
 	*px = (base & 0xFF00) != (a & 0xFF00);
+	if (*px) {
+		/* cycle 4: dummy read of uncorrected address */
+		read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
+	}
+	return a;
+}
+
+static uint16_t
+addr_absy_always(CPU *cpu)
+{
+	uint16_t base = read_word(cpu, cpu->pc);
+
+	cpu->pc += 2;
+	uint16_t a = base + cpu->y;
+
+	/* cycle 4: dummy read of uncorrected address */
+	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
 	return a;
 }
 
@@ -234,7 +272,9 @@ addr_ind(CPU *cpu)
 static uint16_t
 addr_izx(CPU *cpu)
 {
-	uint8_t zp = (read_byte(cpu, cpu->pc++) + cpu->x) & 0xFF;
+	uint8_t zp_raw = read_byte(cpu, cpu->pc++);
+	read_byte(cpu, zp_raw); /* cycle 3: dummy read before X is added */
+	uint8_t zp = (zp_raw + cpu->x) & 0xFF;
 	uint8_t lo = read_byte(cpu, zp);
 	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
 
@@ -251,6 +291,24 @@ addr_izy(CPU *cpu, bool *px)
 	uint16_t a = base + cpu->y;
 
 	*px = (base & 0xFF00) != (a & 0xFF00);
+	if (*px) {
+		/* cycle 5: dummy read of uncorrected address */
+		read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
+	}
+	return a;
+}
+
+static uint16_t
+addr_izy_always(CPU *cpu)
+{
+	uint8_t zp = read_byte(cpu, cpu->pc++);
+	uint8_t lo = read_byte(cpu, zp);
+	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
+	uint16_t base = (hi << 8) | lo;
+	uint16_t a = base + cpu->y;
+
+	/* cycle 5: dummy read of uncorrected address */
+	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
 	return a;
 }
 
@@ -265,10 +323,19 @@ do_branch(CPU *cpu, bool cond)
 
 	if (cond) {
 		uint16_t old = cpu->pc;
+		read_byte(cpu, old); /* cycle 3: dummy read of PC+2 */
 
-		cpu->pc += off;
-		return (uint8_t)(1 +
-		    ((old & 0xFF00) != (cpu->pc & 0xFF00) ? 1 : 0));
+		uint16_t target = old + off;
+		if ((old & 0xFF00) != (target & 0xFF00)) {
+			/* cycle 4: dummy read of intermediate address (uncorrected page) */
+			uint16_t intermediate = (old & 0xFF00) |
+			    (target & 0x00FF);
+			read_byte(cpu, intermediate);
+			cpu->pc = target;
+			return 2;
+		}
+		cpu->pc = target;
+		return 1;
 	}
 	return 0;
 }
@@ -293,7 +360,9 @@ adc_bcd(CPU *cpu, uint8_t m)
 
 	uint8_t result = (high << 4) | (low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW, (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
+	set_flag(cpu,
+	    FLAG_OVERFLOW,
+	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 
 	if (high > 9) {
 		result -= 0xA0; // 10 * 16
@@ -323,7 +392,9 @@ sbc_bcd(CPU *cpu, uint8_t m)
 
 	uint8_t result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW, ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
+	set_flag(cpu,
+	    FLAG_OVERFLOW,
+	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 
 	if (high < 0) {
 		result += 0xA0; // 10 * 16
@@ -528,6 +599,7 @@ op_and_izy(CPU *cpu)
 static void
 op_asl_acc(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x80) != 0);
 	cpu->a <<= 1;
 	update_nz(cpu, cpu->a);
@@ -572,8 +644,7 @@ op_asl_abs(CPU *cpu)
 static void
 op_asl_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
@@ -649,7 +720,7 @@ op_bit_abs(CPU *cpu)
 static void
 op_brk(CPU *cpu)
 {
-	cpu->pc++; /* BRK skips the padding byte */
+	read_byte(cpu, cpu->pc++); /* cycle 2: fetch and discard padding byte */
 	push_word(cpu, cpu->pc);
 	push_byte(cpu, cpu->p | FLAG_BREAK | FLAG_UNUSED);
 	set_flag(cpu, FLAG_INTERRUPT, true);
@@ -661,24 +732,28 @@ op_brk(CPU *cpu)
 static void
 op_clc(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, false);
 	cpu->last_cycles = 2;
 }
 static void
 op_cli(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_INTERRUPT, false);
 	cpu->last_cycles = 2;
 }
 static void
 op_clv(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_OVERFLOW, false);
 	cpu->last_cycles = 2;
 }
 static void
 op_cld(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_DECIMAL, false);
 	cpu->last_cycles = 2;
 }
@@ -687,18 +762,21 @@ op_cld(CPU *cpu)
 static void
 op_sec(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, true);
 	cpu->last_cycles = 2;
 }
 static void
 op_sei(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_INTERRUPT, true);
 	cpu->last_cycles = 2;
 }
 static void
 op_sed(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_DECIMAL, true);
 	cpu->last_cycles = 2;
 }
@@ -864,8 +942,7 @@ op_dec_abs(CPU *cpu)
 static void
 op_dec_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t orig = read_byte(cpu, a);
 	write_byte_dummy(cpu,
 	    a,
@@ -879,6 +956,7 @@ op_dec_absx(CPU *cpu)
 static void
 op_dex(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x--;
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 2;
@@ -886,6 +964,7 @@ op_dex(CPU *cpu)
 static void
 op_dey(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->y--;
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 2;
@@ -992,8 +1071,7 @@ op_inc_abs(CPU *cpu)
 static void
 op_inc_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t orig = read_byte(cpu, a);
 	write_byte_dummy(cpu,
 	    a,
@@ -1007,6 +1085,7 @@ op_inc_absx(CPU *cpu)
 static void
 op_inx(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x++;
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 2;
@@ -1014,6 +1093,7 @@ op_inx(CPU *cpu)
 static void
 op_iny(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->y++;
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 2;
@@ -1037,22 +1117,35 @@ op_jmp_ind(CPU *cpu)
 static void
 op_jsr(CPU *cpu)
 {
-	uint16_t a = addr_abs(cpu);
-	push_word(cpu, cpu->pc - 1);
-	cpu->pc = a;
+	uint8_t lo = read_byte(cpu, cpu->pc++); /* cycle 2: addr low */
+	read_byte(cpu, 0x0100 + cpu->s);	/* cycle 3: dummy stack read */
+	push_word(cpu,
+	    cpu->pc); /* cycles 4-5: push return addr (PC-1 already advanced) */
+	uint8_t hi = read_byte(cpu, cpu->pc); /* cycle 6: addr high */
+	cpu->pc = (hi << 8) | lo;
 	cpu->last_cycles = 6;
 }
 static void
 op_rts(CPU *cpu)
 {
-	cpu->pc = pull_word(cpu) + 1;
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
+	read_byte(cpu,
+	    0x0100 +
+		cpu->s); /* cycle 3: dummy read of stack before pre-increment */
+	cpu->pc = pull_word(cpu) + 1; /* cycles 4-5: pull return addr */
+	read_byte(cpu,
+	    cpu->pc - 1); /* cycle 6: dummy read before PC increment */
 	cpu->last_cycles = 6;
 }
 static void
 op_rti(CPU *cpu)
 {
-	cpu->p = (pull_byte(cpu) & ~FLAG_BREAK) | FLAG_UNUSED;
-	cpu->pc = pull_word(cpu);
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
+	read_byte(cpu,
+	    0x0100 +
+		cpu->s); /* cycle 3: dummy read of stack before pre-increment */
+	cpu->p = (pull_byte(cpu) & ~FLAG_BREAK) | FLAG_UNUSED; /* cycle 4 */
+	cpu->pc = pull_word(cpu);			       /* cycles 5-6 */
 	cpu->last_cycles = 6;
 }
 
@@ -1197,6 +1290,7 @@ op_ldy_absx(CPU *cpu)
 static void
 op_lsr_acc(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x01) != 0);
 	cpu->a >>= 1;
 	update_nz(cpu, cpu->a);
@@ -1241,8 +1335,7 @@ op_lsr_abs(CPU *cpu)
 static void
 op_lsr_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
@@ -1256,6 +1349,7 @@ op_lsr_absx(CPU *cpu)
 static void
 op_nop(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->last_cycles = 2;
 }
 
@@ -1324,26 +1418,34 @@ op_ora_izy(CPU *cpu)
 static void
 op_pha(CPU *cpu)
 {
-	push_byte(cpu, cpu->a);
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
+	push_byte(cpu, cpu->a);	 /* cycle 3 */
 	cpu->last_cycles = 3;
 }
 static void
 op_php(CPU *cpu)
 {
-	push_byte(cpu, cpu->p | FLAG_BREAK | FLAG_UNUSED);
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
+	push_byte(cpu, cpu->p | FLAG_BREAK | FLAG_UNUSED); /* cycle 3 */
 	cpu->last_cycles = 3;
 }
 static void
 op_pla(CPU *cpu)
 {
-	cpu->a = pull_byte(cpu);
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
+	read_byte(cpu,
+	    0x0100 + cpu->s);	 /* cycle 3: dummy read before pre-increment */
+	cpu->a = pull_byte(cpu); /* cycle 4 */
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
 op_plp(CPU *cpu)
 {
-	cpu->p = (pull_byte(cpu) & ~FLAG_BREAK) | FLAG_UNUSED;
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
+	read_byte(cpu,
+	    0x0100 + cpu->s); /* cycle 3: dummy read before pre-increment */
+	cpu->p = (pull_byte(cpu) & ~FLAG_BREAK) | FLAG_UNUSED; /* cycle 4 */
 	cpu->last_cycles = 4;
 }
 
@@ -1351,6 +1453,7 @@ op_plp(CPU *cpu)
 static void
 op_rol_acc(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x80) != 0);
 	cpu->a = (cpu->a << 1) | old_c;
@@ -1399,8 +1502,7 @@ op_rol_abs(CPU *cpu)
 static void
 op_rol_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
@@ -1415,6 +1517,7 @@ op_rol_absx(CPU *cpu)
 static void
 op_ror_acc(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x01) != 0);
 	cpu->a = (cpu->a >> 1) | old_c;
@@ -1463,8 +1566,7 @@ op_ror_abs(CPU *cpu)
 static void
 op_ror_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
@@ -1583,14 +1685,22 @@ static void
 op_sta_absx(CPU *cpu)
 {
 	bool px = false;
-	write_byte(cpu, addr_absx(cpu, &px), cpu->a);
+	uint16_t a = addr_absx(cpu, &px);
+	if (!px) {
+		read_byte(cpu, a);
+	}
+	write_byte(cpu, a, cpu->a);
 	cpu->last_cycles = 5;
 }
 static void
 op_sta_absy(CPU *cpu)
 {
 	bool px = false;
-	write_byte(cpu, addr_absy(cpu, &px), cpu->a);
+	uint16_t a = addr_absy(cpu, &px);
+	if (!px) {
+		read_byte(cpu, a);
+	}
+	write_byte(cpu, a, cpu->a);
 	cpu->last_cycles = 5;
 }
 static void
@@ -1603,7 +1713,11 @@ static void
 op_sta_izy(CPU *cpu)
 {
 	bool px = false;
-	write_byte(cpu, addr_izy(cpu, &px), cpu->a);
+	uint16_t a = addr_izy(cpu, &px);
+	if (!px) {
+		read_byte(cpu, a);
+	}
+	write_byte(cpu, a, cpu->a);
 	cpu->last_cycles = 6;
 }
 
@@ -1651,6 +1765,7 @@ op_sty_abs(CPU *cpu)
 static void
 op_tax(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x = cpu->a;
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 2;
@@ -1658,6 +1773,7 @@ op_tax(CPU *cpu)
 static void
 op_tay(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->y = cpu->a;
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 2;
@@ -1665,6 +1781,7 @@ op_tay(CPU *cpu)
 static void
 op_tsx(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x = cpu->s;
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 2;
@@ -1672,6 +1789,7 @@ op_tsx(CPU *cpu)
 static void
 op_txa(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->a = cpu->x;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -1679,12 +1797,14 @@ op_txa(CPU *cpu)
 static void
 op_txs(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->s = cpu->x;
 	cpu->last_cycles = 2;
 } /* no flags */
 static void
 op_tya(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->a = cpu->y;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -1815,8 +1935,7 @@ op_slo_abs(CPU *cpu)
 static void
 op_slo_izy(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_izy(cpu, &px);
+	uint16_t a = addr_izy_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
@@ -1842,8 +1961,7 @@ op_slo_zpx(CPU *cpu)
 static void
 op_slo_absy(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absy(cpu, &px);
+	uint16_t a = addr_absy_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
@@ -1856,8 +1974,7 @@ op_slo_absy(CPU *cpu)
 static void
 op_slo_absx(CPU *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
+	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
@@ -1902,8 +2019,7 @@ op_rla_abs(CPU *cpu)
 static void
 op_rla_izy(CPU *cpu)
 {
-	bool px = false;
-	rla_core(cpu, addr_izy(cpu, &px));
+	rla_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
@@ -1915,15 +2031,13 @@ op_rla_zpx(CPU *cpu)
 static void
 op_rla_absy(CPU *cpu)
 {
-	bool px = false;
-	rla_core(cpu, addr_absy(cpu, &px));
+	rla_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
 op_rla_absx(CPU *cpu)
 {
-	bool px = false;
-	rla_core(cpu, addr_absx(cpu, &px));
+	rla_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
 }
 
@@ -1960,8 +2074,7 @@ op_sre_abs(CPU *cpu)
 static void
 op_sre_izy(CPU *cpu)
 {
-	bool px = false;
-	sre_core(cpu, addr_izy(cpu, &px));
+	sre_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
@@ -1973,15 +2086,13 @@ op_sre_zpx(CPU *cpu)
 static void
 op_sre_absy(CPU *cpu)
 {
-	bool px = false;
-	sre_core(cpu, addr_absy(cpu, &px));
+	sre_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
 op_sre_absx(CPU *cpu)
 {
-	bool px = false;
-	sre_core(cpu, addr_absx(cpu, &px));
+	sre_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
 }
 
@@ -2021,8 +2132,7 @@ op_rra_abs(CPU *cpu)
 static void
 op_rra_izy(CPU *cpu)
 {
-	bool px = false;
-	rra_core(cpu, addr_izy(cpu, &px));
+	rra_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
@@ -2034,15 +2144,13 @@ op_rra_zpx(CPU *cpu)
 static void
 op_rra_absy(CPU *cpu)
 {
-	bool px = false;
-	rra_core(cpu, addr_absy(cpu, &px));
+	rra_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
 op_rra_absx(CPU *cpu)
 {
-	bool px = false;
-	rra_core(cpu, addr_absx(cpu, &px));
+	rra_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
 }
 
@@ -2080,8 +2188,7 @@ op_dcp_abs(CPU *cpu)
 static void
 op_dcp_izy(CPU *cpu)
 {
-	bool px = false;
-	dcp_core(cpu, addr_izy(cpu, &px));
+	dcp_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
@@ -2093,15 +2200,13 @@ op_dcp_zpx(CPU *cpu)
 static void
 op_dcp_absy(CPU *cpu)
 {
-	bool px = false;
-	dcp_core(cpu, addr_absy(cpu, &px));
+	dcp_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
 op_dcp_absx(CPU *cpu)
 {
-	bool px = false;
-	dcp_core(cpu, addr_absx(cpu, &px));
+	dcp_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
 }
 
@@ -2139,8 +2244,7 @@ op_isc_abs(CPU *cpu)
 static void
 op_isc_izy(CPU *cpu)
 {
-	bool px = false;
-	isc_core(cpu, addr_izy(cpu, &px));
+	isc_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
@@ -2152,15 +2256,13 @@ op_isc_zpx(CPU *cpu)
 static void
 op_isc_absy(CPU *cpu)
 {
-	bool px = false;
-	isc_core(cpu, addr_absy(cpu, &px));
+	isc_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
 op_isc_absx(CPU *cpu)
 {
-	bool px = false;
-	isc_core(cpu, addr_absx(cpu, &px));
+	isc_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
 }
 
@@ -2168,6 +2270,7 @@ op_isc_absx(CPU *cpu)
 static void
 op_nop_imp(CPU *cpu)
 {
+	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->last_cycles = 2;
 }
 static void
@@ -2199,7 +2302,7 @@ op_nop_absx(CPU *cpu)
 static void
 op_skb(CPU *cpu)
 {
-	cpu->pc++;
+	read_byte(cpu, cpu->pc++); /* cycle 2: read and discard immediate */
 	cpu->last_cycles = 2;
 }
 
@@ -2230,6 +2333,10 @@ op_shx(CPU *cpu)
 	uint8_t h = (base >> 8) + 1;
 	uint8_t val = cpu->x & h;
 
+	read_byte(cpu,
+	    (base & 0xFF00) |
+		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
+
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2246,6 +2353,10 @@ op_shy(CPU *cpu)
 	uint16_t addr = base + cpu->x;
 	uint8_t h = (base >> 8) + 1;
 	uint8_t val = cpu->y & h;
+
+	read_byte(cpu,
+	    (base & 0xFF00) |
+		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
@@ -2266,6 +2377,10 @@ op_ahx_izy(CPU *cpu)
 	uint8_t h = (base >> 8) + 1;
 	uint8_t val = cpu->a & cpu->x & h;
 
+	read_byte(cpu,
+	    (base & 0xFF00) |
+		(addr & 0xFF)); /* cycle 5: dummy read of uncorrected address */
+
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2282,6 +2397,10 @@ op_ahx_absy(CPU *cpu)
 	uint16_t addr = base + cpu->y;
 	uint8_t h = (base >> 8) + 1;
 	uint8_t val = cpu->a & cpu->x & h;
+
+	read_byte(cpu,
+	    (base & 0xFF00) |
+		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
@@ -2301,6 +2420,10 @@ op_tas(CPU *cpu)
 	cpu->s = cpu->a & cpu->x;
 	uint8_t h = (base >> 8) + 1;
 	uint8_t val = cpu->s & h;
+
+	read_byte(cpu,
+	    (base & 0xFF00) |
+		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
@@ -2386,7 +2509,8 @@ op_arr(CPU *cpu)
 	if (cpu->p & FLAG_DECIMAL) {
 		uint8_t adjusted = result;
 		if (((value & 0x0F) + (value & 0x01)) > 5) {
-			adjusted = (adjusted & 0xF0) | ((adjusted + 0x06) & 0x0F);
+			adjusted = (adjusted & 0xF0) |
+			    ((adjusted + 0x06) & 0x0F);
 		}
 		if (((value & 0xF0) + (value & 0x10)) > 0x50) {
 			adjusted += 0x60;

@@ -8,6 +8,10 @@ tests/test_aci
 tests/test_dualram
 tests/6502_functional_test.bin
 tests/test_bus
+test_tomharte
+6502_functional_test.bin
+tests/tomharte/
+
 
 
 # runtime generated files
