@@ -3,12 +3,12 @@
 
 #include "bus.h"
 
-// Create and initialize the Krusader card
-expansion_card_t *
+/* Create and initialize the Krusader card */
+struct expansion_card *
 krusader_create(const char *rom_path);
 
-// Free Krusader card resources
+/* Free Krusader card resources */
 void
-krusader_free(expansion_card_t *card);
+krusader_free(struct expansion_card *card);
 
-#endif // KRUSADER_H
+#endif /* KRUSADER_H */

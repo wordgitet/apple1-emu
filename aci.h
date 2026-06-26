@@ -5,24 +5,24 @@
 
 #include "bus.h"
 
-// Create and initialize the ACI cassette interface card
-expansion_card_t *
+/* Create and initialize the ACI cassette interface card */
+struct expansion_card *
 aci_create(const char *rom_path);
 
-// Load a .aci tape file into the ACI card
+/* Load a .aci tape file into the ACI card */
 bool
-aci_load_tape(expansion_card_t *card, const char *tape_path);
+aci_load_tape(struct expansion_card *card, const char *tape_path);
 
-// Save recorded ACI tape output to a .aci file
+/* Save recorded ACI tape output to a .aci file */
 bool
-aci_save_tape(expansion_card_t *card, const char *tape_path);
+aci_save_tape(struct expansion_card *card, const char *tape_path);
 
-// Free ACI card resources
+/* Free ACI card resources */
 void
-aci_free(expansion_card_t *card);
+aci_free(struct expansion_card *card);
 
-// Get recorded pulse transition count
+/* Get recorded pulse transition count */
 uint32_t
-aci_get_recorded_count(expansion_card_t *card);
+aci_get_recorded_count(struct expansion_card *card);
 
-#endif // ACI_H
+#endif /* ACI_H */

@@ -1,37 +1,38 @@
-#include "cpu.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "cpu.h"
 
 /* ------------------------------------------------------------------ */
 /* Memory helpers                                                       */
 /* ------------------------------------------------------------------ */
 
 static inline uint8_t
-read_byte(CPU *cpu, uint16_t addr)
+read_byte(struct cpu *cpu, uint16_t addr)
 {
-	return bus_read(cpu->bus, addr);
+	return (bus_read(cpu->bus, addr));
 }
 
 static inline void
-write_byte(CPU *cpu, uint16_t addr, uint8_t val)
+write_byte(struct cpu *cpu, uint16_t addr, uint8_t val)
 {
 	bus_write(cpu->bus, addr, val);
 }
 
 static inline void
-write_byte_dummy(CPU *cpu, uint16_t addr, uint8_t val)
+write_byte_dummy(struct cpu *cpu, uint16_t addr, uint8_t val)
 {
 	bus_write_ext(cpu->bus, addr, val, true);
 }
 
 static inline uint16_t
-read_word(CPU *cpu, uint16_t addr)
+read_word(struct cpu *cpu, uint16_t addr)
 {
 	uint8_t lo = read_byte(cpu, addr);
 	uint8_t hi = read_byte(cpu, addr + 1);
 
-	return (hi << 8) | lo;
+	return ((hi << 8) | lo);
 }
 
 /* ------------------------------------------------------------------ */
@@ -39,33 +40,33 @@ read_word(CPU *cpu, uint16_t addr)
 /* ------------------------------------------------------------------ */
 
 static inline void
-push_byte(CPU *cpu, uint8_t val)
+push_byte(struct cpu *cpu, uint8_t val)
 {
 	write_byte(cpu, 0x0100 + cpu->s, val);
 	cpu->s--;
 }
 
 static inline uint8_t
-pull_byte(CPU *cpu)
+pull_byte(struct cpu *cpu)
 {
 	cpu->s++;
-	return read_byte(cpu, 0x0100 + cpu->s);
+	return (read_byte(cpu, 0x0100 + cpu->s));
 }
 
 static inline void
-push_word(CPU *cpu, uint16_t val)
+push_word(struct cpu *cpu, uint16_t val)
 {
 	push_byte(cpu, (val >> 8) & 0xFF);
 	push_byte(cpu, val & 0xFF);
 }
 
 static inline uint16_t
-pull_word(CPU *cpu)
+pull_word(struct cpu *cpu)
 {
 	uint8_t lo = pull_byte(cpu);
 	uint8_t hi = pull_byte(cpu);
 
-	return (hi << 8) | lo;
+	return ((hi << 8) | lo);
 }
 
 /* ------------------------------------------------------------------ */
@@ -73,7 +74,7 @@ pull_word(CPU *cpu)
 /* ------------------------------------------------------------------ */
 
 static inline void
-set_flag(CPU *cpu, uint8_t flag, bool cond)
+set_flag(struct cpu *cpu, uint8_t flag, bool cond)
 {
 	if (cond)
 		cpu->p |= flag;
@@ -82,7 +83,7 @@ set_flag(CPU *cpu, uint8_t flag, bool cond)
 }
 
 static inline void
-update_nz(CPU *cpu, uint8_t val)
+update_nz(struct cpu *cpu, uint8_t val)
 {
 	set_flag(cpu, FLAG_ZERO, val == 0);
 	set_flag(cpu, FLAG_NEGATIVE, (val & 0x80) != 0);
@@ -93,11 +94,11 @@ update_nz(CPU *cpu, uint8_t val)
 /* ------------------------------------------------------------------ */
 
 void
-cpu_init(CPU *cpu, Bus *bus)
+cpu_init(struct cpu *cpu, struct bus *bus)
 {
 	cpu->bus = bus;
 	/*
-	 * Real Apple-1 had no power-on reset circuit — the CPU starts
+	 * Real Apple-1 had no power-on reset circuit — the struct cpu starts
 	 * in an undefined/frozen state until the user presses RESET.
 	 * We model this with halted=true; cpu_reset() clears it.
 	 */
@@ -119,8 +120,10 @@ cpu_init(CPU *cpu, Bus *bus)
 }
 
 void
-cpu_reset(CPU *cpu)
+cpu_reset(struct cpu *cpu)
 {
+	uint8_t hi, lo;
+
 	cpu->a = 0;
 	cpu->x = 0;
 	cpu->y = 0;
@@ -128,11 +131,11 @@ cpu_reset(CPU *cpu)
 	cpu->p = FLAG_UNUSED | FLAG_INTERRUPT; /* 0x24 on boot */
 	cpu->nmi_pending = false;
 	cpu->irq_pending = false;
-	cpu->halted = false; /* RESET always un-freezes the CPU */
+	cpu->halted = false; /* RESET always un-freezes the struct cpu */
 
 	/* Read start address from the Reset Vector (RESET_VECTOR/RESET_VECTOR+1) */
-	uint8_t lo = bus_read(cpu->bus, RESET_VECTOR);
-	uint8_t hi = bus_read(cpu->bus, RESET_VECTOR + 1);
+	lo = bus_read(cpu->bus, RESET_VECTOR);
+	hi = bus_read(cpu->bus, RESET_VECTOR + 1);
 
 	cpu->pc = (hi << 8) | lo;
 
@@ -159,102 +162,102 @@ cpu_reset(CPU *cpu)
 /* ------------------------------------------------------------------ */
 
 static uint16_t
-addr_imm(CPU *cpu)
+addr_imm(struct cpu *cpu)
 {
-	return cpu->pc++;
+	return (cpu->pc++);
 }
 
 static uint16_t
-addr_zp(CPU *cpu)
+addr_zp(struct cpu *cpu)
 {
-	return read_byte(cpu, cpu->pc++);
+	return (read_byte(cpu, cpu->pc++));
 }
 
 static uint16_t
-addr_zpx(CPU *cpu)
-{
-	uint8_t base = read_byte(cpu, cpu->pc++);
-	read_byte(cpu, base); /* cycle 3: dummy read of unindexed zp address */
-	return (base + cpu->x) & 0xFF;
-}
-
-static uint16_t
-addr_zpy(CPU *cpu)
+addr_zpx(struct cpu *cpu)
 {
 	uint8_t base = read_byte(cpu, cpu->pc++);
 	read_byte(cpu, base); /* cycle 3: dummy read of unindexed zp address */
-	return (base + cpu->y) & 0xFF;
+	return ((base + cpu->x) & 0xFF);
 }
 
 static uint16_t
-addr_abs(CPU *cpu)
+addr_zpy(struct cpu *cpu)
+{
+	uint8_t base = read_byte(cpu, cpu->pc++);
+	read_byte(cpu, base); /* cycle 3: dummy read of unindexed zp address */
+	return ((base + cpu->y) & 0xFF);
+}
+
+static uint16_t
+addr_abs(struct cpu *cpu)
 {
 	uint16_t a = read_word(cpu, cpu->pc);
 
 	cpu->pc += 2;
-	return a;
+	return (a);
 }
 
 static uint16_t
-addr_absx(CPU *cpu, bool *px)
+addr_absx(struct cpu *cpu, bool *px)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
+	uint16_t a, base;
 
+	base = read_word(cpu, cpu->pc);
 	cpu->pc += 2;
-	uint16_t a = base + cpu->x;
-
+	a = base + cpu->x;
 	*px = (base & 0xFF00) != (a & 0xFF00);
-	if (*px) {
+	if (*px != 0) {
 		/* cycle 4: dummy read of uncorrected address */
 		read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
 	}
-	return a;
+	return (a);
 }
 
 static uint16_t
-addr_absx_always(CPU *cpu)
+addr_absx_always(struct cpu *cpu)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
+	uint16_t a, base;
 
+	base = read_word(cpu, cpu->pc);
 	cpu->pc += 2;
-	uint16_t a = base + cpu->x;
-
+	a = base + cpu->x;
 	/* cycle 4: dummy read of uncorrected address */
 	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
-	return a;
+	return (a);
 }
 
 static uint16_t
-addr_absy(CPU *cpu, bool *px)
+addr_absy(struct cpu *cpu, bool *px)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
+	uint16_t a, base;
 
+	base = read_word(cpu, cpu->pc);
 	cpu->pc += 2;
-	uint16_t a = base + cpu->y;
-
+	a = base + cpu->y;
 	*px = (base & 0xFF00) != (a & 0xFF00);
-	if (*px) {
+	if (*px != 0) {
 		/* cycle 4: dummy read of uncorrected address */
 		read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
 	}
-	return a;
+	return (a);
 }
 
 static uint16_t
-addr_absy_always(CPU *cpu)
+addr_absy_always(struct cpu *cpu)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
+	uint16_t a, base;
 
+	base = read_word(cpu, cpu->pc);
 	cpu->pc += 2;
-	uint16_t a = base + cpu->y;
-
+	a = base + cpu->y;
 	/* cycle 4: dummy read of uncorrected address */
 	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
-	return a;
+	return (a);
 }
 
 static uint16_t
-addr_ind(CPU *cpu)
+addr_ind(struct cpu *cpu)
 {
 	uint16_t ptr = read_word(cpu, cpu->pc);
 
@@ -264,13 +267,13 @@ addr_ind(CPU *cpu)
 		uint8_t lo = read_byte(cpu, ptr);
 		uint8_t hi = read_byte(cpu, ptr & 0xFF00);
 
-		return (hi << 8) | lo;
+		return ((hi << 8) | lo);
 	}
-	return read_word(cpu, ptr);
+	return (read_word(cpu, ptr));
 }
 
 static uint16_t
-addr_izx(CPU *cpu)
+addr_izx(struct cpu *cpu)
 {
 	uint8_t zp_raw = read_byte(cpu, cpu->pc++);
 	read_byte(cpu, zp_raw); /* cycle 3: dummy read before X is added */
@@ -278,38 +281,42 @@ addr_izx(CPU *cpu)
 	uint8_t lo = read_byte(cpu, zp);
 	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
 
-	return (hi << 8) | lo;
+	return ((hi << 8) | lo);
 }
 
 static uint16_t
-addr_izy(CPU *cpu, bool *px)
+addr_izy(struct cpu *cpu, bool *px)
 {
-	uint8_t zp = read_byte(cpu, cpu->pc++);
-	uint8_t lo = read_byte(cpu, zp);
-	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
-	uint16_t base = (hi << 8) | lo;
-	uint16_t a = base + cpu->y;
+	uint16_t a, base;
+	uint8_t hi, lo, zp;
 
+	zp = read_byte(cpu, cpu->pc++);
+	lo = read_byte(cpu, zp);
+	hi = read_byte(cpu, (zp + 1) & 0xFF);
+	base = (hi << 8) | lo;
+	a = base + cpu->y;
 	*px = (base & 0xFF00) != (a & 0xFF00);
-	if (*px) {
+	if (*px != 0) {
 		/* cycle 5: dummy read of uncorrected address */
 		read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
 	}
-	return a;
+	return (a);
 }
 
 static uint16_t
-addr_izy_always(CPU *cpu)
+addr_izy_always(struct cpu *cpu)
 {
-	uint8_t zp = read_byte(cpu, cpu->pc++);
-	uint8_t lo = read_byte(cpu, zp);
-	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
-	uint16_t base = (hi << 8) | lo;
-	uint16_t a = base + cpu->y;
+	uint16_t a, base;
+	uint8_t hi, lo, zp;
 
+	zp = read_byte(cpu, cpu->pc++);
+	lo = read_byte(cpu, zp);
+	hi = read_byte(cpu, (zp + 1) & 0xFF);
+	base = (hi << 8) | lo;
+	a = base + cpu->y;
 	/* cycle 5: dummy read of uncorrected address */
 	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
-	return a;
+	return (a);
 }
 
 /* ------------------------------------------------------------------ */
@@ -317,27 +324,27 @@ addr_izy_always(CPU *cpu)
 /* ------------------------------------------------------------------ */
 
 static uint8_t
-do_branch(CPU *cpu, bool cond)
+do_branch(struct cpu *cpu, bool cond)
 {
-	int8_t off = (int8_t)read_byte(cpu, cpu->pc++);
+	uint16_t intermediate, old, target;
+	int8_t off;
 
-	if (cond) {
-		uint16_t old = cpu->pc;
+	off = (int8_t)read_byte(cpu, cpu->pc++);
+	if (cond != 0) {
+		old = cpu->pc;
 		read_byte(cpu, old); /* cycle 3: dummy read of PC+2 */
-
-		uint16_t target = old + off;
+		target = old + off;
 		if ((old & 0xFF00) != (target & 0xFF00)) {
 			/* cycle 4: dummy read of intermediate address (uncorrected page) */
-			uint16_t intermediate = (old & 0xFF00) |
-			    (target & 0x00FF);
+			intermediate = (old & 0xFF00) | (target & 0x00FF);
 			read_byte(cpu, intermediate);
 			cpu->pc = target;
-			return 2;
+			return (2);
 		}
 		cpu->pc = target;
-		return 1;
+		return (1);
 	}
-	return 0;
+	return (0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -345,69 +352,65 @@ do_branch(CPU *cpu, bool cond)
 /* ------------------------------------------------------------------ */
 
 static void
-adc_bcd(CPU *cpu, uint8_t m)
+adc_bcd(struct cpu *cpu, uint8_t m)
 {
-	uint8_t carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
-	uint8_t bin_result = cpu->a + m + carry;
-	set_flag(cpu, FLAG_ZERO, bin_result == 0);
+	uint8_t bin_result, carry, high, low, result;
 
-	uint8_t low = (cpu->a & 0x0F) + (m & 0x0F) + carry;
-	uint8_t high = (cpu->a >> 4) + (m >> 4);
+	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	bin_result = cpu->a + m + carry;
+	set_flag(cpu, FLAG_ZERO, bin_result == 0);
+	low = (cpu->a & 0x0F) + (m & 0x0F) + carry;
+	high = (cpu->a >> 4) + (m >> 4);
 	if (low > 9) {
 		low -= 10;
 		high++;
 	}
-
-	uint8_t result = (high << 4) | (low & 0x0F);
+	result = (high << 4) | (low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
 	set_flag(cpu,
 	    FLAG_OVERFLOW,
 	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
-
 	if (high > 9) {
-		result -= 0xA0; // 10 * 16
+		result -= 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, true);
 	} else {
 		set_flag(cpu, FLAG_CARRY, false);
 	}
-
 	cpu->a = result;
 }
 
 static void
-sbc_bcd(CPU *cpu, uint8_t m)
+sbc_bcd(struct cpu *cpu, uint8_t m)
 {
-	uint8_t carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
-	uint8_t bin_result = cpu->a + (m ^ 0xFF) + carry;
+	uint8_t bin_result, carry, result;
+	int8_t carry_inv, high, low;
+
+	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	bin_result = cpu->a + (m ^ 0xFF) + carry;
 	set_flag(cpu, FLAG_ZERO, bin_result == 0);
-
-	int8_t carry_inv = (carry == 0) ? 1 : 0;
-	int8_t low = (int8_t)(cpu->a & 0x0F) - (int8_t)(m & 0x0F) - carry_inv;
-	int8_t high = (int8_t)(cpu->a >> 4) - (int8_t)(m >> 4);
-
+	carry_inv = (carry == 0) ? 1 : 0;
+	low = (int8_t)(cpu->a & 0x0F) - (int8_t)(m & 0x0F) - carry_inv;
+	high = (int8_t)(cpu->a >> 4) - (int8_t)(m >> 4);
 	if (low < 0) {
 		low += 10;
 		high--;
 	}
-
-	uint8_t result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
+	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
 	set_flag(cpu,
 	    FLAG_OVERFLOW,
 	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
-
 	if (high < 0) {
-		result += 0xA0; // 10 * 16
+		result += 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, false);
 	} else {
 		set_flag(cpu, FLAG_CARRY, true);
 	}
-
 	cpu->a = result;
 }
 
 static void
-adc_bin(CPU *cpu, uint8_t m)
+adc_bin(struct cpu *cpu, uint8_t m)
 {
 	int c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	int sum = cpu->a + m + c;
@@ -422,7 +425,7 @@ adc_bin(CPU *cpu, uint8_t m)
 }
 
 static void
-sbc_bin(CPU *cpu, uint8_t m)
+sbc_bin(struct cpu *cpu, uint8_t m)
 {
 	int c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	int val = m ^ 0xFF;
@@ -441,7 +444,7 @@ sbc_bin(CPU *cpu, uint8_t m)
 /* Opcode handler typedef                                               */
 /* ------------------------------------------------------------------ */
 
-typedef void (*opcode_fn)(CPU *cpu);
+typedef void (*opcode_fn)(struct cpu *cpu);
 
 /* ================================================================== */
 /* Individual opcode handlers                                           */
@@ -451,7 +454,7 @@ typedef void (*opcode_fn)(CPU *cpu);
 
 /* ---- ADC ---- */
 static void
-op_adc_imm(CPU *cpu)
+op_adc_imm(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_imm(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -461,7 +464,7 @@ op_adc_imm(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_adc_zp(CPU *cpu)
+op_adc_zp(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_zp(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -471,7 +474,7 @@ op_adc_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_adc_zpx(CPU *cpu)
+op_adc_zpx(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_zpx(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -481,7 +484,7 @@ op_adc_zpx(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_adc_abs(CPU *cpu)
+op_adc_abs(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_abs(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -491,7 +494,7 @@ op_adc_abs(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_adc_absx(CPU *cpu)
+op_adc_absx(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t m = read_byte(cpu, addr_absx(cpu, &px));
@@ -502,7 +505,7 @@ op_adc_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_adc_absy(CPU *cpu)
+op_adc_absy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t m = read_byte(cpu, addr_absy(cpu, &px));
@@ -513,7 +516,7 @@ op_adc_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_adc_izx(CPU *cpu)
+op_adc_izx(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_izx(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -523,7 +526,7 @@ op_adc_izx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_adc_izy(CPU *cpu)
+op_adc_izy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t m = read_byte(cpu, addr_izy(cpu, &px));
@@ -536,35 +539,35 @@ op_adc_izy(CPU *cpu)
 
 /* ---- AND ---- */
 static void
-op_and_imm(CPU *cpu)
+op_and_imm(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, addr_imm(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
 static void
-op_and_zp(CPU *cpu)
+op_and_zp(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, addr_zp(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 3;
 }
 static void
-op_and_zpx(CPU *cpu)
+op_and_zpx(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, addr_zpx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_and_abs(CPU *cpu)
+op_and_abs(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, addr_abs(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_and_absx(CPU *cpu)
+op_and_absx(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a &= read_byte(cpu, addr_absx(cpu, &px));
@@ -572,7 +575,7 @@ op_and_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_and_absy(CPU *cpu)
+op_and_absy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a &= read_byte(cpu, addr_absy(cpu, &px));
@@ -580,14 +583,14 @@ op_and_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_and_izx(CPU *cpu)
+op_and_izx(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, addr_izx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 6;
 }
 static void
-op_and_izy(CPU *cpu)
+op_and_izy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a &= read_byte(cpu, addr_izy(cpu, &px));
@@ -597,7 +600,7 @@ op_and_izy(CPU *cpu)
 
 /* ---- ASL ---- */
 static void
-op_asl_acc(CPU *cpu)
+op_asl_acc(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x80) != 0);
@@ -606,7 +609,7 @@ op_asl_acc(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_asl_zp(CPU *cpu)
+op_asl_zp(struct cpu *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -618,7 +621,7 @@ op_asl_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_asl_zpx(CPU *cpu)
+op_asl_zpx(struct cpu *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -630,7 +633,7 @@ op_asl_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_asl_abs(CPU *cpu)
+op_asl_abs(struct cpu *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -642,7 +645,7 @@ op_asl_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_asl_absx(CPU *cpu)
+op_asl_absx(struct cpu *cpu)
 {
 	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -656,49 +659,49 @@ op_asl_absx(CPU *cpu)
 
 /* ---- Branch ---- */
 static void
-op_bpl(CPU *cpu)
+op_bpl(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, !(cpu->p & FLAG_NEGATIVE));
 }
 static void
-op_bmi(CPU *cpu)
+op_bmi(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, (cpu->p & FLAG_NEGATIVE));
 }
 static void
-op_bvc(CPU *cpu)
+op_bvc(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, !(cpu->p & FLAG_OVERFLOW));
 }
 static void
-op_bvs(CPU *cpu)
+op_bvs(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, (cpu->p & FLAG_OVERFLOW));
 }
 static void
-op_bcc(CPU *cpu)
+op_bcc(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, !(cpu->p & FLAG_CARRY));
 }
 static void
-op_bcs(CPU *cpu)
+op_bcs(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, (cpu->p & FLAG_CARRY));
 }
 static void
-op_bne(CPU *cpu)
+op_bne(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, !(cpu->p & FLAG_ZERO));
 }
 static void
-op_beq(CPU *cpu)
+op_beq(struct cpu *cpu)
 {
 	cpu->last_cycles = 2 + do_branch(cpu, (cpu->p & FLAG_ZERO));
 }
 
 /* ---- BIT ---- */
 static void
-op_bit_zp(CPU *cpu)
+op_bit_zp(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zp(cpu));
 	set_flag(cpu, FLAG_ZERO, (cpu->a & t) == 0);
@@ -707,7 +710,7 @@ op_bit_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_bit_abs(CPU *cpu)
+op_bit_abs(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_abs(cpu));
 	set_flag(cpu, FLAG_ZERO, (cpu->a & t) == 0);
@@ -718,7 +721,7 @@ op_bit_abs(CPU *cpu)
 
 /* ---- BRK ---- */
 static void
-op_brk(CPU *cpu)
+op_brk(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc++); /* cycle 2: fetch and discard padding byte */
 	push_word(cpu, cpu->pc);
@@ -730,28 +733,28 @@ op_brk(CPU *cpu)
 
 /* ---- Clear flags ---- */
 static void
-op_clc(CPU *cpu)
+op_clc(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, false);
 	cpu->last_cycles = 2;
 }
 static void
-op_cli(CPU *cpu)
+op_cli(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_INTERRUPT, false);
 	cpu->last_cycles = 2;
 }
 static void
-op_clv(CPU *cpu)
+op_clv(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_OVERFLOW, false);
 	cpu->last_cycles = 2;
 }
 static void
-op_cld(CPU *cpu)
+op_cld(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_DECIMAL, false);
@@ -760,21 +763,21 @@ op_cld(CPU *cpu)
 
 /* ---- Set flags ---- */
 static void
-op_sec(CPU *cpu)
+op_sec(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, true);
 	cpu->last_cycles = 2;
 }
 static void
-op_sei(CPU *cpu)
+op_sei(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_INTERRUPT, true);
 	cpu->last_cycles = 2;
 }
 static void
-op_sed(CPU *cpu)
+op_sed(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_DECIMAL, true);
@@ -783,7 +786,7 @@ op_sed(CPU *cpu)
 
 /* ---- CMP ---- */
 static void
-op_cmp_imm(CPU *cpu)
+op_cmp_imm(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_imm(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->a >= t);
@@ -791,7 +794,7 @@ op_cmp_imm(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_cmp_zp(CPU *cpu)
+op_cmp_zp(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zp(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->a >= t);
@@ -799,7 +802,7 @@ op_cmp_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_cmp_zpx(CPU *cpu)
+op_cmp_zpx(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zpx(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->a >= t);
@@ -807,7 +810,7 @@ op_cmp_zpx(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_cmp_abs(CPU *cpu)
+op_cmp_abs(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_abs(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->a >= t);
@@ -815,7 +818,7 @@ op_cmp_abs(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_cmp_absx(CPU *cpu)
+op_cmp_absx(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t t = read_byte(cpu, addr_absx(cpu, &px));
@@ -824,7 +827,7 @@ op_cmp_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_cmp_absy(CPU *cpu)
+op_cmp_absy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t t = read_byte(cpu, addr_absy(cpu, &px));
@@ -833,7 +836,7 @@ op_cmp_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_cmp_izx(CPU *cpu)
+op_cmp_izx(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_izx(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->a >= t);
@@ -841,7 +844,7 @@ op_cmp_izx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_cmp_izy(CPU *cpu)
+op_cmp_izy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t t = read_byte(cpu, addr_izy(cpu, &px));
@@ -852,7 +855,7 @@ op_cmp_izy(CPU *cpu)
 
 /* ---- CPX ---- */
 static void
-op_cpx_imm(CPU *cpu)
+op_cpx_imm(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_imm(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->x >= t);
@@ -860,7 +863,7 @@ op_cpx_imm(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_cpx_zp(CPU *cpu)
+op_cpx_zp(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zp(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->x >= t);
@@ -868,7 +871,7 @@ op_cpx_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_cpx_abs(CPU *cpu)
+op_cpx_abs(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_abs(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->x >= t);
@@ -878,7 +881,7 @@ op_cpx_abs(CPU *cpu)
 
 /* ---- CPY ---- */
 static void
-op_cpy_imm(CPU *cpu)
+op_cpy_imm(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_imm(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->y >= t);
@@ -886,7 +889,7 @@ op_cpy_imm(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_cpy_zp(CPU *cpu)
+op_cpy_zp(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zp(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->y >= t);
@@ -894,7 +897,7 @@ op_cpy_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_cpy_abs(CPU *cpu)
+op_cpy_abs(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_abs(cpu));
 	set_flag(cpu, FLAG_CARRY, cpu->y >= t);
@@ -904,7 +907,7 @@ op_cpy_abs(CPU *cpu)
 
 /* ---- DEC ---- */
 static void
-op_dec_zp(CPU *cpu)
+op_dec_zp(struct cpu *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -916,7 +919,7 @@ op_dec_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_dec_zpx(CPU *cpu)
+op_dec_zpx(struct cpu *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -928,7 +931,7 @@ op_dec_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_dec_abs(CPU *cpu)
+op_dec_abs(struct cpu *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -940,7 +943,7 @@ op_dec_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_dec_absx(CPU *cpu)
+op_dec_absx(struct cpu *cpu)
 {
 	uint16_t a = addr_absx_always(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -954,7 +957,7 @@ op_dec_absx(CPU *cpu)
 
 /* ---- DEX / DEY ---- */
 static void
-op_dex(CPU *cpu)
+op_dex(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x--;
@@ -962,7 +965,7 @@ op_dex(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_dey(CPU *cpu)
+op_dey(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->y--;
@@ -972,35 +975,35 @@ op_dey(CPU *cpu)
 
 /* ---- EOR ---- */
 static void
-op_eor_imm(CPU *cpu)
+op_eor_imm(struct cpu *cpu)
 {
 	cpu->a ^= read_byte(cpu, addr_imm(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
 static void
-op_eor_zp(CPU *cpu)
+op_eor_zp(struct cpu *cpu)
 {
 	cpu->a ^= read_byte(cpu, addr_zp(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 3;
 }
 static void
-op_eor_zpx(CPU *cpu)
+op_eor_zpx(struct cpu *cpu)
 {
 	cpu->a ^= read_byte(cpu, addr_zpx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_eor_abs(CPU *cpu)
+op_eor_abs(struct cpu *cpu)
 {
 	cpu->a ^= read_byte(cpu, addr_abs(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_eor_absx(CPU *cpu)
+op_eor_absx(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a ^= read_byte(cpu, addr_absx(cpu, &px));
@@ -1008,7 +1011,7 @@ op_eor_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_eor_absy(CPU *cpu)
+op_eor_absy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a ^= read_byte(cpu, addr_absy(cpu, &px));
@@ -1016,14 +1019,14 @@ op_eor_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_eor_izx(CPU *cpu)
+op_eor_izx(struct cpu *cpu)
 {
 	cpu->a ^= read_byte(cpu, addr_izx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 6;
 }
 static void
-op_eor_izy(CPU *cpu)
+op_eor_izy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a ^= read_byte(cpu, addr_izy(cpu, &px));
@@ -1033,7 +1036,7 @@ op_eor_izy(CPU *cpu)
 
 /* ---- INC ---- */
 static void
-op_inc_zp(CPU *cpu)
+op_inc_zp(struct cpu *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -1045,7 +1048,7 @@ op_inc_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_inc_zpx(CPU *cpu)
+op_inc_zpx(struct cpu *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -1057,7 +1060,7 @@ op_inc_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_inc_abs(CPU *cpu)
+op_inc_abs(struct cpu *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -1069,7 +1072,7 @@ op_inc_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_inc_absx(CPU *cpu)
+op_inc_absx(struct cpu *cpu)
 {
 	uint16_t a = addr_absx_always(cpu);
 	uint8_t orig = read_byte(cpu, a);
@@ -1083,7 +1086,7 @@ op_inc_absx(CPU *cpu)
 
 /* ---- INX / INY ---- */
 static void
-op_inx(CPU *cpu)
+op_inx(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x++;
@@ -1091,7 +1094,7 @@ op_inx(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_iny(CPU *cpu)
+op_iny(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->y++;
@@ -1101,13 +1104,13 @@ op_iny(CPU *cpu)
 
 /* ---- JMP ---- */
 static void
-op_jmp_abs(CPU *cpu)
+op_jmp_abs(struct cpu *cpu)
 {
 	cpu->pc = addr_abs(cpu);
 	cpu->last_cycles = 3;
 }
 static void
-op_jmp_ind(CPU *cpu)
+op_jmp_ind(struct cpu *cpu)
 {
 	cpu->pc = addr_ind(cpu);
 	cpu->last_cycles = 5;
@@ -1115,7 +1118,7 @@ op_jmp_ind(CPU *cpu)
 
 /* ---- JSR / RTS / RTI ---- */
 static void
-op_jsr(CPU *cpu)
+op_jsr(struct cpu *cpu)
 {
 	uint8_t lo = read_byte(cpu, cpu->pc++); /* cycle 2: addr low */
 	read_byte(cpu, 0x0100 + cpu->s);	/* cycle 3: dummy stack read */
@@ -1126,7 +1129,7 @@ op_jsr(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_rts(CPU *cpu)
+op_rts(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
 	read_byte(cpu,
@@ -1138,7 +1141,7 @@ op_rts(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_rti(CPU *cpu)
+op_rti(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
 	read_byte(cpu,
@@ -1151,35 +1154,35 @@ op_rti(CPU *cpu)
 
 /* ---- LDA ---- */
 static void
-op_lda_imm(CPU *cpu)
+op_lda_imm(struct cpu *cpu)
 {
 	cpu->a = read_byte(cpu, addr_imm(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
 static void
-op_lda_zp(CPU *cpu)
+op_lda_zp(struct cpu *cpu)
 {
 	cpu->a = read_byte(cpu, addr_zp(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 3;
 }
 static void
-op_lda_zpx(CPU *cpu)
+op_lda_zpx(struct cpu *cpu)
 {
 	cpu->a = read_byte(cpu, addr_zpx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_lda_abs(CPU *cpu)
+op_lda_abs(struct cpu *cpu)
 {
 	cpu->a = read_byte(cpu, addr_abs(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_lda_absx(CPU *cpu)
+op_lda_absx(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a = read_byte(cpu, addr_absx(cpu, &px));
@@ -1187,7 +1190,7 @@ op_lda_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_lda_absy(CPU *cpu)
+op_lda_absy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a = read_byte(cpu, addr_absy(cpu, &px));
@@ -1195,14 +1198,14 @@ op_lda_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_lda_izx(CPU *cpu)
+op_lda_izx(struct cpu *cpu)
 {
 	cpu->a = read_byte(cpu, addr_izx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 6;
 }
 static void
-op_lda_izy(CPU *cpu)
+op_lda_izy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a = read_byte(cpu, addr_izy(cpu, &px));
@@ -1212,35 +1215,35 @@ op_lda_izy(CPU *cpu)
 
 /* ---- LDX ---- */
 static void
-op_ldx_imm(CPU *cpu)
+op_ldx_imm(struct cpu *cpu)
 {
 	cpu->x = read_byte(cpu, addr_imm(cpu));
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 2;
 }
 static void
-op_ldx_zp(CPU *cpu)
+op_ldx_zp(struct cpu *cpu)
 {
 	cpu->x = read_byte(cpu, addr_zp(cpu));
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 3;
 }
 static void
-op_ldx_zpy(CPU *cpu)
+op_ldx_zpy(struct cpu *cpu)
 {
 	cpu->x = read_byte(cpu, addr_zpy(cpu));
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 4;
 }
 static void
-op_ldx_abs(CPU *cpu)
+op_ldx_abs(struct cpu *cpu)
 {
 	cpu->x = read_byte(cpu, addr_abs(cpu));
 	update_nz(cpu, cpu->x);
 	cpu->last_cycles = 4;
 }
 static void
-op_ldx_absy(CPU *cpu)
+op_ldx_absy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->x = read_byte(cpu, addr_absy(cpu, &px));
@@ -1250,35 +1253,35 @@ op_ldx_absy(CPU *cpu)
 
 /* ---- LDY ---- */
 static void
-op_ldy_imm(CPU *cpu)
+op_ldy_imm(struct cpu *cpu)
 {
 	cpu->y = read_byte(cpu, addr_imm(cpu));
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 2;
 }
 static void
-op_ldy_zp(CPU *cpu)
+op_ldy_zp(struct cpu *cpu)
 {
 	cpu->y = read_byte(cpu, addr_zp(cpu));
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 3;
 }
 static void
-op_ldy_zpx(CPU *cpu)
+op_ldy_zpx(struct cpu *cpu)
 {
 	cpu->y = read_byte(cpu, addr_zpx(cpu));
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 4;
 }
 static void
-op_ldy_abs(CPU *cpu)
+op_ldy_abs(struct cpu *cpu)
 {
 	cpu->y = read_byte(cpu, addr_abs(cpu));
 	update_nz(cpu, cpu->y);
 	cpu->last_cycles = 4;
 }
 static void
-op_ldy_absx(CPU *cpu)
+op_ldy_absx(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->y = read_byte(cpu, addr_absx(cpu, &px));
@@ -1288,7 +1291,7 @@ op_ldy_absx(CPU *cpu)
 
 /* ---- LSR ---- */
 static void
-op_lsr_acc(CPU *cpu)
+op_lsr_acc(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x01) != 0);
@@ -1297,7 +1300,7 @@ op_lsr_acc(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_lsr_zp(CPU *cpu)
+op_lsr_zp(struct cpu *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1309,7 +1312,7 @@ op_lsr_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_lsr_zpx(CPU *cpu)
+op_lsr_zpx(struct cpu *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1321,7 +1324,7 @@ op_lsr_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_lsr_abs(CPU *cpu)
+op_lsr_abs(struct cpu *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1333,7 +1336,7 @@ op_lsr_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_lsr_absx(CPU *cpu)
+op_lsr_absx(struct cpu *cpu)
 {
 	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1347,7 +1350,7 @@ op_lsr_absx(CPU *cpu)
 
 /* ---- NOP ---- */
 static void
-op_nop(CPU *cpu)
+op_nop(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->last_cycles = 2;
@@ -1355,35 +1358,35 @@ op_nop(CPU *cpu)
 
 /* ---- ORA ---- */
 static void
-op_ora_imm(CPU *cpu)
+op_ora_imm(struct cpu *cpu)
 {
 	cpu->a |= read_byte(cpu, addr_imm(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
 static void
-op_ora_zp(CPU *cpu)
+op_ora_zp(struct cpu *cpu)
 {
 	cpu->a |= read_byte(cpu, addr_zp(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 3;
 }
 static void
-op_ora_zpx(CPU *cpu)
+op_ora_zpx(struct cpu *cpu)
 {
 	cpu->a |= read_byte(cpu, addr_zpx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_ora_abs(CPU *cpu)
+op_ora_abs(struct cpu *cpu)
 {
 	cpu->a |= read_byte(cpu, addr_abs(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_ora_absx(CPU *cpu)
+op_ora_absx(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a |= read_byte(cpu, addr_absx(cpu, &px));
@@ -1391,7 +1394,7 @@ op_ora_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_ora_absy(CPU *cpu)
+op_ora_absy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a |= read_byte(cpu, addr_absy(cpu, &px));
@@ -1399,14 +1402,14 @@ op_ora_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_ora_izx(CPU *cpu)
+op_ora_izx(struct cpu *cpu)
 {
 	cpu->a |= read_byte(cpu, addr_izx(cpu));
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 6;
 }
 static void
-op_ora_izy(CPU *cpu)
+op_ora_izy(struct cpu *cpu)
 {
 	bool px = false;
 	cpu->a |= read_byte(cpu, addr_izy(cpu, &px));
@@ -1416,21 +1419,21 @@ op_ora_izy(CPU *cpu)
 
 /* ---- PHA / PHP / PLA / PLP ---- */
 static void
-op_pha(CPU *cpu)
+op_pha(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
 	push_byte(cpu, cpu->a);	 /* cycle 3 */
 	cpu->last_cycles = 3;
 }
 static void
-op_php(CPU *cpu)
+op_php(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
 	push_byte(cpu, cpu->p | FLAG_BREAK | FLAG_UNUSED); /* cycle 3 */
 	cpu->last_cycles = 3;
 }
 static void
-op_pla(CPU *cpu)
+op_pla(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
 	read_byte(cpu,
@@ -1440,7 +1443,7 @@ op_pla(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_plp(CPU *cpu)
+op_plp(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read of PC+1 */
 	read_byte(cpu,
@@ -1451,22 +1454,27 @@ op_plp(CPU *cpu)
 
 /* ---- ROL ---- */
 static void
-op_rol_acc(CPU *cpu)
+op_rol_acc(struct cpu *cpu)
 {
+	uint8_t old_c;
+
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x80) != 0);
 	cpu->a = (cpu->a << 1) | old_c;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
 static void
-op_rol_zp(CPU *cpu)
+op_rol_zp(struct cpu *cpu)
 {
-	uint16_t a = addr_zp(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_zp(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1474,12 +1482,15 @@ op_rol_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_rol_zpx(CPU *cpu)
+op_rol_zpx(struct cpu *cpu)
 {
-	uint16_t a = addr_zpx(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_zpx(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1487,12 +1498,15 @@ op_rol_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_rol_abs(CPU *cpu)
+op_rol_abs(struct cpu *cpu)
 {
-	uint16_t a = addr_abs(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_abs(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1500,12 +1514,15 @@ op_rol_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_rol_absx(CPU *cpu)
+op_rol_absx(struct cpu *cpu)
 {
-	uint16_t a = addr_absx_always(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_absx_always(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1515,22 +1532,27 @@ op_rol_absx(CPU *cpu)
 
 /* ---- ROR ---- */
 static void
-op_ror_acc(CPU *cpu)
+op_ror_acc(struct cpu *cpu)
 {
+	uint8_t old_c;
+
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x01) != 0);
 	cpu->a = (cpu->a >> 1) | old_c;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
 static void
-op_ror_zp(CPU *cpu)
+op_ror_zp(struct cpu *cpu)
 {
-	uint16_t a = addr_zp(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_zp(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1538,12 +1560,15 @@ op_ror_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_ror_zpx(CPU *cpu)
+op_ror_zpx(struct cpu *cpu)
 {
-	uint16_t a = addr_zpx(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_zpx(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1551,12 +1576,15 @@ op_ror_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_ror_abs(CPU *cpu)
+op_ror_abs(struct cpu *cpu)
 {
-	uint16_t a = addr_abs(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_abs(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1564,12 +1592,15 @@ op_ror_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_ror_absx(CPU *cpu)
+op_ror_absx(struct cpu *cpu)
 {
-	uint16_t a = addr_absx_always(cpu);
-	uint8_t t = read_byte(cpu, a);
+	uint16_t a;
+	uint8_t old_c, t;
+
+	a = addr_absx_always(cpu);
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
 	write_byte(cpu, a, t);
@@ -1579,7 +1610,7 @@ op_ror_absx(CPU *cpu)
 
 /* ---- SBC ---- */
 static void
-op_sbc_imm(CPU *cpu)
+op_sbc_imm(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_imm(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -1589,7 +1620,7 @@ op_sbc_imm(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_sbc_zp(CPU *cpu)
+op_sbc_zp(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_zp(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -1599,7 +1630,7 @@ op_sbc_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_sbc_zpx(CPU *cpu)
+op_sbc_zpx(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_zpx(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -1609,7 +1640,7 @@ op_sbc_zpx(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_sbc_abs(CPU *cpu)
+op_sbc_abs(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_abs(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -1619,7 +1650,7 @@ op_sbc_abs(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_sbc_absx(CPU *cpu)
+op_sbc_absx(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t m = read_byte(cpu, addr_absx(cpu, &px));
@@ -1630,7 +1661,7 @@ op_sbc_absx(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_sbc_absy(CPU *cpu)
+op_sbc_absy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t m = read_byte(cpu, addr_absy(cpu, &px));
@@ -1641,7 +1672,7 @@ op_sbc_absy(CPU *cpu)
 	cpu->last_cycles = 4 + (px ? 1 : 0);
 }
 static void
-op_sbc_izx(CPU *cpu)
+op_sbc_izx(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, addr_izx(cpu));
 	if (cpu->p & FLAG_DECIMAL)
@@ -1651,7 +1682,7 @@ op_sbc_izx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_sbc_izy(CPU *cpu)
+op_sbc_izy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t m = read_byte(cpu, addr_izy(cpu, &px));
@@ -1664,57 +1695,66 @@ op_sbc_izy(CPU *cpu)
 
 /* ---- STA ---- */
 static void
-op_sta_zp(CPU *cpu)
+op_sta_zp(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zp(cpu), cpu->a);
 	cpu->last_cycles = 3;
 }
 static void
-op_sta_zpx(CPU *cpu)
+op_sta_zpx(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zpx(cpu), cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_sta_abs(CPU *cpu)
+op_sta_abs(struct cpu *cpu)
 {
 	write_byte(cpu, addr_abs(cpu), cpu->a);
 	cpu->last_cycles = 4;
 }
 static void
-op_sta_absx(CPU *cpu)
+op_sta_absx(struct cpu *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absx(cpu, &px);
-	if (!px) {
+	uint16_t a;
+	bool px;
+
+	px = false;
+	a = addr_absx(cpu, &px);
+	if (px == 0) {
 		read_byte(cpu, a);
 	}
 	write_byte(cpu, a, cpu->a);
 	cpu->last_cycles = 5;
 }
 static void
-op_sta_absy(CPU *cpu)
+op_sta_absy(struct cpu *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_absy(cpu, &px);
-	if (!px) {
+	uint16_t a;
+	bool px;
+
+	px = false;
+	a = addr_absy(cpu, &px);
+	if (px == 0) {
 		read_byte(cpu, a);
 	}
 	write_byte(cpu, a, cpu->a);
 	cpu->last_cycles = 5;
 }
 static void
-op_sta_izx(CPU *cpu)
+op_sta_izx(struct cpu *cpu)
 {
 	write_byte(cpu, addr_izx(cpu), cpu->a);
 	cpu->last_cycles = 6;
 }
 static void
-op_sta_izy(CPU *cpu)
+op_sta_izy(struct cpu *cpu)
 {
-	bool px = false;
-	uint16_t a = addr_izy(cpu, &px);
-	if (!px) {
+	uint16_t a;
+	bool px;
+
+	px = false;
+	a = addr_izy(cpu, &px);
+	if (px == 0) {
 		read_byte(cpu, a);
 	}
 	write_byte(cpu, a, cpu->a);
@@ -1723,19 +1763,19 @@ op_sta_izy(CPU *cpu)
 
 /* ---- STX ---- */
 static void
-op_stx_zp(CPU *cpu)
+op_stx_zp(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zp(cpu), cpu->x);
 	cpu->last_cycles = 3;
 }
 static void
-op_stx_zpy(CPU *cpu)
+op_stx_zpy(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zpy(cpu), cpu->x);
 	cpu->last_cycles = 4;
 }
 static void
-op_stx_abs(CPU *cpu)
+op_stx_abs(struct cpu *cpu)
 {
 	write_byte(cpu, addr_abs(cpu), cpu->x);
 	cpu->last_cycles = 4;
@@ -1743,19 +1783,19 @@ op_stx_abs(CPU *cpu)
 
 /* ---- STY ---- */
 static void
-op_sty_zp(CPU *cpu)
+op_sty_zp(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zp(cpu), cpu->y);
 	cpu->last_cycles = 3;
 }
 static void
-op_sty_zpx(CPU *cpu)
+op_sty_zpx(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zpx(cpu), cpu->y);
 	cpu->last_cycles = 4;
 }
 static void
-op_sty_abs(CPU *cpu)
+op_sty_abs(struct cpu *cpu)
 {
 	write_byte(cpu, addr_abs(cpu), cpu->y);
 	cpu->last_cycles = 4;
@@ -1763,7 +1803,7 @@ op_sty_abs(CPU *cpu)
 
 /* ---- Register transfers ---- */
 static void
-op_tax(CPU *cpu)
+op_tax(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x = cpu->a;
@@ -1771,7 +1811,7 @@ op_tax(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_tay(CPU *cpu)
+op_tay(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->y = cpu->a;
@@ -1779,7 +1819,7 @@ op_tay(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_tsx(CPU *cpu)
+op_tsx(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->x = cpu->s;
@@ -1787,7 +1827,7 @@ op_tsx(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_txa(CPU *cpu)
+op_txa(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->a = cpu->x;
@@ -1795,14 +1835,14 @@ op_txa(CPU *cpu)
 	cpu->last_cycles = 2;
 }
 static void
-op_txs(CPU *cpu)
+op_txs(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->s = cpu->x;
 	cpu->last_cycles = 2;
 } /* no flags */
 static void
-op_tya(CPU *cpu)
+op_tya(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->a = cpu->y;
@@ -1816,7 +1856,7 @@ op_tya(CPU *cpu)
 
 /* ---- LAX ---- */
 static void
-op_lax_izx(CPU *cpu)
+op_lax_izx(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_izx(cpu));
 	cpu->a = cpu->x = t;
@@ -1824,7 +1864,7 @@ op_lax_izx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_lax_zp(CPU *cpu)
+op_lax_zp(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zp(cpu));
 	cpu->a = cpu->x = t;
@@ -1832,7 +1872,7 @@ op_lax_zp(CPU *cpu)
 	cpu->last_cycles = 3;
 }
 static void
-op_lax_abs(CPU *cpu)
+op_lax_abs(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_abs(cpu));
 	cpu->a = cpu->x = t;
@@ -1840,7 +1880,7 @@ op_lax_abs(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_lax_izy(CPU *cpu)
+op_lax_izy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t t = read_byte(cpu, addr_izy(cpu, &px));
@@ -1849,7 +1889,7 @@ op_lax_izy(CPU *cpu)
 	cpu->last_cycles = 5 + (px ? 1 : 0);
 }
 static void
-op_lax_zpy(CPU *cpu)
+op_lax_zpy(struct cpu *cpu)
 {
 	uint8_t t = read_byte(cpu, addr_zpy(cpu));
 	cpu->a = cpu->x = t;
@@ -1857,7 +1897,7 @@ op_lax_zpy(CPU *cpu)
 	cpu->last_cycles = 4;
 }
 static void
-op_lax_absy(CPU *cpu)
+op_lax_absy(struct cpu *cpu)
 {
 	bool px = false;
 	uint8_t t = read_byte(cpu, addr_absy(cpu, &px));
@@ -1868,25 +1908,25 @@ op_lax_absy(CPU *cpu)
 
 /* ---- SAX ---- */
 static void
-op_sax_izx(CPU *cpu)
+op_sax_izx(struct cpu *cpu)
 {
 	write_byte(cpu, addr_izx(cpu), cpu->a & cpu->x);
 	cpu->last_cycles = 6;
 }
 static void
-op_sax_zp(CPU *cpu)
+op_sax_zp(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zp(cpu), cpu->a & cpu->x);
 	cpu->last_cycles = 3;
 }
 static void
-op_sax_abs(CPU *cpu)
+op_sax_abs(struct cpu *cpu)
 {
 	write_byte(cpu, addr_abs(cpu), cpu->a & cpu->x);
 	cpu->last_cycles = 4;
 }
 static void
-op_sax_zpy(CPU *cpu)
+op_sax_zpy(struct cpu *cpu)
 {
 	write_byte(cpu, addr_zpy(cpu), cpu->a & cpu->x);
 	cpu->last_cycles = 4;
@@ -1894,7 +1934,7 @@ op_sax_zpy(CPU *cpu)
 
 /* ---- SLO (ASL+ORA, RMW) ---- */
 static void
-op_slo_izx(CPU *cpu)
+op_slo_izx(struct cpu *cpu)
 {
 	uint16_t a = addr_izx(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1907,7 +1947,7 @@ op_slo_izx(CPU *cpu)
 	cpu->last_cycles = 8;
 }
 static void
-op_slo_zp(CPU *cpu)
+op_slo_zp(struct cpu *cpu)
 {
 	uint16_t a = addr_zp(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1920,7 +1960,7 @@ op_slo_zp(CPU *cpu)
 	cpu->last_cycles = 5;
 }
 static void
-op_slo_abs(CPU *cpu)
+op_slo_abs(struct cpu *cpu)
 {
 	uint16_t a = addr_abs(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1933,7 +1973,7 @@ op_slo_abs(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_slo_izy(CPU *cpu)
+op_slo_izy(struct cpu *cpu)
 {
 	uint16_t a = addr_izy_always(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1946,7 +1986,7 @@ op_slo_izy(CPU *cpu)
 	cpu->last_cycles = 8;
 }
 static void
-op_slo_zpx(CPU *cpu)
+op_slo_zpx(struct cpu *cpu)
 {
 	uint16_t a = addr_zpx(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1959,7 +1999,7 @@ op_slo_zpx(CPU *cpu)
 	cpu->last_cycles = 6;
 }
 static void
-op_slo_absy(CPU *cpu)
+op_slo_absy(struct cpu *cpu)
 {
 	uint16_t a = addr_absy_always(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1972,7 +2012,7 @@ op_slo_absy(CPU *cpu)
 	cpu->last_cycles = 7;
 }
 static void
-op_slo_absx(CPU *cpu)
+op_slo_absx(struct cpu *cpu)
 {
 	uint16_t a = addr_absx_always(cpu);
 	uint8_t t = read_byte(cpu, a);
@@ -1987,11 +2027,13 @@ op_slo_absx(CPU *cpu)
 
 /* ---- RLA (ROL+AND, RMW) ---- */
 static void
-rla_core(CPU *cpu, uint16_t a)
+rla_core(struct cpu *cpu, uint16_t a)
 {
-	uint8_t t = read_byte(cpu, a);
+	uint8_t old_c, t;
+
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
 	t = (t << 1) | old_c;
 	cpu->a &= t;
@@ -1999,43 +2041,43 @@ rla_core(CPU *cpu, uint16_t a)
 	write_byte(cpu, a, t);
 }
 static void
-op_rla_izx(CPU *cpu)
+op_rla_izx(struct cpu *cpu)
 {
 	rla_core(cpu, addr_izx(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_rla_zp(CPU *cpu)
+op_rla_zp(struct cpu *cpu)
 {
 	rla_core(cpu, addr_zp(cpu));
 	cpu->last_cycles = 5;
 }
 static void
-op_rla_abs(CPU *cpu)
+op_rla_abs(struct cpu *cpu)
 {
 	rla_core(cpu, addr_abs(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_rla_izy(CPU *cpu)
+op_rla_izy(struct cpu *cpu)
 {
 	rla_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_rla_zpx(CPU *cpu)
+op_rla_zpx(struct cpu *cpu)
 {
 	rla_core(cpu, addr_zpx(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_rla_absy(CPU *cpu)
+op_rla_absy(struct cpu *cpu)
 {
 	rla_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
-op_rla_absx(CPU *cpu)
+op_rla_absx(struct cpu *cpu)
 {
 	rla_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
@@ -2043,7 +2085,7 @@ op_rla_absx(CPU *cpu)
 
 /* ---- SRE (LSR+EOR, RMW) ---- */
 static void
-sre_core(CPU *cpu, uint16_t a)
+sre_core(struct cpu *cpu, uint16_t a)
 {
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
@@ -2054,43 +2096,43 @@ sre_core(CPU *cpu, uint16_t a)
 	write_byte(cpu, a, t);
 }
 static void
-op_sre_izx(CPU *cpu)
+op_sre_izx(struct cpu *cpu)
 {
 	sre_core(cpu, addr_izx(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_sre_zp(CPU *cpu)
+op_sre_zp(struct cpu *cpu)
 {
 	sre_core(cpu, addr_zp(cpu));
 	cpu->last_cycles = 5;
 }
 static void
-op_sre_abs(CPU *cpu)
+op_sre_abs(struct cpu *cpu)
 {
 	sre_core(cpu, addr_abs(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_sre_izy(CPU *cpu)
+op_sre_izy(struct cpu *cpu)
 {
 	sre_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_sre_zpx(CPU *cpu)
+op_sre_zpx(struct cpu *cpu)
 {
 	sre_core(cpu, addr_zpx(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_sre_absy(CPU *cpu)
+op_sre_absy(struct cpu *cpu)
 {
 	sre_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
-op_sre_absx(CPU *cpu)
+op_sre_absx(struct cpu *cpu)
 {
 	sre_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
@@ -2098,11 +2140,13 @@ op_sre_absx(CPU *cpu)
 
 /* ---- RRA (ROR+ADC, RMW) ---- */
 static void
-rra_core(CPU *cpu, uint16_t a)
+rra_core(struct cpu *cpu, uint16_t a)
 {
-	uint8_t t = read_byte(cpu, a);
+	uint8_t old_c, t;
+
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
+	old_c = (cpu->p & FLAG_CARRY) ? 0x80 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x01) != 0);
 	t = (t >> 1) | old_c;
 	if (cpu->p & FLAG_DECIMAL)
@@ -2112,43 +2156,43 @@ rra_core(CPU *cpu, uint16_t a)
 	write_byte(cpu, a, t);
 }
 static void
-op_rra_izx(CPU *cpu)
+op_rra_izx(struct cpu *cpu)
 {
 	rra_core(cpu, addr_izx(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_rra_zp(CPU *cpu)
+op_rra_zp(struct cpu *cpu)
 {
 	rra_core(cpu, addr_zp(cpu));
 	cpu->last_cycles = 5;
 }
 static void
-op_rra_abs(CPU *cpu)
+op_rra_abs(struct cpu *cpu)
 {
 	rra_core(cpu, addr_abs(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_rra_izy(CPU *cpu)
+op_rra_izy(struct cpu *cpu)
 {
 	rra_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_rra_zpx(CPU *cpu)
+op_rra_zpx(struct cpu *cpu)
 {
 	rra_core(cpu, addr_zpx(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_rra_absy(CPU *cpu)
+op_rra_absy(struct cpu *cpu)
 {
 	rra_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
-op_rra_absx(CPU *cpu)
+op_rra_absx(struct cpu *cpu)
 {
 	rra_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
@@ -2156,55 +2200,58 @@ op_rra_absx(CPU *cpu)
 
 /* ---- DCP (DEC+CMP, RMW) ---- */
 static void
-dcp_core(CPU *cpu, uint16_t a)
+dcp_core(struct cpu *cpu, uint16_t a)
 {
-	uint8_t t = read_byte(cpu, a);
+	uint8_t t;
+	int diff;
+
+	t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
 	t--;
-	int diff = cpu->a - t;
+	diff = cpu->a - t;
 	set_flag(cpu, FLAG_CARRY, cpu->a >= t);
 	set_flag(cpu, FLAG_ZERO, (diff & 0xFF) == 0);
 	set_flag(cpu, FLAG_NEGATIVE, (diff & 0x80) != 0);
 	write_byte(cpu, a, t);
 }
 static void
-op_dcp_izx(CPU *cpu)
+op_dcp_izx(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_izx(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_dcp_zp(CPU *cpu)
+op_dcp_zp(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_zp(cpu));
 	cpu->last_cycles = 5;
 }
 static void
-op_dcp_abs(CPU *cpu)
+op_dcp_abs(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_abs(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_dcp_izy(CPU *cpu)
+op_dcp_izy(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_dcp_zpx(CPU *cpu)
+op_dcp_zpx(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_zpx(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_dcp_absy(CPU *cpu)
+op_dcp_absy(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
-op_dcp_absx(CPU *cpu)
+op_dcp_absx(struct cpu *cpu)
 {
 	dcp_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
@@ -2212,7 +2259,7 @@ op_dcp_absx(CPU *cpu)
 
 /* ---- ISC (INC+SBC, RMW) ---- */
 static void
-isc_core(CPU *cpu, uint16_t a)
+isc_core(struct cpu *cpu, uint16_t a)
 {
 	uint8_t t = read_byte(cpu, a);
 	write_byte_dummy(cpu, a, t);
@@ -2224,43 +2271,43 @@ isc_core(CPU *cpu, uint16_t a)
 	write_byte(cpu, a, t);
 }
 static void
-op_isc_izx(CPU *cpu)
+op_isc_izx(struct cpu *cpu)
 {
 	isc_core(cpu, addr_izx(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_isc_zp(CPU *cpu)
+op_isc_zp(struct cpu *cpu)
 {
 	isc_core(cpu, addr_zp(cpu));
 	cpu->last_cycles = 5;
 }
 static void
-op_isc_abs(CPU *cpu)
+op_isc_abs(struct cpu *cpu)
 {
 	isc_core(cpu, addr_abs(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_isc_izy(CPU *cpu)
+op_isc_izy(struct cpu *cpu)
 {
 	isc_core(cpu, addr_izy_always(cpu));
 	cpu->last_cycles = 8;
 }
 static void
-op_isc_zpx(CPU *cpu)
+op_isc_zpx(struct cpu *cpu)
 {
 	isc_core(cpu, addr_zpx(cpu));
 	cpu->last_cycles = 6;
 }
 static void
-op_isc_absy(CPU *cpu)
+op_isc_absy(struct cpu *cpu)
 {
 	isc_core(cpu, addr_absy_always(cpu));
 	cpu->last_cycles = 7;
 }
 static void
-op_isc_absx(CPU *cpu)
+op_isc_absx(struct cpu *cpu)
 {
 	isc_core(cpu, addr_absx_always(cpu));
 	cpu->last_cycles = 7;
@@ -2268,31 +2315,31 @@ op_isc_absx(CPU *cpu)
 
 /* ---- Undocumented NOPs ---- */
 static void
-op_nop_imp(CPU *cpu)
+op_nop_imp(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	cpu->last_cycles = 2;
 }
 static void
-op_nop_zp(CPU *cpu)
+op_nop_zp(struct cpu *cpu)
 {
 	(void)read_byte(cpu, addr_zp(cpu));
 	cpu->last_cycles = 3;
 }
 static void
-op_nop_zpx(CPU *cpu)
+op_nop_zpx(struct cpu *cpu)
 {
 	(void)read_byte(cpu, addr_zpx(cpu));
 	cpu->last_cycles = 4;
 }
 static void
-op_nop_abs(CPU *cpu)
+op_nop_abs(struct cpu *cpu)
 {
 	(void)read_byte(cpu, addr_abs(cpu));
 	cpu->last_cycles = 4;
 }
 static void
-op_nop_absx(CPU *cpu)
+op_nop_absx(struct cpu *cpu)
 {
 	bool px = false;
 	(void)read_byte(cpu, addr_absx(cpu, &px));
@@ -2300,21 +2347,21 @@ op_nop_absx(CPU *cpu)
 }
 /* SKB: 2-byte NOP that reads+discards immediate operand */
 static void
-op_skb(CPU *cpu)
+op_skb(struct cpu *cpu)
 {
 	read_byte(cpu, cpu->pc++); /* cycle 2: read and discard immediate */
 	cpu->last_cycles = 2;
 }
 
-/* ---- JAM / KIL: freeze the CPU bus ---- */
+/* ---- JAM / KIL: freeze the struct cpu bus ---- */
 static void
-op_jam(CPU *cpu)
+op_jam(struct cpu *cpu)
 {
 	uint8_t opcode = read_byte(cpu, cpu->pc - 1); /* already fetched */
 	cpu->pc--; /* PC stays on the JAM opcode */
 	cpu->halted = true;
 	fprintf(stderr,
-	    "\nJAM: CPU halted by opcode 0x%02X at PC=0x%04X. "
+	    "\nJAM: struct cpu halted by opcode 0x%02X at PC=0x%04X. "
 	    "RESET required.\n",
 	    opcode,
 	    (uint16_t)cpu->pc);
@@ -2325,18 +2372,19 @@ op_jam(CPU *cpu)
 
 /* SHX: X AND (HighByte(Address) + 1) -> Address */
 static void
-op_shx(CPU *cpu)
+op_shx(struct cpu *cpu)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
-	cpu->pc += 2;
-	uint16_t addr = base + cpu->y;
-	uint8_t h = (base >> 8) + 1;
-	uint8_t val = cpu->x & h;
+	uint16_t addr, base;
+	uint8_t h, val;
 
+	base = read_word(cpu, cpu->pc);
+	cpu->pc += 2;
+	addr = base + cpu->y;
+	h = (base >> 8) + 1;
+	val = cpu->x & h;
 	read_byte(cpu,
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
-
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2346,18 +2394,19 @@ op_shx(CPU *cpu)
 
 /* SHY: Y AND (HighByte(Address) + 1) -> Address */
 static void
-op_shy(CPU *cpu)
+op_shy(struct cpu *cpu)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
-	cpu->pc += 2;
-	uint16_t addr = base + cpu->x;
-	uint8_t h = (base >> 8) + 1;
-	uint8_t val = cpu->y & h;
+	uint16_t addr, base;
+	uint8_t h, val;
 
+	base = read_word(cpu, cpu->pc);
+	cpu->pc += 2;
+	addr = base + cpu->x;
+	h = (base >> 8) + 1;
+	val = cpu->y & h;
 	read_byte(cpu,
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
-
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2367,20 +2416,21 @@ op_shy(CPU *cpu)
 
 /* AHX: A AND X AND (HighByte(Address) + 1) -> Address (Indirect Y) */
 static void
-op_ahx_izy(CPU *cpu)
+op_ahx_izy(struct cpu *cpu)
 {
-	uint8_t zp = read_byte(cpu, cpu->pc++);
-	uint8_t lo = read_byte(cpu, zp);
-	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
-	uint16_t base = (hi << 8) | lo;
-	uint16_t addr = base + cpu->y;
-	uint8_t h = (base >> 8) + 1;
-	uint8_t val = cpu->a & cpu->x & h;
+	uint16_t addr, base;
+	uint8_t h, hi, lo, val, zp;
 
+	zp = read_byte(cpu, cpu->pc++);
+	lo = read_byte(cpu, zp);
+	hi = read_byte(cpu, (zp + 1) & 0xFF);
+	base = (hi << 8) | lo;
+	addr = base + cpu->y;
+	h = (base >> 8) + 1;
+	val = cpu->a & cpu->x & h;
 	read_byte(cpu,
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 5: dummy read of uncorrected address */
-
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2390,18 +2440,19 @@ op_ahx_izy(CPU *cpu)
 
 /* AHX: A AND X AND (HighByte(Address) + 1) -> Address (Absolute Y) */
 static void
-op_ahx_absy(CPU *cpu)
+op_ahx_absy(struct cpu *cpu)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
-	cpu->pc += 2;
-	uint16_t addr = base + cpu->y;
-	uint8_t h = (base >> 8) + 1;
-	uint8_t val = cpu->a & cpu->x & h;
+	uint16_t addr, base;
+	uint8_t h, val;
 
+	base = read_word(cpu, cpu->pc);
+	cpu->pc += 2;
+	addr = base + cpu->y;
+	h = (base >> 8) + 1;
+	val = cpu->a & cpu->x & h;
 	read_byte(cpu,
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
-
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2411,20 +2462,20 @@ op_ahx_absy(CPU *cpu)
 
 /* TAS: Transfer A AND X to SP, then store S AND (HighByte(Address) + 1) -> Address */
 static void
-op_tas(CPU *cpu)
+op_tas(struct cpu *cpu)
 {
-	uint16_t base = read_word(cpu, cpu->pc);
+	uint16_t addr, base;
+	uint8_t h, val;
+
+	base = read_word(cpu, cpu->pc);
 	cpu->pc += 2;
-	uint16_t addr = base + cpu->y;
-
+	addr = base + cpu->y;
 	cpu->s = cpu->a & cpu->x;
-	uint8_t h = (base >> 8) + 1;
-	uint8_t val = cpu->s & h;
-
+	h = (base >> 8) + 1;
+	val = cpu->s & h;
 	read_byte(cpu,
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
-
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
 		addr = (val << 8) | (addr & 0xFF);
 	}
@@ -2434,12 +2485,12 @@ op_tas(CPU *cpu)
 
 /* XAA (ANE): Transfer X to A AND immediate (unstable magic constant) */
 static void
-op_xaa(CPU *cpu)
+op_xaa(struct cpu *cpu)
 {
-	uint8_t val = read_byte(cpu, cpu->pc++);
-	uint8_t magic =
-	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	uint8_t magic, val;
 
+	val = read_byte(cpu, cpu->pc++);
+	magic = 0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 	cpu->a = (cpu->a | magic) & cpu->x & val;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -2447,12 +2498,12 @@ op_xaa(CPU *cpu)
 
 /* LXA (LAX immediate / ATX / OAL): A, X := (A | magic) & immediate */
 static void
-op_lxa(CPU *cpu)
+op_lxa(struct cpu *cpu)
 {
-	uint8_t val = read_byte(cpu, cpu->pc++);
-	uint8_t magic =
-	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	uint8_t magic, val;
 
+	val = read_byte(cpu, cpu->pc++);
+	magic = 0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 	cpu->a = cpu->x = (cpu->a | magic) & val;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -2460,19 +2511,21 @@ op_lxa(CPU *cpu)
 
 /* LAS: Transfer SP AND memory to A, X, and SP */
 static void
-op_las_unstable(CPU *cpu)
+op_las_unstable(struct cpu *cpu)
 {
-	bool px = false;
-	uint8_t v = read_byte(cpu, addr_absy(cpu, &px)) & cpu->s;
+	uint8_t v;
+	bool px;
 
+	px = false;
+	v = read_byte(cpu, addr_absy(cpu, &px)) & cpu->s;
 	cpu->a = cpu->x = cpu->s = v;
 	update_nz(cpu, v);
-	cpu->last_cycles = 4 + (px ? 1 : 0);
+	cpu->last_cycles = 4 + (px != 0 ? 1 : 0);
 }
 
 /* ---- ANC: AND #imm, copy bit 7 to Carry ---- */
 static void
-op_anc(CPU *cpu)
+op_anc(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, cpu->pc++);
 	update_nz(cpu, cpu->a);
@@ -2482,7 +2535,7 @@ op_anc(CPU *cpu)
 
 /* ---- ALR: AND #imm, then LSR A ---- */
 static void
-op_alr(CPU *cpu)
+op_alr(struct cpu *cpu)
 {
 	cpu->a &= read_byte(cpu, cpu->pc++);
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x01) != 0);
@@ -2493,21 +2546,21 @@ op_alr(CPU *cpu)
 
 /* ---- ARR: AND #imm, then ROR A (with special C/V) ---- */
 static void
-op_arr(CPU *cpu)
+op_arr(struct cpu *cpu)
 {
-	uint8_t m = read_byte(cpu, cpu->pc++);
-	uint8_t value = cpu->a & m;
-	uint8_t old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
-	uint8_t result = (value >> 1) | (old_c << 7);
+	uint8_t adjusted, m, old_c, result, value;
 
-	// Compute binary flags first
+	m = read_byte(cpu, cpu->pc++);
+	value = cpu->a & m;
+	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
+	result = (value >> 1) | (old_c << 7);
+	/* Compute binary flags first */
 	set_flag(cpu, FLAG_CARRY, (result & 0x40) != 0);
 	set_flag(cpu, FLAG_ZERO, result == 0);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
 	set_flag(cpu, FLAG_OVERFLOW, ((result >> 6) ^ (result >> 5)) & 1);
-
 	if (cpu->p & FLAG_DECIMAL) {
-		uint8_t adjusted = result;
+		adjusted = result;
 		if (((value & 0x0F) + (value & 0x01)) > 5) {
 			adjusted = (adjusted & 0xF0) |
 			    ((adjusted + 0x06) & 0x0F);
@@ -2527,7 +2580,7 @@ op_arr(CPU *cpu)
 
 /* ---- SBX (AXS): X = (A & X) - #imm ---- */
 static void
-op_sbx(CPU *cpu)
+op_sbx(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, cpu->pc++);
 	uint8_t ax = cpu->a & cpu->x;
@@ -2540,7 +2593,7 @@ op_sbx(CPU *cpu)
 
 /* ---- USBC: unofficial SBC #imm ---- */
 static void
-op_usbc(CPU *cpu)
+op_usbc(struct cpu *cpu)
 {
 	uint8_t m = read_byte(cpu, cpu->pc++);
 
@@ -2820,15 +2873,19 @@ static const opcode_fn dispatch[256] = {
 /* ================================================================== */
 
 uint8_t
-cpu_step(CPU *cpu)
+cpu_step(struct cpu *cpu)
 {
-	/* If the CPU has been halted by a JAM opcode, keep the bus frozen. */
-	if (cpu->halted)
-		return 1;
+	static uint32_t dram_cycle_acc = 0;
+	uint8_t cycles, opcode;
+	int delta;
+
+	/* If the struct cpu has been halted by a JAM opcode, keep the bus frozen. */
+	if (cpu->halted != 0)
+		return (1);
 
 	/* Record non-sequential transitions */
-	if (cpu->prev_pc_valid) {
-		int delta = (int)cpu->pc - (int)cpu->prev_pc;
+	if (cpu->prev_pc_valid != 0) {
+		delta = (int)cpu->pc - (int)cpu->prev_pc;
 		if (delta < 0 || delta > 3) {
 			cpu->pc_trace[cpu->pc_trace_idx].from = cpu->prev_pc;
 			cpu->pc_trace[cpu->pc_trace_idx].to = cpu->pc;
@@ -2842,7 +2899,7 @@ cpu_step(CPU *cpu)
 	 *
 	 * Real NMOS 6502 interrupt mechanism (per Visual6502 / NESdev):
 	 *
-	 * After the previous instruction completes, the CPU samples its
+	 * After the previous instruction completes, the struct cpu samples its
 	 * interrupt lines.  If an interrupt is pending it performs the
 	 * opcode fetch for the *next* instruction (cycle 1) but discards
 	 * the byte and forces $00 (BRK) into the instruction register
@@ -2852,39 +2909,39 @@ cpu_step(CPU *cpu)
 	 *
 	 * The "hijacking" term refers to a *different* edge case: an NMI
 	 * that arrives while a BRK/IRQ sequence is already mid-flight
-	 * (during the vector pull) takes over the vector — our 7-cycle
+	 * (during the vector pull) takes over the vector -- our 7-cycle
 	 * handler is atomic at the step level so we don't model that
 	 * sub-instruction race here.
 	 *
 	 * Either way: no peek at memory, no conditional pc++.
 	 */
-	if (cpu->nmi_pending) {
+	if (cpu->nmi_pending != 0) {
 		cpu->nmi_pending = false;
 		read_byte(cpu, cpu->pc); /* cycle 1: fetch discarded, PC held */
 		push_word(cpu, cpu->pc);
 		push_byte(cpu, (cpu->p & ~FLAG_BREAK) | FLAG_UNUSED);
 		set_flag(cpu, FLAG_INTERRUPT, true);
 		cpu->pc = read_word(cpu, 0xFFFA);
-		return 7;
+		return (7);
 	}
-	if (cpu->irq_pending && !(cpu->p & FLAG_INTERRUPT)) {
+	if (cpu->irq_pending != 0 && (cpu->p & FLAG_INTERRUPT) == 0) {
 		cpu->irq_pending = false;
 		read_byte(cpu, cpu->pc); /* cycle 1: fetch discarded, PC held */
 		push_word(cpu, cpu->pc);
 		push_byte(cpu, (cpu->p & ~FLAG_BREAK) | FLAG_UNUSED);
 		set_flag(cpu, FLAG_INTERRUPT, true);
 		cpu->pc = read_word(cpu, 0xFFFE);
-		return 7;
+		return (7);
 	}
 
 	/* 2. Fetch opcode */
-	uint8_t opcode = read_byte(cpu, cpu->pc++);
+	opcode = read_byte(cpu, cpu->pc++);
 
 	/* 3. Dispatch */
 	if (dispatch[opcode] != NULL) {
 		dispatch[opcode](cpu);
 	} else {
-		/* Unimplemented slot — treat as JAM */
+		/* Unimplemented slot -- treat as JAM */
 		cpu->pc--;
 		cpu->halted = true;
 		fprintf(stderr,
@@ -2895,12 +2952,10 @@ cpu_step(CPU *cpu)
 		cpu->last_cycles = 1;
 	}
 
-	uint8_t cycles = cpu->last_cycles;
+	cycles = cpu->last_cycles;
 
 	/* 4. DRAM refresh cycle stealing (optional) */
-	static uint32_t dram_cycle_acc = 0;
-
-	if (cpu->bus->opts.emulate_dram_refresh) {
+	if (cpu->bus->opts.emulate_dram_refresh != 0) {
 		dram_cycle_acc += cycles * 4;
 		while (dram_cycle_acc >= 61) {
 			dram_cycle_acc -= 61;
@@ -2908,7 +2963,7 @@ cpu_step(CPU *cpu)
 		}
 	}
 
-	return cycles;
+	return (cycles);
 }
 
 /* ================================================================== */
@@ -2916,13 +2971,13 @@ cpu_step(CPU *cpu)
 /* ================================================================== */
 
 void
-cpu_irq(CPU *cpu, bool assert)
+cpu_irq(struct cpu *cpu, bool assert)
 {
 	cpu->irq_pending = assert;
 }
 
 void
-cpu_nmi(CPU *cpu)
+cpu_nmi(struct cpu *cpu)
 {
 	cpu->nmi_pending = true;
 }

@@ -1,12 +1,13 @@
 #ifndef TERM_INTERNAL_H
 #define TERM_INTERNAL_H
 
-#include "bus.h"
-#include "cpu.h"
-#include "dbg.h"
 #include <SDL3/SDL.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "bus.h"
+#include "cpu.h"
+#include "dbg.h"
 
 /* ── CONSTANTS & PALETTES ────────────────────────────────────────────────── */
 #define CELL_W	      28
@@ -24,19 +25,19 @@
 
 #define MAX_CASSETTES 32
 
-typedef enum { MONITOR_GREEN, MONITOR_AMBER, MONITOR_MONO } MonitorTint;
+enum monitor_tint { MONITOR_GREEN, MONITOR_AMBER, MONITOR_MONO };
 
-typedef struct {
+struct palette {
 	SDL_Color bg;
 	SDL_Color pixel;
 	SDL_Color glow;
-} Palette;
+};
 
-extern const Palette PALETTES[];
+extern const struct palette PALETTES[];
 
 /* ── SHARED GLOBAL VARIABLES ─────────────────────────────────────────────── */
-extern Bus *g_bus;
-extern CPU *g_cpu;
+extern struct bus *g_bus;
+extern struct cpu *g_cpu;
 extern debugger_t *g_dbg;
 extern bool g_debug_enabled;
 extern char *g_argv0;
@@ -48,7 +49,7 @@ extern uint8_t charmap_data[2048];
 extern bool charmap_loaded;
 extern int charmap_size;
 
-extern MonitorTint monitor_tint;
+extern enum monitor_tint monitor_tint;
 extern bool scanlines_enabled;
 extern float scanline_opacity;
 
@@ -77,12 +78,12 @@ extern const SDL_Color BTNBG;
 extern const SDL_Color BTNHV;
 
 /* ── CONFIG FIELDS ────────────────────────────────────────────────────────── */
-typedef enum { FT_STR, FT_BOOL, FT_CHOICE, FT_FILE } FType;
-typedef struct {
+enum ftype { FT_STR, FT_BOOL, FT_CHOICE, FT_FILE };
+struct field {
 	const char *label;
 	const char *hint;
 	char flag;
-	FType type;
+	enum ftype type;
 	bool bval;
 	char sval[512];
 	const char **choices;
@@ -90,9 +91,9 @@ typedef struct {
 	int cidx;
 	bool editing;
 	int cursor;
-} Field;
+};
 
-extern Field fields[];
+extern struct field fields[];
 extern const int NF;
 extern const int ICFG;
 extern int editing_field_idx;

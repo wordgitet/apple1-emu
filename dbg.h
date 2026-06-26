@@ -1,8 +1,9 @@
 #ifndef DBG_H
 #define DBG_H
 
-#include "cpu.h"
 #include <stdbool.h>
+
+#include "cpu.h"
 
 #define MAX_BREAKPOINTS 32
 #define MAX_WATCHPOINTS 32
@@ -15,7 +16,7 @@ typedef struct {
 } watchpoint_t;
 
 typedef struct {
-	CPU *cpu;
+	struct cpu *cpu;
 	uint16_t breakpoints[MAX_BREAKPOINTS];
 	int num_breakpoints;
 	watchpoint_t watchpoints[MAX_WATCHPOINTS];
@@ -25,7 +26,7 @@ typedef struct {
 } debugger_t;
 
 void
-dbg_init(debugger_t *dbg, CPU *cpu);
+dbg_init(debugger_t *dbg, struct cpu *cpu);
 void
 dbg_add_breakpoint(debugger_t *dbg, uint16_t addr);
 void
@@ -45,4 +46,4 @@ dbg_interactive_loop(debugger_t *dbg);
 void
 dbg_run_command(debugger_t *dbg, const char *cmd_line);
 
-#endif // DBG_H
+#endif /* DBG_H */

@@ -1,9 +1,10 @@
-#include "../bus.h"
-#include "../cpu.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../bus.h"
+#include "../cpu.h"
 
 /*
  * Interrupt Test Suite
@@ -11,7 +12,7 @@
  * Covers the NMOS 6502 IRQ and NMI interrupt mechanism as verified by
  * Visual6502 silicon simulation and documented in primary sources:
  *
- *   NESdev wiki "CPU interrupts" -- cycle table, stack layout, I-flag timing
+ *   NESdev wiki "struct cpu interrupts" -- cycle table, stack layout, I-flag timing
  *   Michael Steil / pagetable.com -- forced-$00 into IR, PC increment suppressed
  *   6502.org/tutorials/interrupts -- BRK padding byte, return-address detail
  *   NESdev "The B flag" -- B=0 for IRQ/NMI; B=1 for BRK/PHP; no physical B reg
@@ -31,8 +32,8 @@
  *   $01FB = P    (last push)
  */
 
-static Bus bus;
-static CPU cpu;
+static struct bus bus;
+static struct cpu cpu;
 
 static void
 setup(void)
@@ -97,7 +98,7 @@ test_irq_basic(void)
 /*
  * Test 2: PC held — return address on stack is the preempted address.
  *
- * "The CPU suppresses the PC increment on the initial fetch, so the
+ * "The struct cpu suppresses the PC increment on the initial fetch, so the
  *  saved PC is the address of the instruction that would have run next."
  *  -- Steil / Visual6502 / pagetable.com
  *
@@ -124,7 +125,7 @@ test_irq_pc_held(void)
 /*
  * Test 3: B=0 and UNUSED=1 in pushed P for hardware IRQ.
  *
- * "The CPU pushes 0 for hardware interrupts, 1 for BRK/PHP."
+ * "The struct cpu pushes 0 for hardware interrupts, 1 for BRK/PHP."
  * -- NESdev "The B flag".  Bit 5 (UNUSED) is always 1 on any push.
  */
 static void
@@ -146,11 +147,11 @@ test_irq_b_flag(void)
 }
 
 /*
- * Test 4: IRQ is masked when I=1 — CPU must execute the real instruction.
+ * Test 4: IRQ is masked when I=1 — struct cpu must execute the real instruction.
  *
- * IRQ is level-sensitive and suppressed while I=1.  The CPU must run the
+ * IRQ is level-sensitive and suppressed while I=1.  The struct cpu must run the
  * next real opcode (NOP, 2 cycles) rather than servicing the interrupt.
- * -- NESdev "CPU interrupts"
+ * -- NESdev "struct cpu interrupts"
  */
 static void
 test_irq_masked(void)
@@ -208,7 +209,7 @@ static void
 test_brk_b_flag_and_return_addr(void)
 {
 	bus.ram[0x1000] = 0x00; /* BRK opcode */
-	bus.ram[0x1001] = 0x42; /* padding byte (signature; discarded by CPU) */
+	bus.ram[0x1001] = 0x42; /* padding byte (signature; discarded by struct cpu) */
 
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
@@ -233,13 +234,13 @@ test_brk_b_flag_and_return_addr(void)
 }
 
 /*
- * Test 7: RTI round-trip — IRQ fires, ISR executes RTI, CPU resumes at
+ * Test 7: RTI round-trip — IRQ fires, ISR executes RTI, struct cpu resumes at
  *         the preempted address.
  *
  * RTI pops P, then PCL, then PCH (reverse push order).  The B bit read
  * from the stack is discarded — there is no physical B register inside
- * the CPU.  RTI itself takes 6 cycles.
- * -- NESdev "CPU interrupts", Visual6502
+ * the struct cpu.  RTI itself takes 6 cycles.
+ * -- NESdev "struct cpu interrupts", Visual6502
  */
 static void
 test_rti_roundtrip(void)
@@ -278,5 +279,5 @@ main(void)
 
 	bus_free(&bus);
 	printf("All interrupt tests passed.\n");
-	return 0;
+	return (0);
 }

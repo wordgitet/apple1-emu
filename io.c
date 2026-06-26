@@ -1,6 +1,7 @@
+#include <stdbool.h>
+
 #include "io.h"
 #include "term_apple1.h"
-#include <stdbool.h>
 
 static uint8_t buffered_key = 0;
 
@@ -22,7 +23,7 @@ io_check_keyboard(void)
 	/*
 	 * Always call term_poll() so Ctrl-R / Ctrl-L side-effects are
 	 * processed even when the PIA keyboard strobe is still set (i.e.
-	 * the CPU hasn't consumed the previous keypress yet).  Only
+	 * the struct cpu hasn't consumed the previous keypress yet).  Only
 	 * store the result if the buffer is empty.
 	 */
 	uint8_t key = term_poll();
@@ -38,7 +39,7 @@ io_read_keyboard(void)
 	uint8_t key = buffered_key;
 
 	buffered_key = 0;
-	return key;
+	return (key);
 }
 
 void
@@ -56,7 +57,7 @@ io_set_welcome(const char *msg1, const char *msg2)
 bool
 io_reset_pending(void)
 {
-	return term_reset_pending();
+	return (term_reset_pending());
 }
 
 void
@@ -68,5 +69,5 @@ io_reset(void)
 bool
 io_has_buffered_key(void)
 {
-	return buffered_key != 0;
+	return (buffered_key != 0);
 }

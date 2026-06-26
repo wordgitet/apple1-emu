@@ -1,19 +1,20 @@
-#include "term_apple1.h"
-#include "term_config.h"
-#include "term_internal.h"
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
+
+#include "term_apple1.h"
+#include "term_config.h"
+#include "term_internal.h"
 
 /* Defines matching term_internal.h declarations */
 static const char *RAM_CHOICES[] = { "4", "8", "16", "32", "48", "64" };
 static const char
     *BAUD_CHOICES[] = { "300", "1200", "1500", "2400", "4800", "9600", "Fast" };
 
-Field fields[] = {
+struct field fields[] = {
 	{ "ROM FILE (-r)",
 	    "Path to 256-byte Wozmon ROM (optional, uses embedded by default)",
 	    'r',
@@ -126,7 +127,7 @@ Field fields[] = {
 	    false,
 	    0 },
 	{ "DEBUG MODE (-g)",
-	    "Start with interactive debugger (pauses CPU first)",
+	    "Start with interactive debugger (pauses struct cpu first)",
 	    'g',
 	    FT_BOOL,
 	    false,
@@ -137,7 +138,7 @@ Field fields[] = {
 	    false,
 	    0 },
 	{ "TRACE MODE (-t)",
-	    "Print CPU trace to stdout (pipe to file to capture)",
+	    "Print struct cpu trace to stdout (pipe to file to capture)",
 	    't',
 	    FT_BOOL,
 	    false,
@@ -198,9 +199,11 @@ const SDL_Color BTNHV = { 30, 55, 30, 255 };
 static void
 get_xdg_config_path(char *out_path, size_t max_len)
 {
+	const char *home;
+
 #ifdef __APPLE__
-	const char *home = getenv("HOME");
-	if (home && home[0] != '\0') {
+	home = getenv("HOME");
+	if (home != NULL && home[0] != '\0') {
 		snprintf(out_path,
 		    max_len,
 		    "%s/Library/Application Support/apple1/apple1.conf",
@@ -209,15 +212,16 @@ get_xdg_config_path(char *out_path, size_t max_len)
 		snprintf(out_path, max_len, "apple1.conf");
 	}
 #else
-	const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
-	if (xdg_config_home && xdg_config_home[0] != '\0') {
+	const char *xdg_config_home;
+	xdg_config_home = getenv("XDG_CONFIG_HOME");
+	if (xdg_config_home != NULL && xdg_config_home[0] != '\0') {
 		snprintf(out_path,
 		    max_len,
 		    "%s/apple1/apple1.conf",
 		    xdg_config_home);
 	} else {
-		const char *home = getenv("HOME");
-		if (home && home[0] != '\0') {
+		home = getenv("HOME");
+		if (home != NULL && home[0] != '\0') {
 			snprintf(out_path,
 			    max_len,
 			    "%s/.config/apple1/apple1.conf",
@@ -233,8 +237,10 @@ static void
 mkdirs(const char *path)
 {
 	char t[1024];
+	char *p;
+
 	snprintf(t, sizeof(t), "%s", path);
-	for (char *p = t + 1; *p; p++) {
+	for (p = t + 1; *p != '\0'; p++) {
 		if (*p == '/') {
 			*p = '\0';
 			mkdir(t, 0755);
@@ -243,47 +249,58 @@ mkdirs(const char *path)
 	}
 }
 
-static Field *
+static struct field *
 by_flag(char f)
 {
-	for (int i = 0; i < NF - 1; i++) {
+	int i;
+
+	for (i = 0; i < NF - 1; i++) {
 		if (fields[i].flag == f)
-			return &fields[i];
+			return (&fields[i]);
 	}
-	return NULL;
+	return (NULL);
 }
 
 static void
 load_conf(const char *path)
 {
-	FILE *fp = fopen(path, "r");
-	if (!fp)
-		return;
+	FILE *fp;
 	char line[1024];
-	while (fgets(line, sizeof(line), fp)) {
-		size_t l = strlen(line);
+	char *p;
+	char *v;
+	struct field *f;
+	size_t l;
+	int j;
+	char fl;
+
+	fp = fopen(path, "r");
+	if (fp == NULL)
+		return;
+
+	while (fgets(line, sizeof(line), fp) != NULL) {
+		l = strlen(line);
 		while (l > 0 &&
 		    (line[l - 1] == '\n' || line[l - 1] == '\r' ||
 			line[l - 1] == ' ')) {
 			line[--l] = '\0';
 		}
-		char *p = line;
+		p = line;
 		while (*p == ' ')
 			p++;
-		if (!*p || *p == '#')
+		if (*p == '\0' || *p == '#')
 			continue;
-		if (p[0] == '-' && p[1]) {
-			char fl = p[1];
-			char *v = p + 2;
+		if (p[0] == '-' && p[1] != '\0') {
+			fl = p[1];
+			v = p + 2;
 			while (*v == ' ')
 				v++;
-			Field *f = by_flag(fl);
-			if (!f)
+			f = by_flag(fl);
+			if (f == NULL)
 				continue;
 			if (f->type == FT_BOOL) {
 				f->bval = true;
 			} else if (f->type == FT_CHOICE) {
-				for (int j = 0; j < f->nchoices; j++) {
+				for (j = 0; j < f->nchoices; j++) {
 					if (strcmp(f->choices[j], v) == 0) {
 						f->cidx = j;
 						snprintf(f->sval,
@@ -304,23 +321,27 @@ load_conf(const char *path)
 static void
 save_conf(const char *path)
 {
+	FILE *fp;
+	struct field *f;
+	int i;
+
 	mkdirs(path);
-	FILE *fp = fopen(path, "w");
-	if (!fp)
+	fp = fopen(path, "w");
+	if (fp == NULL)
 		return;
 	fprintf(fp, "# Apple-1 Emulator Config (SDL3 GUI)\n");
 	fprintf(fp,
 	    "# Options managed live in the emulator sidebar are NOT "
 	    "here:\n");
-	fprintf(fp, "#   CPU speed (-c), ACI tape (-e/-E), Krusader (-k)\n\n");
-	for (int i = 0; i < NF - 1; i++) {
-		Field *f = &fields[i];
+	fprintf(fp, "#   struct cpu speed (-c), ACI tape (-e/-E), Krusader (-k)\n\n");
+	for (i = 0; i < NF - 1; i++) {
+		f = &fields[i];
 		if (f->type == FT_BOOL) {
-			if (f->bval)
+			if (f->bval == true)
 				fprintf(fp, "-%c\n", f->flag);
 		} else if (f->type == FT_CHOICE) {
 			fprintf(fp, "-%c %s\n", f->flag, f->choices[f->cidx]);
-		} else if (f->sval[0]) {
+		} else if (f->sval[0] != '\0') {
 			fprintf(fp, "-%c %s\n", f->flag, f->sval);
 		}
 	}
@@ -351,66 +372,86 @@ draw_config_button(int x,
     int mx,
     int my)
 {
-	bool hov = (mx >= x && mx < x + w && my >= y && my < y + h);
-	SDL_FRect btn_rect = { (float)x, (float)y, (float)w, (float)h };
+	bool hov;
+	SDL_FRect btn_rect;
+	int cw;
+	int ch2;
+
+	hov = (mx >= x && mx < x + w && my >= y && my < y + h);
+	btn_rect.x = (float)x;
+	btn_rect.y = (float)y;
+	btn_rect.w = (float)w;
+	btn_rect.h = (float)h;
 
 	SDL_SetRenderDrawColor(renderer,
-	    hov ? BTNHV.r : BTNBG.r,
-	    hov ? BTNHV.g : BTNBG.g,
-	    hov ? BTNHV.b : BTNBG.b,
+	    (hov == true) ? BTNHV.r : BTNBG.r,
+	    (hov == true) ? BTNHV.g : BTNBG.g,
+	    (hov == true) ? BTNHV.b : BTNBG.b,
 	    255);
 	SDL_RenderFillRect(renderer, &btn_rect);
 	SDL_SetRenderDrawColor(renderer, tint.r, tint.g, tint.b, 255);
 	SDL_RenderRect(renderer, &btn_rect);
 
-	int cw = (GLYPH_COLS + 1) * 2;
-	int ch2 = GLYPH_ROWS * 2;
+	cw = (GLYPH_COLS + 1) * 2;
+	ch2 = GLYPH_ROWS * 2;
 	draw_text_2x(renderer,
 	    lbl,
 	    x + (w - (int)strlen(lbl) * cw) / 2,
 	    y + (h - ch2) / 2,
 	    tint);
-	return hov;
+	return (hov);
 }
 
 static void
 render_config_field(int i, int idx, int mx, int my)
 {
-	Field *f = &fields[i];
-	int y = MODAL_Y + SB_Y + idx * FIELD_H;
-	int x = MODAL_X + SB_X;
-	bool sel =
-	    (mx >= x && mx < x + FIELD_W && my >= y && my < y + FIELD_H - 2);
+	struct field *f;
+	int y;
+	int x;
+	bool sel;
+	SDL_FRect field_rect;
+	int vx;
+	char vb[80];
+	const char *v;
+	int vl;
+	char tr[40];
+	int cx2;
+	SDL_FRect cursor_rect;
 
-	SDL_FRect field_rect = { (float)x,
-		(float)y,
-		(float)FIELD_W,
-		(float)(FIELD_H - 2) };
+	f = &fields[i];
+	y = MODAL_Y + SB_Y + idx * FIELD_H;
+	x = MODAL_X + SB_X;
+	sel = (mx >= x && mx < x + FIELD_W && my >= y && my < y + FIELD_H - 2);
+
+	field_rect.x = (float)x;
+	field_rect.y = (float)y;
+	field_rect.w = (float)FIELD_W;
+	field_rect.h = (float)(FIELD_H - 2);
+
 	SDL_SetRenderDrawColor(renderer,
-	    sel ? SELBG.r : PANEL.r,
-	    sel ? SELBG.g : PANEL.g,
-	    sel ? SELBG.b : PANEL.b,
+	    (sel == true) ? SELBG.r : PANEL.r,
+	    (sel == true) ? SELBG.g : PANEL.g,
+	    (sel == true) ? SELBG.b : PANEL.b,
 	    255);
 	SDL_RenderFillRect(renderer, &field_rect);
 	SDL_SetRenderDrawColor(renderer,
-	    sel ? SELBO.r : BORD.r,
-	    sel ? SELBO.g : BORD.g,
-	    sel ? SELBO.b : BORD.b,
+	    (sel == true) ? SELBO.r : BORD.r,
+	    (sel == true) ? SELBO.g : BORD.g,
+	    (sel == true) ? SELBO.b : BORD.b,
 	    255);
 	SDL_RenderRect(renderer, &field_rect);
 
-	draw_text_2x(renderer, f->label, x + 8, y + 14, sel ? GREEN : DIM);
+	draw_text_2x(renderer, f->label, x + 8, y + 14, (sel == true) ? GREEN : DIM);
 
-	int vx = x + 340;
-	char vb[80];
+	vx = x + 340;
 	switch (f->type) {
 	case FT_BOOL:
 		draw_config_button(vx,
 		    y + 8,
 		    90,
 		    26,
-		    f->bval ? "YES" : "NO",
-		    f->bval ? GREEN : DIM,
+		    (f->bval == true) ? "YES" : "NO",
+		    (f->bval == true) ? GREEN : DIM,
 		    mx,
 		    my);
 		break;
@@ -437,10 +478,9 @@ render_config_field(int i, int idx, int mx, int my)
 		draw_config_button(vx + 120, y + 8, 30, 26, ">", GREEN, mx, my);
 		break;
 	case FT_STR:
-	case FT_FILE: {
-		const char *v = f->sval[0] ? f->sval : "(EMPTY)";
-		int vl = (int)strlen(v);
-		char tr[40];
+	case FT_FILE:
+		v = (f->sval[0] != '\0') ? f->sval : "(EMPTY)";
+		vl = (int)strlen(v);
 		if (vl > 35) {
 			snprintf(tr, sizeof(tr), "...%s", v + vl - 32);
 		} else {
@@ -450,7 +490,7 @@ render_config_field(int i, int idx, int mx, int my)
 		    tr,
 		    vx,
 		    y + 14,
-		    f->editing ? AMBER : WHITE);
+		    (f->editing == true) ? AMBER : WHITE);
 		if (f->type == FT_FILE) {
 			draw_config_button(vx + 380,
 			    y + 8,
@@ -462,13 +502,14 @@ render_config_field(int i, int idx, int mx, int my)
 			    my);
 		}
 		/* Blinking cursor */
-		if (f->editing) {
-			int cx2 = vx + f->cursor * (GLYPH_COLS + 1) * 2;
-			if ((SDL_GetTicks() / 400) % 2 == 0) {
-				SDL_FRect cursor_rect = { (float)cx2,
-					(float)(y + 13),
-					2.0f,
-					(float)(GLYPH_ROWS * 2 + 2) };
+		if (f->editing == true) {
+			cx2 = vx + f->cursor * (GLYPH_COLS + 1) * 2;
+			if (((SDL_GetTicks() / 400) % 2) == 0) {
+				cursor_rect.x = (float)cx2;
+				cursor_rect.y = (float)(y + 13);
+				cursor_rect.w = 2.0f;
+				cursor_rect.h = (float)(GLYPH_ROWS * 2 + 2);
+
 				SDL_SetRenderDrawColor(renderer,
 				    AMBER.r,
 				    AMBER.g,
@@ -479,37 +520,61 @@ render_config_field(int i, int idx, int mx, int my)
 		}
 		break;
 	}
-	}
 }
 
 void
 term_config_modal_render(SDL_Renderer *rend)
 {
+	SDL_FRect overlay;
+	SDL_FRect modal_rect;
+	float mx_f, my_f;
+	int mx;
+	int my;
+	int idx;
+	int i;
+	int track_x;
+	int track_y;
+	int track_w;
+	int track_h;
+	SDL_FRect track_rect;
+	float ratio;
+	int thumb_h;
+	float scroll_pct;
+	int thumb_y;
+	SDL_FRect thumb_rect;
+	bool thumb_hover;
+	SDL_Color note_color;
+	int bby;
+	SDL_FRect bar;
+	int fy;
+
 	(void)
 	    rend; /* Shared renderer is global, but parameter is kept for signature */
 
 	/* Semi-transparent dimming background overlay over the entire screen */
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
-	SDL_FRect overlay = { 0, 0, (float)SCREEN_W, (float)SCREEN_H };
+	overlay.x = 0.0f;
+	overlay.y = 0.0f;
+	overlay.w = (float)SCREEN_W;
+	overlay.h = (float)SCREEN_H;
 	SDL_RenderFillRect(renderer, &overlay);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 
 	/* Centered modal panel */
-	SDL_FRect modal_rect = { (float)MODAL_X,
-		(float)MODAL_Y,
-		(float)MODAL_W,
-		(float)MODAL_H };
+	modal_rect.x = (float)MODAL_X;
+	modal_rect.y = (float)MODAL_Y;
+	modal_rect.w = (float)MODAL_W;
+	modal_rect.h = (float)MODAL_H;
 	SDL_SetRenderDrawColor(renderer, PANEL.r, PANEL.g, PANEL.b, PANEL.a);
 	SDL_RenderFillRect(renderer, &modal_rect);
 	SDL_SetRenderDrawColor(renderer, BORD.r, BORD.g, BORD.b, BORD.a);
 	SDL_RenderRect(renderer, &modal_rect);
 
 	/* Mouse position for hover states */
-	float mx_f, my_f;
 	SDL_GetMouseState(&mx_f, &my_f);
-	int mx = (int)mx_f;
-	int my = (int)my_f;
+	mx = (int)mx_f;
+	my = (int)my_f;
 
 	/* Draw Title */
 	draw_text_scaled(renderer,
@@ -538,8 +603,8 @@ term_config_modal_render(SDL_Renderer *rend)
 	    DIM);
 
 	/* Draw fields */
-	for (int idx = 0; idx < VISIBLE_FIELDS; idx++) {
-		int i = config_scroll_offset + idx;
+	for (idx = 0; idx < VISIBLE_FIELDS; idx++) {
+		i = config_scroll_offset + idx;
 		if (i >= NF)
 			break;
 		render_config_field(i, idx, mx, my);
@@ -547,48 +612,51 @@ term_config_modal_render(SDL_Renderer *rend)
 
 	/* Draw Scrollbar if needed */
 	if (NF > VISIBLE_FIELDS) {
-		int track_x = MODAL_X + 855;
-		int track_y = MODAL_Y + SB_Y;
-		int track_w = 15;
-		int track_h = VISIBLE_FIELDS * FIELD_H - 2;
+		track_x = MODAL_X + 855;
+		track_y = MODAL_Y + SB_Y;
+		track_w = 15;
+		track_h = VISIBLE_FIELDS * FIELD_H - 2;
 
-		SDL_FRect track_rect = { (float)track_x,
-			(float)track_y,
-			(float)track_w,
-			(float)track_h };
+		track_rect.x = (float)track_x;
+		track_rect.y = (float)track_y;
+		track_rect.w = (float)track_w;
+		track_rect.h = (float)track_h;
 		SDL_SetRenderDrawColor(renderer, 10, 10, 14, 255);
 		SDL_RenderFillRect(renderer, &track_rect);
 		SDL_SetRenderDrawColor(renderer, BORD.r, BORD.g, BORD.b, BORD.a);
 		SDL_RenderRect(renderer, &track_rect);
 
 		/* Thumb height and position */
-		float ratio = (float)VISIBLE_FIELDS / (float)NF;
-		int thumb_h = (int)(ratio * track_h);
+		ratio = (float)VISIBLE_FIELDS / (float)NF;
+		thumb_h = (int)(ratio * track_h);
 		if (thumb_h < 20)
 			thumb_h = 20;
 
-		float scroll_pct = (float)config_scroll_offset /
+		scroll_pct = (float)config_scroll_offset /
 		    (float)(NF - VISIBLE_FIELDS);
-		int thumb_y = track_y + (int)(scroll_pct * (track_h - thumb_h));
+		thumb_y = track_y + (int)(scroll_pct * (track_h - thumb_h));
 
-		SDL_FRect thumb_rect = { (float)track_x + 2,
-			(float)thumb_y,
-			(float)track_w - 4,
-			(float)thumb_h };
-		bool thumb_hover = (mx >= track_x && mx < track_x + track_w &&
+		thumb_rect.x = (float)track_x + 2;
+		thumb_rect.y = (float)thumb_y;
+		thumb_rect.w = (float)track_w - 4;
+		thumb_rect.h = (float)thumb_h;
+		thumb_hover = (mx >= track_x && mx < track_x + track_w &&
 		    my >= track_y && my < track_y + track_h);
 		SDL_SetRenderDrawColor(renderer,
-		    thumb_hover ? GREEN.r : DIM.r,
-		    thumb_hover ? GREEN.g : DIM.g,
-		    thumb_hover ? GREEN.b : DIM.b,
+		    (thumb_hover == true) ? GREEN.r : DIM.r,
+		    (thumb_hover == true) ? GREEN.g : DIM.g,
+		    (thumb_hover == true) ? GREEN.b : DIM.b,
 		    255);
 		SDL_RenderFillRect(renderer, &thumb_rect);
 	}
 
 	/* Note at the bottom */
-	SDL_Color note_color = { 60, 80, 60, 255 };
+	note_color.r = 60;
+	note_color.g = 80;
+	note_color.b = 60;
+	note_color.a = 255;
 	draw_text_scaled(renderer,
-	    "NOTE: CPU SPEED / TAPE / KRUSADER ARE CONTROLLED LIVE IN THE "
+	    "NOTE: struct cpu SPEED / TAPE / KRUSADER ARE CONTROLLED LIVE IN THE "
 	    "EMULATOR SIDEBAR",
 	    MODAL_X + 20,
 	    MODAL_Y + MODAL_H - 118,
@@ -596,12 +664,12 @@ term_config_modal_render(SDL_Renderer *rend)
 	    note_color);
 
 	/* Bottom Buttons */
-	int bby = MODAL_Y + MODAL_BBY;
+	bby = MODAL_Y + MODAL_BBY;
 	SDL_SetRenderDrawColor(renderer, 30, 30, 36, 255);
-	SDL_FRect bar = { (float)MODAL_X,
-		(float)(bby - 10),
-		(float)MODAL_W,
-		2.0f };
+	bar.x = (float)MODAL_X;
+	bar.y = (float)(bby - 10);
+	bar.w = (float)MODAL_W;
+	bar.h = 2.0f;
 	SDL_RenderFillRect(renderer, &bar);
 
 	draw_config_button(MODAL_X + 20,
@@ -623,7 +691,7 @@ term_config_modal_render(SDL_Renderer *rend)
 	draw_config_button(MODAL_X + 400, bby, 100, 34, "CLOSE", RED, mx, my);
 
 	/* Status message OR field hover hint — shown in the same area */
-	if (SDL_GetTicks() < config_status_until && config_status_msg[0]) {
+	if (SDL_GetTicks() < config_status_until && config_status_msg[0] != '\0') {
 		/* Active status takes priority over the hover hint */
 		draw_text_2x(renderer,
 		    config_status_msg,
@@ -632,11 +700,11 @@ term_config_modal_render(SDL_Renderer *rend)
 		    AMBER);
 	} else {
 		/* Hint for hovered field */
-		for (int idx = 0; idx < VISIBLE_FIELDS; idx++) {
-			int i = config_scroll_offset + idx;
+		for (idx = 0; idx < VISIBLE_FIELDS; idx++) {
+			i = config_scroll_offset + idx;
 			if (i >= NF)
 				break;
-			int fy = MODAL_Y + SB_Y + idx * FIELD_H;
+			fy = MODAL_Y + SB_Y + idx * FIELD_H;
 			if (my >= fy && my < fy + FIELD_H - 2 &&
 			    mx >= MODAL_X + SB_X &&
 			    mx < MODAL_X + SB_X + FIELD_W) {
@@ -654,28 +722,43 @@ term_config_modal_render(SDL_Renderer *rend)
 void
 term_config_modal_handle_click(int bx, int by, bool is_wizard, bool *done)
 {
-	int bby = MODAL_Y + MODAL_BBY;
+	int bby;
+	int track_x;
+	int track_y;
+	int track_w;
+	int track_h;
+	float click_pct;
+	int new_offset;
+	int idx;
+	int i;
+	int fy;
+	struct field *f;
+	int vx;
+	char picked[512];
+	const char *ext;
+
+	bby = MODAL_Y + MODAL_BBY;
 
 	/* 1. Check bottom buttons */
 	if (bx >= MODAL_X + 20 && bx < MODAL_X + 180 && by >= bby &&
 	    by < bby + 34) {
 		save_conf(fields[ICFG].sval);
 		set_config_status("CONFIG SAVED!", 2500);
-		if (is_wizard)
+		if (is_wizard == true)
 			*done = true;
 		return;
 	}
 	if (bx >= MODAL_X + 200 && bx < MODAL_X + 380 && by >= bby &&
 	    by < bby + 34) {
 		save_conf(fields[ICFG].sval);
-		if (is_wizard) {
+		if (is_wizard == true) {
 			*done = true;
 		} else {
 			reboot_emulator();
 		}
 		return;
 	}
-	if (!is_wizard && bx >= MODAL_X + 400 && bx < MODAL_X + 500 &&
+	if (is_wizard == false && bx >= MODAL_X + 400 && bx < MODAL_X + 500 &&
 	    by >= bby && by < bby + 34) {
 		if (editing_field_idx >= 0) {
 			fields[editing_field_idx].editing = false;
@@ -687,16 +770,16 @@ term_config_modal_handle_click(int bx, int by, bool is_wizard, bool *done)
 
 	/* 2. Check click on scrollbar */
 	if (NF > VISIBLE_FIELDS) {
-		int track_x = MODAL_X + 855;
-		int track_y = MODAL_Y + SB_Y;
-		int track_w = 15;
-		int track_h = VISIBLE_FIELDS * FIELD_H - 2;
+		track_x = MODAL_X + 855;
+		track_y = MODAL_Y + SB_Y;
+		track_w = 15;
+		track_h = VISIBLE_FIELDS * FIELD_H - 2;
 
 		if (bx >= track_x && bx < track_x + track_w && by >= track_y &&
 		    by < track_y + track_h) {
-			float click_pct = (float)(by - track_y) /
+			click_pct = (float)(by - track_y) /
 			    (float)track_h;
-			int new_offset =
+			new_offset =
 			    (int)(click_pct * (NF - VISIBLE_FIELDS + 1));
 			if (new_offset < 0)
 				new_offset = 0;
@@ -714,21 +797,21 @@ term_config_modal_handle_click(int bx, int by, bool is_wizard, bool *done)
 	}
 
 	/* 3. Check each visible field */
-	for (int idx = 0; idx < VISIBLE_FIELDS; idx++) {
-		int i = config_scroll_offset + idx;
+	for (idx = 0; idx < VISIBLE_FIELDS; idx++) {
+		i = config_scroll_offset + idx;
 		if (i >= NF)
 			break;
-		int fy = MODAL_Y + SB_Y + idx * FIELD_H;
+		fy = MODAL_Y + SB_Y + idx * FIELD_H;
 		if (by < fy || by >= fy + FIELD_H - 2 || bx < MODAL_X + SB_X ||
 		    bx >= MODAL_X + SB_X + FIELD_W) {
 			continue;
 		}
-		Field *f = &fields[i];
-		int vx = MODAL_X + SB_X + 340;
+		f = &fields[i];
+		vx = MODAL_X + SB_X + 340;
 		switch (f->type) {
 		case FT_BOOL:
 			if (bx >= vx && bx < vx + 90) {
-				f->bval = !f->bval;
+				f->bval = (f->bval == true) ? false : true;
 			}
 			break;
 		case FT_CHOICE:
@@ -749,16 +832,13 @@ term_config_modal_handle_click(int bx, int by, bool is_wizard, bool *done)
 			break;
 		case FT_FILE:
 			if (bx >= vx + 380 && bx < vx + 470) {
-				char picked[512] = { 0 };
-				const char *ext =
-				    (f->flag == 'r' || f->flag == 'a') ? "*."
-									 "rom "
-									 "*.bin"
-								       : "*";
+				memset(picked, 0, sizeof(picked));
+				ext = (f->flag == 'r' || f->flag == 'a') ?
+				    "*.rom *.bin" : "*";
 				if (pick_file_dialog(picked,
 					sizeof(picked),
 					"Select ROM",
-					ext)) {
+					ext) == true) {
 					snprintf(f->sval,
 					    sizeof(f->sval),
 					    "%s",
@@ -785,11 +865,15 @@ term_config_modal_handle_click(int bx, int by, bool is_wizard, bool *done)
 void
 term_config_modal_handle_key(const SDL_KeyboardEvent *key)
 {
+	struct field *f;
+	SDL_Keycode k;
+	int sl;
+
 	if (editing_field_idx < 0)
 		return;
-	Field *f = &fields[editing_field_idx];
-	SDL_Keycode k = key->key;
-	int sl = (int)strlen(f->sval);
+	f = &fields[editing_field_idx];
+	k = key->key;
+	sl = (int)strlen(f->sval);
 
 	if (k == SDLK_RETURN || k == SDLK_ESCAPE) {
 		f->editing = false;
@@ -817,11 +901,15 @@ term_config_modal_handle_key(const SDL_KeyboardEvent *key)
 void
 term_config_modal_handle_text_input(const char *text)
 {
+	struct field *f;
+	size_t tl;
+	size_t sl;
+
 	if (editing_field_idx < 0)
 		return;
-	Field *f = &fields[editing_field_idx];
-	size_t tl = strlen(text);
-	size_t sl = strlen(f->sval);
+	f = &fields[editing_field_idx];
+	tl = strlen(text);
+	sl = strlen(f->sval);
 	if (sl + tl < sizeof(f->sval) - 1) {
 		memmove(f->sval + f->cursor + tl,
 		    f->sval + f->cursor,
@@ -844,19 +932,26 @@ term_config_scroll(int delta)
 void
 term_run_config_wizard(void)
 {
+	SDL_Window *wiz_win;
+	SDL_Renderer *wiz_ren;
+	bool done;
+	SDL_Event ev;
+	int bx;
+	int by;
+
 	get_xdg_config_path(fields[ICFG].sval, sizeof(fields[ICFG].sval));
 
-	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == false) {
 		fprintf(stderr, "SDL init failed: %s\n", SDL_GetError());
 		return;
 	}
 
-	SDL_Window *wiz_win = SDL_CreateWindow("Apple-1 First Time Setup — "
-					       "Save Config to Continue",
+	wiz_win = SDL_CreateWindow("Apple-1 First Time Setup — "
+				       "Save Config to Continue",
 	    SCREEN_W,
 	    SCREEN_H,
 	    0);
-	SDL_Renderer *wiz_ren = SDL_CreateRenderer(wiz_win, NULL);
+	wiz_ren = SDL_CreateRenderer(wiz_win, NULL);
 	SDL_StartTextInput(wiz_win);
 
 	/* Temporarily wire global renderer/window to the wizard */
@@ -872,16 +967,15 @@ term_run_config_wizard(void)
 	    0xFFFFFFFF);
 	config_status_until = UINT64_MAX;
 
-	bool done = false;
-	while (!done) {
+	done = false;
+	while (done == false) {
 		/* Dark background */
 		SDL_SetRenderDrawColor(renderer, 8, 8, 10, 255);
 		SDL_RenderClear(renderer);
 		term_config_modal_render(NULL);
 		SDL_RenderPresent(renderer);
 
-		SDL_Event ev;
-		while (SDL_PollEvent(&ev)) {
+		while (SDL_PollEvent(&ev) != 0) {
 			if (ev.type == SDL_EVENT_QUIT) {
 				/* Force-quit only — user didn't save */
 				SDL_StopTextInput(wiz_win);
@@ -914,8 +1008,8 @@ term_run_config_wizard(void)
 
 			if (ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
 			    ev.button.button == SDL_BUTTON_LEFT) {
-				int bx = (int)ev.button.x;
-				int by = (int)ev.button.y;
+				bx = (int)ev.button.x;
+				by = (int)ev.button.y;
 				term_config_modal_handle_click(bx,
 				    by,
 				    true,

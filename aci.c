@@ -1,12 +1,13 @@
-#include "aci.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
+#include "aci.h"
+
+struct aci_card {
 	uint8_t rom[256];
 
-	// Tape playback state
+	/* Tape playback state */
 	uint32_t *durations;
 	uint32_t num_durations;
 	uint32_t playback_index;
@@ -20,7 +21,7 @@ typedef struct {
 	bool tape_loaded;
 	bool tape_active;
 
-	// Tape recording state
+	/* Tape recording state */
 	bool output_level;
 	bool output_initial_level;
 	uint64_t last_output_toggle_cycle;
@@ -28,30 +29,31 @@ typedef struct {
 	uint32_t *recorded_durations;
 	uint32_t recorded_count;
 	uint32_t recorded_capacity;
-} aci_card_t;
+};
 
 static void
-aci_record_toggle(aci_card_t *aci)
+aci_record_toggle(struct aci_card *aci)
 {
-	if (!aci->recording_started) {
+	uint32_t new_cap;
+	uint32_t *buf;
+	uint64_t delta;
+
+	if (aci->recording_started == 0) {
 		/* First toggle: capture initial output level before toggling */
 		aci->output_initial_level = aci->output_level;
 		aci->last_output_toggle_cycle = aci->current_cycle;
 		aci->recording_started = true;
 	} else {
-		uint64_t delta = aci->current_cycle -
-		    aci->last_output_toggle_cycle;
-
+		delta = aci->current_cycle - aci->last_output_toggle_cycle;
 		if (delta > 0 && delta <= UINT32_MAX) {
 			/* Grow recording buffer if needed */
 			if (aci->recorded_count >= aci->recorded_capacity) {
-				uint32_t new_cap = aci->recorded_capacity == 0
+				new_cap = aci->recorded_capacity == 0
 				    ? 4096
 				    : aci->recorded_capacity * 2;
-				uint32_t *buf = realloc(aci->recorded_durations,
+				buf = realloc(aci->recorded_durations,
 				    new_cap * sizeof(uint32_t));
-
-				if (buf) {
+				if (buf != NULL) {
 					aci->recorded_durations = buf;
 					aci->recorded_capacity = new_cap;
 				}
@@ -69,49 +71,55 @@ aci_record_toggle(aci_card_t *aci)
 static uint8_t
 aci_read(void *ctx, uint16_t addr, bool is_dummy)
 {
-	(void)is_dummy;
-	aci_card_t *aci = (aci_card_t *)ctx;
+	struct aci_card *aci;
+	uint8_t result;
+	uint64_t gap;
 
-	// ROM resides at $C100 - $C1FF
+	(void)is_dummy;
+	aci = (struct aci_card *)ctx;
+
+	/* ROM resides at $C100 - $C1FF */
 	if (addr >= 0xC100 && addr <= 0xC1FF) {
-		return aci->rom[addr - 0xC100];
+		return (aci->rom[addr - 0xC100]);
 	}
 
-	// Tape Input Register resides at $C081
+	/* Tape Input Register resides at $C081 */
 	if (addr == 0xC081) {
-		// Leader preservation rewind check:
-		// 500 ms at ~1.023 MHz clock = 511,500 cycles.
-		uint64_t gap = aci->current_cycle - aci->last_read_cycle;
-		if (aci->tape_loaded && aci->playback_index > 0 &&
+		/* Leader preservation rewind check:
+		 * 500 ms at ~1.023 MHz clock = 511,500 cycles. */
+		gap = aci->current_cycle - aci->last_read_cycle;
+		if (aci->tape_loaded != 0 && aci->playback_index > 0 &&
 		    gap > 511500) {
-			// Rewind / Arm tape at start
+			/* Rewind / Arm tape at start */
 			aci->playback_index = 0;
 			aci->cycles_until_toggle = aci->durations[0];
 			aci->input_level = aci->initial_level;
 			aci->tape_active = true;
 		}
 		aci->last_read_cycle = aci->current_cycle;
-		uint8_t result = aci->input_level ? 0x80 : 0x00;
+		result = aci->input_level != 0 ? 0x80 : 0x00;
 		aci_record_toggle(aci); /* C081 access also toggles output FF */
-		return result;
+		return (result);
 	}
 
-	// Other $C000 - $C0FF addresses toggle ACI output level
+	/* Other $C000 - $C0FF addresses toggle ACI output level */
 	if (addr >= 0xC000 && addr <= 0xC0FF) {
 		aci_record_toggle(aci);
 	}
 
-	return 0x00;
+	return (0x00);
 }
 
 static void
 aci_write(void *ctx, uint16_t addr, uint8_t val, bool is_dummy)
 {
+	struct aci_card *aci;
+
 	(void)val;
 	(void)is_dummy;
-	aci_card_t *aci = (aci_card_t *)ctx;
+	aci = (struct aci_card *)ctx;
 
-	// Any write to $C000 - $C0FF (except $C081) toggles ACI output level
+	/* Any write to $C000 - $C0FF (except $C081) toggles ACI output level */
 	if (addr >= 0xC000 && addr <= 0xC0FF && addr != 0xC081) {
 		aci_record_toggle(aci);
 	}
@@ -120,12 +128,15 @@ aci_write(void *ctx, uint16_t addr, uint8_t val, bool is_dummy)
 static void
 aci_tick(void *ctx, uint8_t cycles)
 {
-	aci_card_t *aci = (aci_card_t *)ctx;
+	struct aci_card *aci;
+
+	aci = (struct aci_card *)ctx;
 	aci->current_cycle += cycles;
 
-	if (aci->tape_loaded && aci->tape_active) {
+	if (aci->tape_loaded != 0 && aci->tape_active != 0) {
 		aci->cycles_until_toggle -= cycles;
-		while (aci->cycles_until_toggle <= 0 && aci->tape_active) {
+		while (aci->cycles_until_toggle <= 0 &&
+		    aci->tape_active != 0) {
 			aci->input_level = !aci->input_level;
 			aci->playback_index++;
 			if (aci->playback_index >= aci->num_durations) {
@@ -138,18 +149,23 @@ aci_tick(void *ctx, uint8_t cycles)
 	}
 }
 
-expansion_card_t *
+struct expansion_card *
 aci_create(const char *rom_path)
 {
-	if (!rom_path)
-		return NULL;
+	struct aci_card *aci;
+	struct expansion_card *card;
+	FILE *f;
+	long size;
 
-	FILE *f = fopen(rom_path, "rb");
-	if (!f)
-		return NULL;
+	if (rom_path == NULL)
+		return (NULL);
+
+	f = fopen(rom_path, "rb");
+	if (f == NULL)
+		return (NULL);
 
 	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
+	size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
 	if (size != 256) {
@@ -159,14 +175,14 @@ aci_create(const char *rom_path)
 		    rom_path,
 		    size);
 		fclose(f);
-		return NULL;
+		return (NULL);
 	}
 
-	aci_card_t *aci = calloc(1, sizeof(aci_card_t));
-	if (!aci) {
+	aci = calloc(1, sizeof(struct aci_card));
+	if (aci == NULL) {
 		perror("Failed to allocate ACI card context");
 		fclose(f);
-		return NULL;
+		return (NULL);
 	}
 
 	if (fread(aci->rom, 1, 256, f) != 256) {
@@ -175,15 +191,15 @@ aci_create(const char *rom_path)
 		    rom_path);
 		free(aci);
 		fclose(f);
-		return NULL;
+		return (NULL);
 	}
 	fclose(f);
 
-	expansion_card_t *card = malloc(sizeof(expansion_card_t));
-	if (!card) {
+	card = malloc(sizeof(struct expansion_card));
+	if (card == NULL) {
 		perror("Failed to allocate ACI expansion card");
 		free(aci);
-		return NULL;
+		return (NULL);
 	}
 
 	card->name = "ACI";
@@ -197,7 +213,7 @@ aci_create(const char *rom_path)
 
 	printf("Registered ACI card: ROM mapped at 0xC100 - 0xC1FF, registers "
 	       "at 0xC000 - 0xC0FF\n");
-	return card;
+	return (card);
 }
 
 static bool
@@ -208,12 +224,17 @@ pcm_to_durations(const float *mono,
     uint32_t *out_count,
     bool *out_initial_level)
 {
+	uint32_t *durations, *new_buf;
+	uint32_t cap, count, first_active, i;
+	bool current_level;
+	uint32_t last_transition;
+
 	if (num_samples == 0 || sample_rate == 0) {
-		return false;
+		return (false);
 	}
 
 	const float threshold = 0.02f;
-	uint32_t first_active = 0;
+	first_active = 0;
 
 	while (first_active < num_samples &&
 	    (mono[first_active] < 0.0f ? -mono[first_active]
@@ -225,23 +246,23 @@ pcm_to_durations(const float *mono,
 		fprintf(stderr,
 		    "Error: Audio file does not contain a detectable "
 		    "cassette signal\n");
-		return false;
+		return (false);
 	}
 
 	*out_initial_level = mono[first_active] >= 0.0f;
-	bool current_level = *out_initial_level;
-	uint32_t last_transition = first_active;
+	current_level = *out_initial_level;
+	last_transition = first_active;
 
-	uint32_t cap = 4096;
-	uint32_t count = 0;
-	uint32_t *durations = malloc(cap * sizeof(uint32_t));
+	cap = 4096;
+	count = 0;
+	durations = malloc(cap * sizeof(uint32_t));
 
-	if (!durations) {
+	if (durations == NULL) {
 		perror("Failed to allocate durations buffer");
-		return false;
+		return (false);
 	}
 
-	for (uint32_t i = first_active + 1; i < num_samples; i++) {
+	for (i = first_active + 1; i < num_samples; i++) {
 		bool new_level = current_level;
 
 		if (mono[i] >= threshold) {
@@ -267,17 +288,17 @@ pcm_to_durations(const float *mono,
 					    "Error: Cassette signal durations "
 					    "array overflow\n");
 					free(durations);
-					return false;
+					return (false);
 				}
 				cap *= 2;
-				uint32_t *new_buf =
+				new_buf =
 				    realloc(durations, cap * sizeof(uint32_t));
 
-				if (!new_buf) {
+				if (new_buf == NULL) {
 					perror("Failed to reallocate durations "
 					       "buffer");
 					free(durations);
-					return false;
+					return (false);
 				}
 				durations = new_buf;
 			}
@@ -289,56 +310,65 @@ pcm_to_durations(const float *mono,
 
 	if (count == 0) {
 		free(durations);
-		return false;
+		return (false);
 	}
 
 	*out_durations = durations;
 	*out_count = count;
-	return true;
+	return (true);
 }
 
 static bool
-load_wav_tape(aci_card_t *aci, const char *tape_path)
+load_wav_tape(struct aci_card *aci, const char *tape_path)
 {
-	FILE *f = fopen(tape_path, "rb");
+	FILE *f;
+	uint8_t riff_header[12];
+	uint16_t audio_format, bits_per_sample, channels;
+	uint32_t data_size, sample_rate;
+	uint8_t *data_chunk;
+	uint32_t bytes_per_sample, frame_count, i;
+	float *mono_samples;
+	uint32_t *durations;
+	uint32_t count;
+	bool initial_level;
 
-	if (!f) {
+	f = fopen(tape_path, "rb");
+	if (f == NULL) {
 		fprintf(stderr,
 		    "Error: Could not open WAV file '%s'\n",
 		    tape_path);
-		return false;
+		return (false);
 	}
-
-	uint8_t riff_header[12];
 
 	if (fread(riff_header, 1, 12, f) != 12) {
 		fprintf(stderr, "Error: Truncated WAV header\n");
 		fclose(f);
-		return false;
+		return (false);
 	}
 
 	if (memcmp(riff_header, "RIFF", 4) != 0 ||
 	    memcmp(riff_header + 8, "WAVE", 4) != 0) {
 		fprintf(stderr, "Error: Invalid WAV format\n");
 		fclose(f);
-		return false;
+		return (false);
 	}
 
-	uint16_t audio_format = 0;
-	uint16_t channels = 0;
-	uint32_t sample_rate = 0;
-	uint16_t bits_per_sample = 0;
-	uint8_t *data_chunk = NULL;
-	uint32_t data_size = 0;
+	audio_format = 0;
+	channels = 0;
+	sample_rate = 0;
+	bits_per_sample = 0;
+	data_chunk = NULL;
+	data_size = 0;
 
-	while (1) {
+	for (;;) {
 		uint8_t chunk_header[8];
+		uint32_t chunk_size;
 
 		if (fread(chunk_header, 1, 8, f) != 8) {
 			break;
 		}
 
-		uint32_t chunk_size = chunk_header[4] | (chunk_header[5] << 8) |
+		chunk_size = chunk_header[4] | (chunk_header[5] << 8) |
 		    (chunk_header[6] << 16) | (chunk_header[7] << 24);
 
 		if (memcmp(chunk_header, "fmt ", 4) == 0) {
@@ -348,12 +378,12 @@ load_wav_tape(aci_card_t *aci, const char *tape_path)
 				fprintf(stderr,
 				    "Error: Invalid fmt chunk size\n");
 				fclose(f);
-				return false;
+				return (false);
 			}
 			if (fread(fmt_data, 1, 16, f) != 16) {
 				fprintf(stderr, "Error: Truncated fmt chunk\n");
 				fclose(f);
-				return false;
+				return (false);
 			}
 			audio_format = fmt_data[0] | (fmt_data[1] << 8);
 			channels = fmt_data[2] | (fmt_data[3] << 8);
@@ -367,17 +397,17 @@ load_wav_tape(aci_card_t *aci, const char *tape_path)
 		} else if (memcmp(chunk_header, "data", 4) == 0) {
 			data_size = chunk_size;
 			data_chunk = malloc(data_size);
-			if (!data_chunk) {
+			if (data_chunk == NULL) {
 				perror("Failed to allocate data chunk buffer");
 				fclose(f);
-				return false;
+				return (false);
 			}
 			if (fread(data_chunk, 1, data_size, f) != data_size) {
 				fprintf(stderr,
 				    "Error: Truncated data chunk\n");
 				free(data_chunk);
 				fclose(f);
-				return false;
+				return (false);
 			}
 			break;
 		} else {
@@ -389,54 +419,58 @@ load_wav_tape(aci_card_t *aci, const char *tape_path)
 
 	fclose(f);
 
-	if (!data_chunk) {
+	if (data_chunk == NULL) {
 		fprintf(stderr, "Error: Missing WAV data chunk\n");
-		return false;
+		return (false);
 	}
 	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
 		fprintf(stderr, "Error: Missing WAV format details\n");
 		free(data_chunk);
-		return false;
+		return (false);
 	}
 	if (audio_format != 1 && audio_format != 3) {
 		fprintf(stderr,
 		    "Error: Unsupported WAV format (only PCM and float32 "
 		    "are supported)\n");
 		free(data_chunk);
-		return false;
+		return (false);
 	}
 
-	uint32_t bytes_per_sample = bits_per_sample / 8;
-
-	if (bytes_per_sample == 0 || data_size < bytes_per_sample * channels) {
+	bytes_per_sample = bits_per_sample / 8;
+	if (bytes_per_sample == 0 ||
+	    data_size < bytes_per_sample * channels) {
 		fprintf(stderr, "Error: Unsupported WAV sample format\n");
 		free(data_chunk);
-		return false;
+		return (false);
 	}
 
-	uint32_t frame_count = data_size / (bytes_per_sample * channels);
+	frame_count = data_size / (bytes_per_sample * channels);
 	if (frame_count > UINT32_MAX / sizeof(float)) {
 		fprintf(stderr,
 		    "Error: WAV file is too large (integer overflow "
 		    "prevention)\n");
 		free(data_chunk);
-		return false;
+		return (false);
 	}
-	float *mono_samples = malloc(frame_count * sizeof(float));
-
-	if (!mono_samples) {
+	mono_samples = malloc(frame_count * sizeof(float));
+	if (mono_samples == NULL) {
 		perror("Failed to allocate mixed mono samples buffer");
 		free(data_chunk);
-		return false;
+		return (false);
 	}
 
-	for (uint32_t i = 0; i < frame_count; i++) {
-		float mixed = 0.0f;
+	for (i = 0; i < frame_count; i++) {
+		float mixed;
+		uint16_t ch;
 
-		for (uint16_t ch = 0; ch < channels; ch++) {
-			uint8_t *sample_ptr = data_chunk +
+		mixed = 0.0f;
+		for (ch = 0; ch < channels; ch++) {
+			uint8_t *sample_ptr;
+			float value;
+
+			sample_ptr = data_chunk +
 			    (i * channels + ch) * bytes_per_sample;
-			float value = 0.0f;
+			value = 0.0f;
 
 			if (audio_format == 1 && bits_per_sample == 8) {
 				value = ((int)sample_ptr[0] - 128) / 128.0f;
@@ -474,23 +508,23 @@ load_wav_tape(aci_card_t *aci, const char *tape_path)
 
 	free(data_chunk);
 
-	uint32_t *durations = NULL;
-	uint32_t count = 0;
-	bool initial_level = false;
+	durations = NULL;
+	count = 0;
+	initial_level = false;
 
-	if (!pcm_to_durations(mono_samples,
+	if (pcm_to_durations(mono_samples,
 		frame_count,
 		sample_rate,
 		&durations,
 		&count,
-		&initial_level)) {
+		&initial_level) == 0) {
 		free(mono_samples);
-		return false;
+		return (false);
 	}
 
 	free(mono_samples);
 
-	if (aci->durations) {
+	if (aci->durations != NULL) {
 		free(aci->durations);
 	}
 
@@ -509,16 +543,16 @@ load_wav_tape(aci_card_t *aci, const char *tape_path)
 	    tape_path,
 	    count,
 	    sample_rate);
-	return true;
+	return (true);
 }
 
 static bool
-save_wav_tape(aci_card_t *aci, const char *tape_path)
+save_wav_tape(struct aci_card *aci, const char *tape_path)
 {
 	if (aci->recorded_count == 0) {
 		fprintf(stderr,
 		    "ACI: No tape output was recorded. Nothing to save.\n");
-		return false;
+		return (false);
 	}
 
 	uint32_t wav_sample_rate = 44100;
@@ -542,7 +576,7 @@ save_wav_tape(aci_card_t *aci, const char *tape_path)
 	if (total_samples > UINT32_MAX / 2) {
 		fprintf(stderr,
 		    "Error: Recording is too long to save as WAV\n");
-		return false;
+		return (false);
 	}
 
 	uint32_t data_size = (uint32_t)(total_samples * sizeof(int16_t));
@@ -554,7 +588,7 @@ save_wav_tape(aci_card_t *aci, const char *tape_path)
 		fprintf(stderr,
 		    "Error: Could not open '%s' for writing\n",
 		    tape_path);
-		return false;
+		return (false);
 	}
 
 	fwrite("RIFF", 1, 4, f);
@@ -649,41 +683,45 @@ save_wav_tape(aci_card_t *aci, const char *tape_path)
 
 	fclose(f);
 	printf("Saved ACI tape '%s' as WAV format\n", tape_path);
-	return true;
+	return (true);
 }
 
 bool
-aci_load_tape(expansion_card_t *card, const char *tape_path)
+aci_load_tape(struct expansion_card *card, const char *tape_path)
 {
-	if (!card || strcmp(card->name, "ACI") != 0) {
-		return false;
-	}
-	aci_card_t *aci = (aci_card_t *)card->ctx;
+	struct aci_card *aci;
 
-	return load_wav_tape(aci, tape_path);
+	if (card == NULL || strcmp(card->name, "ACI") != 0) {
+		return (false);
+	}
+	aci = (struct aci_card *)card->ctx;
+	return (load_wav_tape(aci, tape_path));
 }
 
 bool
-aci_save_tape(expansion_card_t *card, const char *tape_path)
+aci_save_tape(struct expansion_card *card, const char *tape_path)
 {
-	if (!card || strcmp(card->name, "ACI") != 0) {
-		return false;
-	}
-	aci_card_t *aci = (aci_card_t *)card->ctx;
+	struct aci_card *aci;
 
-	return save_wav_tape(aci, tape_path);
+	if (card == NULL || strcmp(card->name, "ACI") != 0) {
+		return (false);
+	}
+	aci = (struct aci_card *)card->ctx;
+	return (save_wav_tape(aci, tape_path));
 }
 
 void
-aci_free(expansion_card_t *card)
+aci_free(struct expansion_card *card)
 {
-	if (card) {
-		if (card->ctx) {
-			aci_card_t *aci = (aci_card_t *)card->ctx;
-			if (aci->durations) {
+	struct aci_card *aci;
+
+	if (card != NULL) {
+		if (card->ctx != NULL) {
+			aci = (struct aci_card *)card->ctx;
+			if (aci->durations != NULL) {
 				free(aci->durations);
 			}
-			if (aci->recorded_durations) {
+			if (aci->recorded_durations != NULL) {
 				free(aci->recorded_durations);
 			}
 			free(aci);
@@ -693,11 +731,13 @@ aci_free(expansion_card_t *card)
 }
 
 uint32_t
-aci_get_recorded_count(expansion_card_t *card)
+aci_get_recorded_count(struct expansion_card *card)
 {
-	if (!card || strcmp(card->name, "ACI") != 0) {
-		return 0;
+	struct aci_card *aci;
+
+	if (card == NULL || strcmp(card->name, "ACI") != 0) {
+		return (0);
 	}
-	aci_card_t *aci = (aci_card_t *)card->ctx;
-	return aci->recorded_count;
+	aci = (struct aci_card *)card->ctx;
+	return (aci->recorded_count);
 }

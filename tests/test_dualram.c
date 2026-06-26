@@ -1,17 +1,18 @@
-#include "../bus.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../bus.h"
+
 static void
-expect_writable(Bus *bus, uint16_t address, uint8_t value)
+expect_writable(struct bus *bus, uint16_t address, uint8_t value)
 {
 	bus_write(bus, address, value);
 	assert(bus_read(bus, address) == value);
 }
 
 static void
-expect_unmapped(Bus *bus, uint16_t address, uint8_t value)
+expect_unmapped(struct bus *bus, uint16_t address, uint8_t value)
 {
 	// Before write, the underlying RAM cell must be 0x00
 	assert(bus->ram[address] == 0x00);
@@ -32,7 +33,7 @@ expect_unmapped(Bus *bus, uint16_t address, uint8_t value)
 static void
 test_pia_mirroring(void)
 {
-	Bus bus;
+	struct bus bus;
 
 	if (!bus_init(&bus, 8192)) {
 		fprintf(stderr,
@@ -69,12 +70,12 @@ main(void)
 {
 	printf("Starting Dual-Bank 8KB RAM Tests...\n");
 
-	Bus bus;
+	struct bus bus;
 
 	// Initialize with 8 KB (8192 bytes) RAM size
 	if (!bus_init(&bus, 8192)) {
 		fprintf(stderr, "Failed to initialize bus with 8KB RAM\n");
-		return 1;
+		return (1);
 	}
 
 	// Standard Apple-1 / Replica dual-bank RAM: low 4 KB plus high 4 KB.
@@ -95,5 +96,5 @@ main(void)
 	// Run mirroring test
 	test_pia_mirroring();
 
-	return 0;
+	return (0);
 }

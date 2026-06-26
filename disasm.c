@@ -1,21 +1,22 @@
-#include "disasm.h"
 #include <stdint.h>
 #include <stdio.h>
 
+#include "disasm.h"
+
 typedef enum {
-	ADDR_IMP, // Implied (e.g. TAX)
-	ADDR_ACC, // Accumulator (e.g. LSR A)
-	ADDR_IMM, // Immediate (e.g. LDA #$12)
-	ADDR_ZP,  // Zero Page (e.g. LDA $12)
-	ADDR_ZPX, // Zero Page, X (e.g. LDA $12,X)
-	ADDR_ZPY, // Zero Page, Y (e.g. LDX $12,Y)
-	ADDR_ABS, // Absolute (e.g. LDA $1234)
-	ADDR_ABX, // Absolute, X (e.g. LDA $1234,X)
-	ADDR_ABY, // Absolute, Y (e.g. LDA $1234,Y)
-	ADDR_IND, // Indirect (e.g. JMP ($1234))
-	ADDR_IZX, // Indirect, X (e.g. LDA ($12,X))
-	ADDR_IZY, // Indirect, Y (e.g. LDA ($12),Y)
-	ADDR_REL, // Relative (e.g. BNE $1234)
+	ADDR_IMP, /* Implied (e.g. TAX) */
+	ADDR_ACC, /* Accumulator (e.g. LSR A) */
+	ADDR_IMM, /* Immediate (e.g. LDA #$12) */
+	ADDR_ZP,  /* Zero Page (e.g. LDA $12) */
+	ADDR_ZPX, /* Zero Page, X (e.g. LDA $12,X) */
+	ADDR_ZPY, /* Zero Page, Y (e.g. LDX $12,Y) */
+	ADDR_ABS, /* Absolute (e.g. LDA $1234) */
+	ADDR_ABX, /* Absolute, X (e.g. LDA $1234,X) */
+	ADDR_ABY, /* Absolute, Y (e.g. LDA $1234,Y) */
+	ADDR_IND, /* Indirect (e.g. JMP ($1234)) */
+	ADDR_IZX, /* Indirect, X (e.g. LDA ($12,X)) */
+	ADDR_IZY, /* Indirect, Y (e.g. LDA ($12),Y) */
+	ADDR_REL, /* Relative (e.g. BNE $1234) */
 } addr_mode_t;
 
 typedef struct {
@@ -24,7 +25,7 @@ typedef struct {
 } op_info_t;
 
 static const op_info_t op_table[256] = {
-	// 0x00 - 0x0F
+	/* 0x00 - 0x0F */
 	{ "BRK", ADDR_IMP },
 	{ "ORA", ADDR_IZX },
 	{ "JAM", ADDR_IMP },
@@ -41,7 +42,7 @@ static const op_info_t op_table[256] = {
 	{ "ORA", ADDR_ABS },
 	{ "ASL", ADDR_ABS },
 	{ "SLO", ADDR_ABS },
-	// 0x10 - 0x1F
+	/* 0x10 - 0x1F */
 	{ "BPL", ADDR_REL },
 	{ "ORA", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -58,7 +59,7 @@ static const op_info_t op_table[256] = {
 	{ "ORA", ADDR_ABX },
 	{ "ASL", ADDR_ABX },
 	{ "SLO", ADDR_ABX },
-	// 0x20 - 0x2F
+	/* 0x20 - 0x2F */
 	{ "JSR", ADDR_ABS },
 	{ "AND", ADDR_IZX },
 	{ "JAM", ADDR_IMP },
@@ -75,7 +76,7 @@ static const op_info_t op_table[256] = {
 	{ "AND", ADDR_ABS },
 	{ "ROL", ADDR_ABS },
 	{ "RLA", ADDR_ABS },
-	// 0x30 - 0x3F
+	/* 0x30 - 0x3F */
 	{ "BMI", ADDR_REL },
 	{ "AND", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -92,7 +93,7 @@ static const op_info_t op_table[256] = {
 	{ "AND", ADDR_ABX },
 	{ "ROL", ADDR_ABX },
 	{ "RLA", ADDR_ABX },
-	// 0x40 - 0x4F
+	/* 0x40 - 0x4F */
 	{ "RTI", ADDR_IMP },
 	{ "EOR", ADDR_IZX },
 	{ "JAM", ADDR_IMP },
@@ -109,7 +110,7 @@ static const op_info_t op_table[256] = {
 	{ "EOR", ADDR_ABS },
 	{ "LSR", ADDR_ABS },
 	{ "SRE", ADDR_ABS },
-	// 0x50 - 0x5F
+	/* 0x50 - 0x5F */
 	{ "BVC", ADDR_REL },
 	{ "EOR", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -126,7 +127,7 @@ static const op_info_t op_table[256] = {
 	{ "EOR", ADDR_ABX },
 	{ "LSR", ADDR_ABX },
 	{ "SRE", ADDR_ABX },
-	// 0x60 - 0x6F
+	/* 0x60 - 0x6F */
 	{ "RTS", ADDR_IMP },
 	{ "ADC", ADDR_IZX },
 	{ "JAM", ADDR_IMP },
@@ -143,7 +144,7 @@ static const op_info_t op_table[256] = {
 	{ "ADC", ADDR_ABS },
 	{ "ROR", ADDR_ABS },
 	{ "RRA", ADDR_ABS },
-	// 0x70 - 0x7F
+	/* 0x70 - 0x7F */
 	{ "BVS", ADDR_REL },
 	{ "ADC", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -160,7 +161,7 @@ static const op_info_t op_table[256] = {
 	{ "ADC", ADDR_ABX },
 	{ "ROR", ADDR_ABX },
 	{ "RRA", ADDR_ABX },
-	// 0x80 - 0x8F
+	/* 0x80 - 0x8F */
 	{ "SKB", ADDR_IMM },
 	{ "STA", ADDR_IZX },
 	{ "SKB", ADDR_IMM },
@@ -177,7 +178,7 @@ static const op_info_t op_table[256] = {
 	{ "STA", ADDR_ABS },
 	{ "STX", ADDR_ABS },
 	{ "SAX", ADDR_ABS },
-	// 0x90 - 0x9F
+	/* 0x90 - 0x9F */
 	{ "BCC", ADDR_REL },
 	{ "STA", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -194,7 +195,7 @@ static const op_info_t op_table[256] = {
 	{ "STA", ADDR_ABX },
 	{ "SHX", ADDR_ABY },
 	{ "AHX", ADDR_ABY },
-	// 0xA0 - 0xAF
+	/* 0xA0 - 0xAF */
 	{ "LDY", ADDR_IMM },
 	{ "LDA", ADDR_IZX },
 	{ "LDX", ADDR_IMM },
@@ -211,7 +212,7 @@ static const op_info_t op_table[256] = {
 	{ "LDA", ADDR_ABS },
 	{ "LDX", ADDR_ABS },
 	{ "LAX", ADDR_ABS },
-	// 0xB0 - 0xBF
+	/* 0xB0 - 0xBF */
 	{ "BCS", ADDR_REL },
 	{ "LDA", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -228,7 +229,7 @@ static const op_info_t op_table[256] = {
 	{ "LDA", ADDR_ABX },
 	{ "LDX", ADDR_ABY },
 	{ "LAX", ADDR_ABY },
-	// 0xC0 - 0xCF
+	/* 0xC0 - 0xCF */
 	{ "CPY", ADDR_IMM },
 	{ "CMP", ADDR_IZX },
 	{ "SKB", ADDR_IMM },
@@ -245,7 +246,7 @@ static const op_info_t op_table[256] = {
 	{ "CMP", ADDR_ABS },
 	{ "DEC", ADDR_ABS },
 	{ "DCP", ADDR_ABS },
-	// 0xD0 - 0xDF
+	/* 0xD0 - 0xDF */
 	{ "BNE", ADDR_REL },
 	{ "CMP", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -262,7 +263,7 @@ static const op_info_t op_table[256] = {
 	{ "CMP", ADDR_ABX },
 	{ "DEC", ADDR_ABX },
 	{ "DCP", ADDR_ABX },
-	// 0xE0 - 0xEF
+	/* 0xE0 - 0xEF */
 	{ "CPX", ADDR_IMM },
 	{ "SBC", ADDR_IZX },
 	{ "SKB", ADDR_IMM },
@@ -279,7 +280,7 @@ static const op_info_t op_table[256] = {
 	{ "SBC", ADDR_ABS },
 	{ "INC", ADDR_ABS },
 	{ "ISB", ADDR_ABS },
-	// 0xF0 - 0xFF
+	/* 0xF0 - 0xFF */
 	{ "BEQ", ADDR_REL },
 	{ "SBC", ADDR_IZY },
 	{ "JAM", ADDR_IMP },
@@ -299,7 +300,7 @@ static const op_info_t op_table[256] = {
 };
 
 int
-cpu_disassemble(Bus *bus, uint16_t pc, char *out_str)
+cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 {
 	uint8_t op = bus_read(bus, pc);
 	op_info_t info = op_table[op];
@@ -402,5 +403,5 @@ cpu_disassemble(Bus *bus, uint16_t pc, char *out_str)
 	}
 	}
 
-	return bytes;
+	return (bytes);
 }

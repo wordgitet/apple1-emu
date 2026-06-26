@@ -1,9 +1,10 @@
-#include "../bus.h"
-#include "../cpu.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../bus.h"
+#include "../cpu.h"
 
 /*
  * test_tomharte.c -- Cycle-exact Tom Harte test runner using binary fixture.
@@ -48,10 +49,10 @@ static bool
 read_state(FILE *f, state_t *s)
 {
 	if (fread(&s->pc, 2, 1, f) != 1)
-		return false;
+		return (false);
 	uint8_t regs[5];
 	if (fread(regs, 1, 5, f) != 5)
-		return false;
+		return (false);
 	s->s = regs[0];
 	s->a = regs[1];
 	s->x = regs[2];
@@ -59,28 +60,28 @@ read_state(FILE *f, state_t *s)
 	s->p = regs[4];
 
 	if (fread(&s->ram_count, 2, 1, f) != 1)
-		return false;
+		return (false);
 	for (int i = 0; i < s->ram_count; i++) {
 		if (fread(&s->ram[i].addr, 2, 1, f) != 1)
-			return false;
+			return (false);
 		if (fread(&s->ram[i].val, 1, 1, f) != 1)
-			return false;
+			return (false);
 	}
-	return true;
+	return (true);
 }
 
 static bool
 read_test_case(FILE *f, test_case_t *t)
 {
 	if (fread(&t->op, 1, 1, f) != 1)
-		return false;
+		return (false);
 	if (!read_state(f, &t->initial))
-		return false;
+		return (false);
 	if (!read_state(f, &t->final))
-		return false;
+		return (false);
 	if (fread(&t->cycles, 1, 1, f) != 1)
-		return false;
-	return true;
+		return (false);
+	return (true);
 }
 
 static void
@@ -119,7 +120,7 @@ main(int argc, char **argv)
 		fprintf(stderr,
 		    "Error: Could not open test fixture %s\n",
 		    bin_path);
-		return 1;
+		return (1);
 	}
 
 	char header[4];
@@ -128,14 +129,14 @@ main(int argc, char **argv)
 		    "Error: Invalid test fixture header in %s\n",
 		    bin_path);
 		fclose(f);
-		return 1;
+		return (1);
 	}
 
 	uint32_t total_cases;
 	if (fread(&total_cases, 4, 1, f) != 1) {
 		fprintf(stderr, "Error: Could not read total case count\n");
 		fclose(f);
-		return 1;
+		return (1);
 	}
 
 	int opcodes_count = 244;
@@ -150,15 +151,15 @@ main(int argc, char **argv)
 		    limit);
 	}
 
-	Bus bus;
+	struct bus bus;
 	if (!bus_init(&bus, 65536)) {
 		fclose(f);
-		return 1;
+		return (1);
 	}
 	bus.opts.flat_bus = true;
 	bus.access_cb = access_callback;
 
-	CPU cpu;
+	struct cpu cpu;
 	cpu_init(&cpu, &bus);
 
 	int passed_ops = 0;
@@ -181,7 +182,7 @@ main(int argc, char **argv)
 				    op_idx);
 				bus_free(&bus);
 				fclose(f);
-				return 1;
+				return (1);
 			}
 
 			if (first_case) {
@@ -192,7 +193,7 @@ main(int argc, char **argv)
 				first_case = false;
 			}
 
-			// Setup CPU initial state
+			// Setup struct cpu initial state
 			cpu.pc = t.initial.pc;
 			cpu.s = t.initial.s;
 			cpu.a = t.initial.a;
@@ -296,11 +297,11 @@ main(int argc, char **argv)
 	fclose(f);
 
 	if (failed_ops > 0) {
-		return 1;
+		return (1);
 	}
 
 	printf("\nAll %d opcodes passed successfully (%d cases each)!\n",
 	    passed_ops,
 	    limit < cases_per_op ? limit : cases_per_op);
-	return 0;
+	return (0);
 }

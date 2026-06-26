@@ -1,12 +1,13 @@
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "bus.h"
 #include "dbg.h"
 #include "disasm.h"
 #include "io.h"
 #include "term_apple1.h"
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 int
 dbg_printf(const char *format, ...);
@@ -18,7 +19,7 @@ print_help(void)
 	printf("Debugger commands:\n");
 	printf("  s, <Enter>        Step one instruction\n");
 	printf("  c                 Continue execution\n");
-	printf("  r                 Show CPU registers (A, X, Y, PC, S, P "
+	printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
 	       "flags)\n");
 	printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
 	printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
@@ -39,7 +40,7 @@ print_help(void)
 }
 
 static void
-print_registers(CPU *cpu)
+print_registers(struct cpu *cpu)
 {
 	printf("PC:%04X  A:%02X  X:%02X  Y:%02X  SP:%02X  P:%02X (",
 	    cpu->pc,
@@ -62,16 +63,17 @@ print_registers(CPU *cpu)
 static void
 dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 {
-	uint32_t current = start;
+	uint32_t current, i, line_end;
+	uint8_t ch, val;
 
+	current = start;
 	while (current <= end) {
 		printf("$%04X: ", current);
-		uint32_t line_end = current + 15;
-
+		line_end = current + 15;
 		if (line_end > end) {
 			line_end = end;
 		}
-		for (uint32_t i = current; i <= current + 15; i++) {
+		for (i = current; i <= current + 15; i++) {
 			if (i <= line_end) {
 				printf("%02X ", bus_read(dbg->cpu->bus, i));
 			} else {
@@ -79,10 +81,9 @@ dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 			}
 		}
 		printf(" |");
-		for (uint32_t i = current; i <= line_end; i++) {
-			uint8_t val = bus_read(dbg->cpu->bus, i);
-			uint8_t ch = val & 0x7F;
-
+		for (i = current; i <= line_end; i++) {
+			val = bus_read(dbg->cpu->bus, i);
+			ch = val & 0x7F;
 			printf("%c", (ch >= 0x20 && ch <= 0x7E) ? ch : '.');
 		}
 		printf("|\n");
@@ -94,7 +95,7 @@ dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 }
 
 void
-dbg_init(debugger_t *dbg, CPU *cpu)
+dbg_init(debugger_t *dbg, struct cpu *cpu)
 {
 	dbg->cpu = cpu;
 	dbg->num_breakpoints = 0;
@@ -161,22 +162,27 @@ dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr)
 void
 dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 {
-	debugger_t *dbg = (debugger_t *)ctx;
-	if (!dbg)
+	debugger_t *dbg;
+	int i;
+
+	dbg = (debugger_t *)ctx;
+	if (dbg == NULL)
 		return;
 
-	for (int i = 0; i < dbg->num_watchpoints; i++) {
+	for (i = 0; i < dbg->num_watchpoints; i++) {
 		watchpoint_t *wp = &dbg->watchpoints[i];
 		if (wp->addr == addr) {
-			bool trigger = false;
-			if (is_write && (wp->type & WP_WRITE))
+			bool trigger;
+
+			trigger = false;
+			if (is_write != 0 && (wp->type & WP_WRITE) != 0)
 				trigger = true;
-			if (!is_write && (wp->type & WP_READ))
+			if (is_write == 0 && (wp->type & WP_READ) != 0)
 				trigger = true;
 
-			if (trigger) {
+			if (trigger != 0) {
 				dbg->step_mode = true;
-				if (!dbg->cpu->bus->opts.headless) {
+				if (dbg->cpu->bus->opts.headless == 0) {
 					term_open_debugger();
 				}
 				printf("\n*** WATCHPOINT TRIGGERED ***\n");
@@ -242,10 +248,10 @@ dbg_has_breakpoint(debugger_t *dbg, uint16_t addr)
 {
 	for (int i = 0; i < dbg->num_breakpoints; i++) {
 		if (dbg->breakpoints[i] == addr) {
-			return true;
+			return (true);
 		}
 	}
-	return false;
+	return (false);
 }
 
 void
@@ -472,19 +478,22 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 void
 dbg_interactive_loop(debugger_t *dbg)
 {
-	if (!dbg->cpu->bus->opts.headless) {
+	bus_access_cb_t old_cb;
+	char disasm_buf[64];
+	uint8_t op;
+
+	if (dbg->cpu->bus->opts.headless == 0) {
 		io_cleanup();
 	}
 
-	/* Suspend access callback to avoid infinite recursion/re-triggering from debug reads */
-	bus_access_cb_t old_cb = dbg->cpu->bus->access_cb;
+	/* Suspend access callback to avoid infinite recursion/re-triggering
+	 * from debug reads */
+	old_cb = dbg->cpu->bus->access_cb;
 	dbg->cpu->bus->access_cb = NULL;
-
-	char disasm_buf[64];
 	cpu_disassemble(dbg->cpu->bus, dbg->cpu->pc, disasm_buf);
 
-	// Check if this is a BRK instruction (BRK opcode is 0x00)
-	uint8_t op = bus_read(dbg->cpu->bus, dbg->cpu->pc);
+	/* Check if this is a BRK instruction (BRK opcode is 0x00) */
+	op = bus_read(dbg->cpu->bus, dbg->cpu->pc);
 	if (op == 0x00) {
 		printf("\n*** BRK INSTRUCTION DETECTED ***\n");
 	}
@@ -493,7 +502,7 @@ dbg_interactive_loop(debugger_t *dbg)
 	print_registers(dbg->cpu);
 	printf("        $%04X: %s\n", dbg->cpu->pc, disasm_buf);
 
-	// Print stack dump (top 8 values)
+	/* Print stack dump (top 8 values) */
 	printf("        Stack: ");
 	if (dbg->cpu->s == 0xFF) {
 		printf("[Empty]");
@@ -508,27 +517,30 @@ dbg_interactive_loop(debugger_t *dbg)
 	}
 	printf("\n");
 
-	while (1) {
+	for (;;) {
+		char input[256];
+		char *cmd_str;
+		char cmd;
+		size_t len;
+
 		printf("dbg> ");
 		fflush(stdout);
 
-		char input[256];
-
-		if (!fgets(input, sizeof(input), stdin)) {
+		if (fgets(input, sizeof(input), stdin) == NULL) {
 			break;
 		}
 
-		size_t len = strlen(input);
+		len = strlen(input);
 
 		if (len > 0 && input[len - 1] == '\n') {
 			input[len - 1] = '\0';
 		}
 
-		char *cmd_str = input;
+		cmd_str = input;
 		while (*cmd_str == ' ' || *cmd_str == '\t') {
 			cmd_str++;
 		}
-		char cmd = cmd_str[0];
+		cmd = cmd_str[0];
 		if (cmd == '\0')
 			cmd = 's';
 
@@ -543,12 +555,12 @@ dbg_interactive_loop(debugger_t *dbg)
 	/* Restore access callback when resuming execution */
 	dbg->cpu->bus->access_cb = old_cb;
 
-	if (!dbg->cpu->bus->opts.headless) {
-		io_init(); // Re-enable raw mode when execution resumes
+	if (dbg->cpu->bus->opts.headless == 0) {
+		io_init(); /* Re-enable raw mode when execution resumes */
 	}
 }
 
-extern Bus *g_bus;
+extern struct bus *g_bus;
 void
 dbg_log_append(const char *str);
 
@@ -556,16 +568,18 @@ int
 dbg_printf(const char *format, ...)
 {
 	va_list args;
-	va_start(args, format);
 	char buf[1024];
-	int ret = vsnprintf(buf, sizeof(buf), format, args);
+	int ret;
+
+	va_start(args, format);
+	ret = vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
 
-	if (g_bus && g_bus->opts.headless) {
+	if (g_bus != NULL && g_bus->opts.headless != 0) {
 		fputs(buf, stdout);
 		fflush(stdout);
 	} else {
 		dbg_log_append(buf);
 	}
-	return ret;
+	return (ret);
 }

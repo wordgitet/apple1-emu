@@ -1,21 +1,23 @@
-#include "bus.h"
-#include "embedded_roms.h"
-#include "io.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+#include "bus.h"
+#include "embedded_roms.h"
+#include "io.h"
+
 static void
 delay_nanoseconds(long ns)
 {
-	struct timespec start, current;
+	struct timespec current, start;
+	long elapsed;
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
-	while (1) {
+	for (;;) {
 		clock_gettime(CLOCK_MONOTONIC, &current);
-		long elapsed = (current.tv_sec - start.tv_sec) * 1000000000L +
+		elapsed = (current.tv_sec - start.tv_sec) * 1000000000L +
 		    (current.tv_nsec - start.tv_nsec);
 		if (elapsed >= ns) {
 			break;
@@ -24,30 +26,30 @@ delay_nanoseconds(long ns)
 }
 
 static inline bool
-bus_is_ram_address(Bus *bus, uint16_t address)
+bus_is_ram_address(struct bus *bus, uint16_t address)
 {
 	if (bus->ram_size == 8192) {
-		// 8KB split mode: 0x0000-0x0FFF and 0xE000-0xEFFF
+		/* 8KB split mode: 0x0000-0x0FFF and 0xE000-0xEFFF */
 		if (address < 0x1000)
-			return true;
+			return (true);
 		if (address >= 0xE000 && address < 0xF000)
-			return true;
-		return false;
+			return (true);
+		return (false);
 	}
-	return (uint32_t)address < bus->ram_size;
+	return ((uint32_t)address < bus->ram_size);
 }
 
 bool
-bus_init(Bus *bus, uint32_t ram_size)
+bus_init(struct bus *bus, uint32_t ram_size)
 {
-	memset(bus, 0, sizeof(Bus));
+	memset(bus, 0, sizeof(struct bus));
 	bus->ram_size = ram_size;
 	bus->ram = malloc(65536);
-	if (!bus->ram) {
+	if (bus->ram == NULL) {
 		perror("Failed to allocate RAM");
-		return false;
+		return (false);
 	}
-	// Set default options
+	/* Set default options */
 	bus->opts.uncapped = true;
 	bus->opts.throttle_pia = true;
 	bus->opts.emulate_dram_refresh = false;
@@ -57,44 +59,46 @@ bus_init(Bus *bus, uint32_t ram_size)
 	bus->opts.headless = false;
 
 	memset(bus->ram, 0, 65536);
-	// Default display control (bit 7 set = ready)
+	/* Default display control (bit 7 set = ready) */
 	bus->pia.dsp_control = 0x80;
 
-	return true;
+	return (true);
 }
 
 void
-bus_free(Bus *bus)
+bus_free(struct bus *bus)
 {
-	if (bus->ram) {
+	if (bus->ram != NULL) {
 		free(bus->ram);
 		bus->ram = NULL;
 	}
 }
 
 bool
-bus_load_rom(Bus *bus, const char *rom_path)
+bus_load_rom(struct bus *bus, const char *rom_path)
 {
-	if (!rom_path) {
+	FILE *f;
+	size_t read_bytes;
+	long size;
+
+	if (rom_path == NULL) {
 		memcpy(bus->rom, embedded_wozmon, 256);
 		bus->rom_loaded = true;
-		return true;
+		return (true);
 	}
 
-	FILE *f = fopen(rom_path, "rb");
-
-	if (!f) {
+	f = fopen(rom_path, "rb");
+	if (f == NULL) {
 		fprintf(stderr,
 		    "Warning: '%s' not found, using embedded Wozmon ROM.\n",
 		    rom_path);
 		memcpy(bus->rom, embedded_wozmon, 256);
 		bus->rom_loaded = true;
-		return true;
+		return (true);
 	}
 
 	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
-
+	size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
 	if (size != 256) {
@@ -104,39 +108,41 @@ bus_load_rom(Bus *bus, const char *rom_path)
 		    rom_path,
 		    size);
 		fclose(f);
-		return false;
+		return (false);
 	}
 
-	size_t read_bytes = fread(bus->rom, 1, 256, f);
-
+	read_bytes = fread(bus->rom, 1, 256, f);
 	fclose(f);
 
 	if (read_bytes != 256) {
 		fprintf(stderr,
 		    "Error: Failed to read 256 bytes from '%s'\n",
 		    rom_path);
-		return false;
+		return (false);
 	}
 
 	bus->rom_loaded = true;
-	return true;
+	return (true);
 }
 
 bool
-bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
+bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 {
-	FILE *f = fopen(bin_path, "rb");
+	FILE *f;
+	size_t read_bytes;
+	long size;
+	uint32_t addr;
 
-	if (!f) {
+	f = fopen(bin_path, "rb");
+	if (f == NULL) {
 		fprintf(stderr,
 		    "Error: Could not open binary file '%s'\n",
 		    bin_path);
-		return false;
+		return (false);
 	}
 
 	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
-
+	size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
 	if (size <= 0) {
@@ -144,11 +150,12 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 		    "Error: Binary file '%s' is empty.\n",
 		    bin_path);
 		fclose(f);
-		return false;
+		return (false);
 	}
 
-	for (uint32_t addr = address; addr < (uint32_t)address + size; addr++) {
-		if (addr > 0xFFFF || !bus_is_ram_address(bus, (uint16_t)addr)) {
+	for (addr = address; addr < (uint32_t)address + size; addr++) {
+		if (addr > 0xFFFF ||
+		    bus_is_ram_address(bus, (uint16_t)addr) == 0) {
 			fprintf(stderr,
 			    "Error: Binary file '%s' (size %ld bytes) "
 			    "loaded at "
@@ -158,19 +165,18 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 			    address,
 			    bus->ram_size / 1024);
 			fclose(f);
-			return false;
+			return (false);
 		}
 	}
 
-	size_t read_bytes = fread(bus->ram + address, 1, size, f);
-
+	read_bytes = fread(bus->ram + address, 1, size, f);
 	fclose(f);
 
 	if (read_bytes != (size_t)size) {
 		fprintf(stderr,
 		    "Error: Failed to read entire binary file '%s'\n",
 		    bin_path);
-		return false;
+		return (false);
 	}
 
 	printf("Loaded '%s' (%ld bytes) into RAM at 0x%04X - 0x%04X\n",
@@ -178,74 +184,83 @@ bus_load_bin(Bus *bus, const char *bin_path, uint16_t address)
 	    size,
 	    address,
 	    (uint16_t)(address + size - 1));
-	return true;
+	return (true);
 }
 
 static inline int
 hex_val(char c)
 {
 	if (c >= '0' && c <= '9')
-		return c - '0';
+		return (c - '0');
 	if (c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
+		return (c - 'A' + 10);
 	if (c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
-	return 0;
+		return (c - 'a' + 10);
+	return (0);
 }
 
 bool
-bus_load_wozmon_txt(Bus *bus,
+bus_load_wozmon_txt(struct bus *bus,
     const char *txt_path,
     uint16_t *run_address,
     bool *has_run_address)
 {
-	FILE *f = fopen(txt_path, "r");
-	if (!f) {
+	char *cleaned, *content;
+	size_t read_bytes, w;
+	long size;
+	uint16_t current_addr;
+	int total_bytes;
+	bool first_addr, in_comment;
+	size_t i;
+	FILE *f;
+
+	f = fopen(txt_path, "r");
+	if (f == NULL) {
 		fprintf(stderr,
 		    "Error: Could not open text file '%s'\n",
 		    txt_path);
-		return false;
+		return (false);
 	}
 
 	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
+	size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
 	if (size <= 0) {
 		fprintf(stderr, "Error: Text file '%s' is empty.\n", txt_path);
 		fclose(f);
-		return false;
+		return (false);
 	}
 
-	char *content = malloc(size + 1);
-	if (!content) {
+	content = malloc(size + 1);
+	if (content == NULL) {
 		fclose(f);
-		return false;
+		return (false);
 	}
 
-	size_t read_bytes = fread(content, 1, size, f);
+	read_bytes = fread(content, 1, size, f);
 	content[read_bytes] = '\0';
 	fclose(f);
 
-	// Strip inline comments
-	char *cleaned = malloc(size + 1);
-	if (!cleaned) {
+	/* Strip inline comments */
+	cleaned = malloc(size + 1);
+	if (cleaned == NULL) {
 		free(content);
-		return false;
+		return (false);
 	}
 
-	size_t w = 0;
-	bool in_comment = false;
-	for (size_t i = 0; i < read_bytes; i++) {
+	w = 0;
+	in_comment = false;
+	for (i = 0; i < read_bytes; i++) {
 		if (content[i] == '\n' || content[i] == '\r') {
 			in_comment = false;
 			cleaned[w++] = content[i];
 			continue;
 		}
-		if (in_comment)
+		if (in_comment != 0)
 			continue;
 
-		// Start of comment
+		/* Start of comment */
 		if (content[i] == '#' || content[i] == ';') {
 			in_comment = true;
 			continue;
@@ -260,12 +275,12 @@ bus_load_wozmon_txt(Bus *bus,
 	cleaned[w] = '\0';
 	free(content);
 
-	uint16_t current_addr = 0;
-	bool first_addr = true;
-	int total_bytes = 0;
-	size_t i = 0;
+	current_addr = 0;
+	first_addr = true;
+	total_bytes = 0;
+	i = 0;
 
-	if (has_run_address)
+	if (has_run_address != NULL)
 		*has_run_address = false;
 
 	while (i < w) {
@@ -276,14 +291,14 @@ bus_load_wozmon_txt(Bus *bus,
 			continue;
 		}
 
-		// 'T' prefix (turbo) - skip
+		/* 'T' prefix (turbo) - skip */
 		if (toupper((unsigned char)c) == 'T' && i + 1 < w &&
 		    isxdigit((unsigned char)cleaned[i + 1])) {
 			i++;
 			continue;
 		}
 
-		// 'X' marker - skip X + hex addr
+		/* 'X' marker - skip X + hex addr */
 		if (toupper((unsigned char)c) == 'X' && i + 1 < w &&
 		    isxdigit((unsigned char)cleaned[i + 1])) {
 			i++;
@@ -310,7 +325,7 @@ bus_load_wozmon_txt(Bus *bus,
 
 			if (i < w &&
 			    toupper((unsigned char)cleaned[i]) == 'R') {
-				// run command
+				/* run command */
 				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (size_t j = 0; j + 1 < data_len; j += 2) {
 					uint8_t val =
@@ -318,7 +333,7 @@ bus_load_wozmon_txt(Bus *bus,
 						<< 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
-						current_addr)) {
+						current_addr) != 0) {
 						bus->ram[current_addr] = val;
 					}
 					current_addr++;
@@ -332,17 +347,17 @@ bus_load_wozmon_txt(Bus *bus,
 					addr_str[4] = '\0';
 					uint16_t raddr = (uint16_t)
 					    strtol(addr_str, NULL, 16);
-					if (run_address)
+					if (run_address != NULL)
 						*run_address = raddr;
-					if (has_run_address)
+					if (has_run_address != NULL)
 						*has_run_address = true;
 				}
-				i++; // skip R
+				i++; /* skip R */
 				continue;
 			}
 
 			if (peek < w && cleaned[peek] == ':' && hex_len >= 3) {
-				// Address change (and possibly some data bytes before it in merged strings)
+				/* Address change (and possibly some data bytes before it in merged strings) */
 				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (size_t j = 0; j + 1 < data_len; j += 2) {
 					uint8_t val =
@@ -350,7 +365,7 @@ bus_load_wozmon_txt(Bus *bus,
 						<< 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
-						current_addr)) {
+						current_addr) != 0) {
 						bus->ram[current_addr] = val;
 					}
 					current_addr++;
@@ -363,22 +378,22 @@ bus_load_wozmon_txt(Bus *bus,
 				    addr_digits);
 				current_addr =
 				    (uint16_t)strtol(addr_str, NULL, 16);
-				if (first_addr) {
+				if (first_addr != 0) {
 					first_addr = false;
 				}
-				i = peek + 1; // skip ':'
+				i = peek + 1; /* skip ':' */
 				continue;
 			}
 
-			// Data bytes
+			/* Data bytes */
 			for (size_t j = 0; j + 1 < hex_len; j += 2) {
 				uint8_t val =
 				    (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
-				if (bus_is_ram_address(bus, current_addr)) {
+				if (bus_is_ram_address(bus, current_addr) != 0) {
 					bus->ram[current_addr] = val;
 				} else {
-					// Also print warning if write exceeds bounds or write is not to RAM?
+					/* write exceeds bounds or write is not to RAM */
 				}
 				current_addr++;
 				total_bytes++;
@@ -391,76 +406,76 @@ bus_load_wozmon_txt(Bus *bus,
 
 	free(cleaned);
 
-	if (total_bytes == 0 && first_addr) {
-		// Nothing loaded, completely invalid format or empty
-		return false;
+	if (total_bytes == 0 && first_addr != 0) {
+		/* Nothing loaded, completely invalid format or empty */
+		return (false);
 	}
 
 	printf("Loaded '%s' (%d bytes) via Woz Monitor text format\n",
 	    txt_path,
 	    total_bytes);
-	return true;
+	return (true);
 }
 
 static uint8_t
-pia_read(Bus *bus, uint16_t address)
+pia_read(struct bus *bus, uint16_t address)
 {
 	switch (address) {
 	case PIA_BASE: {
 		if (bus->pia.kbd_control & 0x04) {
 			uint8_t data = bus->pia.kbd_data;
 
-			// Reading Keyboard Data clears the keyboard strobe
+			/* Reading Keyboard Data clears the keyboard strobe */
 			bus->pia.kbd_control &= ~0x80;
-			return data;
+			return (data);
 		} else {
-			// Accessing DDRB (DDR for Port A/Keyboard)
-			return 0x00;
+			/* Accessing DDRB (DDR for Port A/Keyboard) */
+			return (0x00);
 		}
 	}
 	case PIA_BASE + 1:
-		return bus->pia.kbd_control;
+		return (bus->pia.kbd_control);
 	case PIA_BASE + 2:
-		// Always return 0x00 so that Wozmon doesn't hang in a busy loop
-		return 0x00;
+		/* Always return 0x00 so that Wozmon doesn't hang in a busy loop */
+		return (0x00);
 	case PIA_BASE + 3:
-		return bus->pia.dsp_control;
+		return (bus->pia.dsp_control);
 	}
-	return 0x00;
+	return (0x00);
 }
 
 static void
-pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
+pia_write(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 {
 	switch (address) {
 	case PIA_BASE:
-		// Keyboard data is read-only
+		/* Keyboard data is read-only */
 		break;
 	case PIA_BASE + 1:
-		if (is_dummy) {
-			// DCP $D011 dummy write clears key-ready bit (bit 7)
+		if (is_dummy != 0) {
+			/* DCP $D011 dummy write clears key-ready bit (bit 7) */
 			bus->pia.kbd_control &= ~0x80;
 		} else {
-			// Real writes cannot modify bit 7 (status flag is read-only)
+			/* Real writes cannot modify bit 7 (status flag is read-only) */
 			bus->pia.kbd_control = (bus->pia.kbd_control & 0x80) |
 			    (value & 0x7F);
 		}
 		break;
 	case PIA_BASE + 2:
 		if (bus->pia.dsp_control & 0x04) {
-			if (is_dummy) {
-				// SLO $D012 dummy write triggers display ready
+			if (is_dummy != 0) {
+				/* SLO $D012 dummy write triggers display ready */
 				bus->pia.dsp_control |= 0x80;
 			} else {
 				bus->pia.dsp_data = value;
 				io_write_display(value);
 			}
 		} else {
-			// Accessing DDRA (DDR for Port B/Display)
+			/* Accessing DDRA (DDR for Port B/Display) */
 		}
 		break;
 	case PIA_BASE + 3:
-		// Real writes cannot modify bit 7 (status flag is read-only)
+		/* Real writes cannot modify bit 7 (status flag is read-only) */
 		bus->pia.dsp_control = (bus->pia.dsp_control & 0x80) |
 		    (value & 0x7F);
 		break;
@@ -468,11 +483,11 @@ pia_write(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 }
 
 uint8_t
-bus_read(Bus *bus, uint16_t address)
+bus_read(struct bus *bus, uint16_t address)
 {
 	uint8_t result = bus->last_bus_value; /* default: open-bus float */
 
-	if (bus->opts.flat_bus) {
+	if (bus->opts.flat_bus != 0) {
 		result = bus->ram[address];
 		bus->last_bus_value = result;
 	} else {
@@ -480,13 +495,13 @@ bus_read(Bus *bus, uint16_t address)
 		if ((address & 0xF000) == 0xD000)
 			address = PIA_BASE | (address & 0x03);
 
-		if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		    !bus->opts.headless && address >= PIA_BASE &&
+		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
+		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
 			delay_nanoseconds(977);
 
 		if (address >= ROM_BASE) {
-			if (bus->rom_loaded)
+			if (bus->rom_loaded != 0)
 				bus->last_bus_value =
 				    bus->rom[address - ROM_BASE];
 			result = bus->last_bus_value;
@@ -496,9 +511,9 @@ bus_read(Bus *bus, uint16_t address)
 		} else {
 			bool card_hit = false;
 			for (int i = 0; i < bus->num_cards; i++) {
-				expansion_card_t *card = bus->cards[i];
+				struct expansion_card *card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
-					if (card->read)
+					if (card->read != NULL)
 						bus->last_bus_value =
 						    card->read(card->ctx,
 							address,
@@ -508,54 +523,55 @@ bus_read(Bus *bus, uint16_t address)
 					break;
 				}
 			}
-			if (!card_hit) {
-				if (bus_is_ram_address(bus, address))
+			if (card_hit == 0) {
+				if (bus_is_ram_address(bus, address) != 0)
 					bus->last_bus_value = bus->ram[address];
 				result = bus->last_bus_value;
 			}
 		}
 	}
 
-	if (bus->access_cb)
+	if (bus->access_cb != NULL)
 		bus->access_cb(bus->access_cb_ctx, address, false, result);
-	return result;
+	return (result);
 }
 
 void
-bus_write(Bus *bus, uint16_t address, uint8_t value)
+bus_write(struct bus *bus, uint16_t address, uint8_t value)
 {
-	// Calls standard write with is_dummy = false
+	/* Calls standard write with is_dummy = false */
 	bus_write_ext(bus, address, value, false);
 }
 
-// Overloaded write function supporting dummy writes
+/* Overloaded write function supporting dummy writes */
 void
-bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
+bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 {
 	bus->last_bus_value = value;
 
-	if (bus->opts.flat_bus) {
+	if (bus->opts.flat_bus != 0) {
 		bus->ram[address] = value;
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
 		if ((address & 0xF000) == 0xD000)
 			address = PIA_BASE | (address & 0x03);
 
-		if (bus->opts.uncapped && bus->opts.throttle_pia &&
-		    !bus->opts.headless && address >= PIA_BASE &&
+		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
+		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
 			delay_nanoseconds(977);
 
 		if (address >= ROM_BASE) {
-			/* ROM is read-only — silently ignore */
+			/* ROM is read-only - silently ignore */
 		} else if (address >= PIA_BASE && address <= (PIA_BASE + 3)) {
 			pia_write(bus, address, value, is_dummy);
 		} else {
 			bool card_hit = false;
 			for (int i = 0; i < bus->num_cards; i++) {
-				expansion_card_t *card = bus->cards[i];
+				struct expansion_card *card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
-					if (!card->rom_only && card->write)
+					if (card->rom_only == 0 &&
+					    card->write != NULL)
 						card->write(card->ctx,
 						    address,
 						    value,
@@ -564,18 +580,21 @@ bus_write_ext(Bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 					break;
 				}
 			}
-			if (!card_hit && bus_is_ram_address(bus, address))
+			if (card_hit == 0 &&
+			    bus_is_ram_address(bus, address) != 0)
 				bus->ram[address] = value;
 		}
 	}
 
-	/* Fire watchpoint callback for real (non-phantom) writes only (unless flat_bus is enabled) */
-	if ((!is_dummy || bus->opts.flat_bus) && bus->access_cb)
+	/* Fire watchpoint callback for real (non-phantom) writes only
+	 * (unless flat_bus is enabled) */
+	if ((is_dummy == 0 || bus->opts.flat_bus != 0) &&
+	    bus->access_cb != NULL)
 		bus->access_cb(bus->access_cb_ctx, address, true, value);
 }
 
 void
-bus_update_keyboard(Bus *bus)
+bus_update_keyboard(struct bus *bus)
 {
 	bool key_avail = io_check_keyboard();
 
@@ -589,39 +608,40 @@ bus_update_keyboard(Bus *bus)
 	 * output. The Apple-1 PIA's CA1 input is rising-edge sensitive, so it
 	 * latches exactly one keypress per strobe.
 	 *
-	 * The previous model was wrong — it randomly toggled the strobe bit,
-	 * creating new rising edges that the CPU saw as extra keypresses. Real
+	 * The previous model was wrong - it randomly toggled the strobe bit,
+	 * creating new rising edges that the struct cpu saw as extra keypresses. Real
 	 * hardware never does this; bounce is absorbed inside the encoder before
 	 * the strobe line is touched.
 	 *
-	 * We now model this as a lockout window (≈5–15 ms) after each keypress
+	 * We now model this as a lockout window (~5-15 ms) after each keypress
 	 * during which the encoder is still internally "settling" and will not
 	 * assert a new strobe. New keys are simply ignored in this window. The
-	 * strobe bit is left exactly as the CPU last left it (cleared after the
-	 * $D010 read) — no toggling, no fake rising edges.
+	 * strobe bit is left exactly as the struct cpu last left it (cleared after the
+	 * $D010 read) - no toggling, no fake rising edges.
 	 */
-	if (bus->opts.emulate_kbd_bounce && bus->kbd_bounce_cycles > 0) {
+	if (bus->opts.emulate_kbd_bounce != 0 &&
+	    bus->kbd_bounce_cycles > 0) {
 		bus->kbd_bounce_cycles--;
-		return; /* encoder still settling — ignore new input */
+		return; /* encoder still settling - ignore new input */
 	}
 
 	/* Check if keyboard strobe is clear */
-	if (!(bus->pia.kbd_control & 0x80)) {
-		if (key_avail) {
+	if ((bus->pia.kbd_control & 0x80) == 0) {
+		if (key_avail != 0) {
 			uint8_t key = io_read_keyboard();
 
 			if (key != 0) {
 				bus->pia.kbd_data = key;
 				bus->pia.kbd_control |= 0x80;
 				/*
-				 * Start lockout window: 5–15 ms at ~1 MHz
-				 * ≈ 5 000–15 000 cycles. bus_update_keyboard is
-				 * called once per cpu_step (~2–7 cycles on
+				 * Start lockout window: 5-15 ms at ~1 MHz
+				 * = 5 000-15 000 cycles. bus_update_keyboard is
+				 * called once per cpu_step (~2-7 cycles on
 				 * average), so divide by ~4 for call count.
-				 * Result: ~1 250–3 750 calls ≈ realistic MM5740
+				 * Result: ~1 250-3 750 calls = realistic MM5740
 				 * inter-key settle time.
 				 */
-				if (bus->opts.emulate_kbd_bounce) {
+				if (bus->opts.emulate_kbd_bounce != 0) {
 					bus->kbd_bounce_cycles = 1250 +
 					    (uint32_t)(rand() % 2500);
 				}
@@ -631,7 +651,7 @@ bus_update_keyboard(Bus *bus)
 }
 
 void
-bus_reset(Bus *bus)
+bus_reset(struct bus *bus)
 {
 	bus->pia.kbd_data = 0x00;
 	bus->pia.kbd_control = 0x00;
@@ -641,7 +661,7 @@ bus_reset(Bus *bus)
 }
 
 void
-bus_add_card(Bus *bus, expansion_card_t *card)
+bus_add_card(struct bus *bus, struct expansion_card *card)
 {
 	if (bus->num_cards < 8) {
 		bus->cards[bus->num_cards++] = card;

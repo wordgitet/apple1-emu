@@ -1,4 +1,16 @@
 #define _POSIX_C_SOURCE 200809L
+#include <sys/types.h>
+#include <SDL3/SDL.h>
+#include <dirent.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
 #include "aci.h"
 #include "bus.h"
 #include "cpu.h"
@@ -11,30 +23,19 @@
 #include "term_config.h"
 #include "term_debug.h"
 #include "term_internal.h"
-#include <SDL3/SDL.h>
-#include <dirent.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-extern Bus *g_bus;
-extern CPU *g_cpu;
+extern struct bus *g_bus;
+extern struct cpu *g_cpu;
 extern bool g_debug_enabled;
 extern char *g_argv0;
 extern bool
 io_has_buffered_key(void);
 
 /* ── CONSTANTS & PALETTES ────────────────────────────────────────────────── */
-const Palette PALETTES[] = {
+const struct palette PALETTES[] = {
 	/* Green */
 	{ { 5, 17, 5, 255 }, { 51, 255, 51, 255 }, { 17, 136, 17, 64 } },
 	/* Amber */
@@ -70,7 +71,7 @@ static int paste_pos = 0;
 static int paste_len = 0;
 
 /* ── GUI INTERACTIVE SETTINGS ────────────────────────────────────────────── */
-MonitorTint monitor_tint = MONITOR_GREEN;
+enum monitor_tint monitor_tint = MONITOR_GREEN;
 bool scanlines_enabled = true;
 float scanline_opacity = 0.35f;
 
@@ -99,16 +100,18 @@ static int context_menu_y = 0;
 void
 scan_tapes(void)
 {
+	DIR *d;
+
 	num_cassettes = 0;
 
-	// Scan root directory "." for .aci files
-	DIR *d = opendir(".");
-	if (d) {
+	/* Scan root directory "." for .aci files */
+	d = opendir(".");
+	if (d != NULL) {
 		struct dirent *dir;
 		while ((dir = readdir(d)) != NULL) {
 			if (dir->d_type == DT_REG) {
 				const char *ext = strrchr(dir->d_name, '.');
-				if (ext && strcmp(ext, ".aci") == 0) {
+				if (ext != NULL && strcmp(ext, ".aci") == 0) {
 					if (num_cassettes < MAX_CASSETTES) {
 						snprintf(
 						    cassette_files[num_cassettes],
@@ -123,9 +126,9 @@ scan_tapes(void)
 		closedir(d);
 	}
 
-	// Scan "cassettes" directory for .aci files
+	/* Scan "cassettes" directory for .aci files */
 	d = opendir("cassettes");
-	if (d) {
+	if (d != NULL) {
 		struct dirent *dir;
 		while ((dir = readdir(d)) != NULL) {
 			if (dir->d_type == DT_REG) {
@@ -168,14 +171,14 @@ load_charmap(void)
 		fclose(f);
 		if (read_bytes == 2048) {
 			charmap_size = 2048;
-			return true;
+			return (true);
 		}
 	}
 
 	/* Fallback to embedded authentic Apple-1 2513 character ROM */
 	memcpy(charmap_data, embedded_2513_charmap, 2048);
 	charmap_size = 2048;
-	return true;
+	return (true);
 }
 
 static void
@@ -187,14 +190,14 @@ scroll_up(void)
 	memset(vram[23], 0x20, 40);
 }
 
-static expansion_card_t *
+static struct expansion_card *
 get_or_add_aci(void)
 {
 	if (!g_bus)
-		return NULL;
+		return (NULL);
 	for (int i = 0; i < g_bus->num_cards; i++) {
 		if (strcmp(g_bus->cards[i]->name, "ACI") == 0) {
-			return g_bus->cards[i];
+			return (g_bus->cards[i]);
 		}
 	}
 
@@ -208,7 +211,7 @@ get_or_add_aci(void)
 		}
 	}
 
-	expansion_card_t *aci_card = aci_create(aci_path);
+	struct expansion_card *aci_card = aci_create(aci_path);
 
 	if (aci_card) {
 		bus_add_card(g_bus, aci_card);
@@ -224,7 +227,7 @@ get_or_add_aci(void)
 		    sizeof(status_text),
 		    "ACI ROM LOAD FAILED");
 	}
-	return aci_card;
+	return (aci_card);
 }
 
 /* ── CHARMAP RENDERERS ───────────────────────────────────────────────────── */
@@ -233,7 +236,7 @@ get_or_add_aci(void)
 int
 ascii_to_rom_idx(uint8_t ascii)
 {
-	return (int)((ascii - 0x40) & 0x3F);
+	return ((int)((ascii - 0x40) & 0x3F));
 }
 
 /* Draw a character at 4x scale with soft phosphor glow. */
@@ -242,7 +245,7 @@ draw_char_4x_glow(SDL_Renderer *rend,
     uint8_t glyphIndex,
     int cell_x,
     int cell_y,
-    const Palette *pal)
+    const struct palette *pal)
 {
 	if (!charmap_loaded)
 		return;
@@ -363,7 +366,7 @@ draw_button(SDL_Renderer *rend,
 	    x + (w - (int)strlen(lbl) * cw) / 2,
 	    y + (h - ch2) / 2,
 	    tint);
-	return hov;
+	return (hov);
 }
 
 void
@@ -582,7 +585,7 @@ draw_emulation_dropdown(void)
 
 	const char *items[] = { item0,
 		item1,
-		"RESET CPU",
+		"RESET struct cpu",
 		"CLEAR SCREEN (VRAM)",
 		item3 };
 
@@ -1020,7 +1023,7 @@ prompt_hex_address(const char *title,
 #endif
 	FILE *p = popen(cmd, "r");
 	if (!p)
-		return false;
+		return (false);
 	char buf[64] = { 0 };
 	bool ok = false;
 	if (fgets(buf, sizeof(buf), p)) {
@@ -1033,7 +1036,7 @@ prompt_hex_address(const char *title,
 		}
 	}
 	pclose(p);
-	return ok;
+	return (ok);
 }
 
 static void
@@ -1104,9 +1107,9 @@ load_wozmon_fn(const char *path, void *ctx)
 {
 	(void)ctx;
 	if (!g_bus || !bus_load_bin(g_bus, path, 0xFF00))
-		return false;
+		return (false);
 	reset_pending = true;
-	return true;
+	return (true);
 }
 
 static void
@@ -1215,14 +1218,14 @@ pick_file_dialog(char *out_path,
 #endif
 	FILE *p = popen(cmd, "r");
 	if (!p)
-		return false;
+		return (false);
 	bool ok = false;
 	if (fgets(out_path, (int)max_len, p)) {
 		out_path[strcspn(out_path, "\n")] = '\0';
 		ok = strlen(out_path) > 0;
 	}
 	pclose(p);
-	return ok;
+	return (ok);
 }
 
 static bool
@@ -1253,14 +1256,14 @@ pick_save_dialog(char *out_path,
 #endif
 	FILE *p = popen(cmd, "r");
 	if (!p)
-		return false;
+		return (false);
 	bool ok = false;
 	if (fgets(out_path, (int)max_len, p)) {
 		out_path[strcspn(out_path, "\n")] = '\0';
 		ok = strlen(out_path) > 0;
 	}
 	pclose(p);
-	return ok;
+	return (ok);
 }
 
 static void
@@ -1397,11 +1400,11 @@ get_system_clipboard(bool *success)
 			int status = pclose(p);
 			if (status == 0) {
 				*success = true;
-				return clip_buf;
+				return (clip_buf);
 			}
 		}
 	}
-	return NULL;
+	return (NULL);
 }
 
 static void
@@ -1448,7 +1451,7 @@ save_png(const char *filename, SDL_Surface *surface)
 	SDL_Surface *converted =
 	    SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGB24);
 	if (!converted) {
-		return false;
+		return (false);
 	}
 	int ret = stbi_write_png(filename,
 	    converted->w,
@@ -1457,7 +1460,7 @@ save_png(const char *filename, SDL_Surface *surface)
 	    converted->pixels,
 	    converted->pitch);
 	SDL_DestroySurface(converted);
-	return ret != 0;
+	return (ret != 0);
 }
 
 static void
@@ -1643,7 +1646,7 @@ render_gui(void)
 	if (!renderer)
 		return;
 
-	const Palette *pal = &PALETTES[monitor_tint];
+	const struct palette *pal = &PALETTES[monitor_tint];
 
 	float mx_f, my_f;
 	SDL_GetMouseState(&mx_f, &my_f);
@@ -1755,7 +1758,7 @@ render_gui(void)
 	    SCREEN_W,
 	    44 + MENU_BAR_H);
 
-	draw_text_2x(renderer, "CPU REGISTERS:", sx, 54 + MENU_BAR_H, amber);
+	draw_text_2x(renderer, "struct cpu REGISTERS:", sx, 54 + MENU_BAR_H, amber);
 	char reg_buf[64];
 	if (g_cpu && g_bus) {
 		snprintf(reg_buf,
@@ -1901,7 +1904,7 @@ render_gui(void)
 	    mx,
 	    my);
 
-	Field *f_baud = NULL;
+	struct field *f_baud = NULL;
 	for (int i = 0; i < NF - 1; i++) {
 		if (fields[i].flag == 'B') {
 			f_baud = &fields[i];
@@ -2163,7 +2166,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 				case 2: /* Reset */
 					reset_pending = true;
 					strncpy(status_text,
-					    "CPU RESET.",
+					    "struct cpu RESET.",
 					    sizeof(status_text) - 1);
 					break;
 				case 3: /* Clear screen */
@@ -2366,7 +2369,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 	if (x >= sx && x < sx + 115 && y >= 166 && y < 166 + 28) {
 		reset_pending = true;
 		strncpy(status_text,
-		    "CPU RESET.",
+		    "struct cpu RESET.",
 		    sizeof(status_text) - 1);
 		return;
 	}
@@ -2484,7 +2487,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 
 	/* Play / Load Tape (sx, 372, 130, 24) */
 	if (x >= sx && x < sx + 130 && y >= 372 && y < 372 + 24) {
-		expansion_card_t *aci_card = get_or_add_aci();
+		struct expansion_card *aci_card = get_or_add_aci();
 		if (aci_card) {
 			if (selected_cassette_idx >= 0 &&
 			    selected_cassette_idx < num_cassettes) {
@@ -2510,7 +2513,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 
 	/* Record / Save Tape (sx + 140, 372, 130, 24) */
 	if (x >= sx + 140 && x < sx + 140 + 130 && y >= 372 && y < 372 + 24) {
-		expansion_card_t *aci_card = get_or_add_aci();
+		struct expansion_card *aci_card = get_or_add_aci();
 		if (aci_card) {
 			if (selected_cassette_idx >= 0 &&
 			    selected_cassette_idx < num_cassettes) {
@@ -2536,7 +2539,7 @@ handle_mouse_event(const SDL_MouseButtonEvent *button)
 
 	/* Baud Speed Button (sx, 406, 270, 28) */
 	if (x >= sx && x < sx + 270 && y >= 406 && y < 406 + 28) {
-		Field *f_baud = NULL;
+		struct field *f_baud = NULL;
 		for (int i = 0; i < NF - 1; i++) {
 			if (fields[i].flag == 'B') {
 				f_baud = &fields[i];
@@ -2576,7 +2579,7 @@ handle_key_event(const SDL_KeyboardEvent *key)
 		if (sym == SDLK_R) {
 			reset_pending = true;
 			strncpy(status_text,
-			    "CPU RESET.",
+			    "struct cpu RESET.",
 			    sizeof(status_text) - 1);
 			return;
 		}
@@ -2750,10 +2753,10 @@ is_real_backspace_enabled(void)
 {
 	for (int i = 0; i < NF - 1; i++) {
 		if (fields[i].flag == 'x') {
-			return fields[i].bval;
+			return (fields[i].bval);
 		}
 	}
-	return false;
+	return (false);
 }
 
 void
@@ -2813,7 +2816,7 @@ term_write(uint8_t val)
 
 	/* Terminal baud rate throttle: 8N1 = 10 bits/char → delay = 10000/baud ms */
 	{
-		Field *f_baud = NULL;
+		struct field *f_baud = NULL;
 		for (int i = 0; i < NF - 1; i++) {
 			if (fields[i].flag == 'B') {
 				f_baud = &fields[i];
@@ -2895,21 +2898,21 @@ get_event_window(const SDL_Event *ev)
 	case SDL_EVENT_WINDOW_HIT_TEST:
 	case SDL_EVENT_WINDOW_ICCPROF_CHANGED:
 	case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
-		return SDL_GetWindowFromID(ev->window.windowID);
+		return (SDL_GetWindowFromID(ev->window.windowID));
 	case SDL_EVENT_KEY_DOWN:
 	case SDL_EVENT_KEY_UP:
-		return SDL_GetWindowFromID(ev->key.windowID);
+		return (SDL_GetWindowFromID(ev->key.windowID));
 	case SDL_EVENT_TEXT_INPUT:
-		return SDL_GetWindowFromID(ev->text.windowID);
+		return (SDL_GetWindowFromID(ev->text.windowID));
 	case SDL_EVENT_MOUSE_MOTION:
-		return SDL_GetWindowFromID(ev->motion.windowID);
+		return (SDL_GetWindowFromID(ev->motion.windowID));
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 	case SDL_EVENT_MOUSE_BUTTON_UP:
-		return SDL_GetWindowFromID(ev->button.windowID);
+		return (SDL_GetWindowFromID(ev->button.windowID));
 	case SDL_EVENT_MOUSE_WHEEL:
-		return SDL_GetWindowFromID(ev->wheel.windowID);
+		return (SDL_GetWindowFromID(ev->wheel.windowID));
 	default:
-		return NULL;
+		return (NULL);
 	}
 }
 
@@ -2997,7 +3000,7 @@ term_poll(void)
 
 	uint8_t val = buffered_key_sdl;
 	buffered_key_sdl = 0;
-	return val;
+	return (val);
 }
 
 void
@@ -3012,17 +3015,17 @@ term_reset_pending(void)
 {
 	bool pending = reset_pending;
 	reset_pending = false;
-	return pending;
+	return (pending);
 }
 
 bool
 term_is_powered(void)
 {
-	return machine_powered;
+	return (machine_powered);
 }
 
 bool
 term_is_paused(void)
 {
-	return emulation_paused;
+	return (emulation_paused);
 }

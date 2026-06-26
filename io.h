@@ -4,40 +4,41 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// Initialize terminal to raw mode
+/* Initialize terminal to raw mode */
 void
 io_init(void);
 
-// Restore terminal settings to original state
+/* Restore terminal settings to original state */
 void
 io_cleanup(void);
 
-// Check if keyboard input is available (non-blocking)
+/* Check if keyboard input is available (non-blocking) */
 bool
 io_check_keyboard(void);
 
-// Read a filtered character from keyboard (auto-uppercases, handles Enter/CR, returns with bit 7 set)
+/* Read a filtered character from keyboard (auto-uppercases, handles
+ * Enter/CR, returns with bit 7 set) */
 uint8_t
 io_read_keyboard(void);
 
-// Write character to display (interprets bit 7 and handles carriage returns)
+/* Write character to display (interprets bit 7 and handles carriage returns) */
 void
 io_write_display(uint8_t value);
 
-// Set welcome messages to display at the bottom of the alternate screen
+/* Set welcome messages to display at the bottom of the alternate screen */
 void
 io_set_welcome(const char *msg1, const char *msg2);
 
-// Returns true (once) if Ctrl-R was pressed — caller should call cpu_reset()
+/* Returns true (once) if Ctrl-R was pressed - caller should call cpu_reset() */
 bool
 io_reset_pending(void);
 
-// Check if a keyboard key is currently buffered
+/* Check if a keyboard key is currently buffered */
 bool
 io_has_buffered_key(void);
 
-// Reset keyboard buffer
+/* Reset keyboard buffer */
 void
 io_reset(void);
 
-#endif // IO_H
+#endif /* IO_H */

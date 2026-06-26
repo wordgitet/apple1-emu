@@ -1,10 +1,11 @@
-#include "../bus.h"
-#include "../term_apple1.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-Bus *g_bus = NULL;
+#include "../bus.h"
+#include "../term_apple1.h"
+
+struct bus *g_bus = NULL;
 
 void
 dbg_log_append(const char *str)
@@ -36,7 +37,7 @@ term_update(void)
 uint8_t
 term_poll(void)
 {
-	return 0;
+	return (0);
 }
 
 void
@@ -49,7 +50,7 @@ term_set_welcome(const char *msg1, const char *msg2)
 bool
 term_reset_pending(void)
 {
-	return false;
+	return (false);
 }
 
 void
@@ -60,7 +61,7 @@ term_run_config_wizard(void)
 bool
 term_is_powered(void)
 {
-	return true;
+	return (true);
 }
 
 void
@@ -72,13 +73,13 @@ term_trace_push(const char *line)
 bool
 term_trace_active(void)
 {
-	return false;
+	return (false);
 }
 
 bool
 term_should_step(void)
 {
-	return false;
+	return (false);
 }
 
 void
@@ -89,7 +90,7 @@ term_request_step(void)
 bool
 term_is_paused(void)
 {
-	return false;
+	return (false);
 }
 
 void

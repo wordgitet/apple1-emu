@@ -1,17 +1,18 @@
-#include "../bus.h"
-#include "../cpu.h"
-#include "../dbg.h"
-#include "../disasm.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../bus.h"
+#include "../cpu.h"
+#include "../dbg.h"
+#include "../disasm.h"
+
 static void
-run_test(const char *name, void (*test_fn)(CPU *, Bus *))
+run_test(const char *name, void (*test_fn)(struct cpu *, struct bus *))
 {
-	Bus bus;
-	CPU cpu;
+	struct bus bus;
+	struct cpu cpu;
 
 	// Initialize 16KB mock RAM for testing
 	if (!bus_init(&bus, 16 * 1024)) {
@@ -38,7 +39,7 @@ run_test(const char *name, void (*test_fn)(CPU *, Bus *))
 
 // LDA / STA Test
 static void
-test_lda_sta(CPU *cpu, Bus *bus)
+test_lda_sta(struct cpu *cpu, struct bus *bus)
 {
 	// Write instructions:
 	// 0x1000: LDA #$42  (A9 42)
@@ -60,7 +61,7 @@ test_lda_sta(CPU *cpu, Bus *bus)
 
 // Binary Arithmetic Test (ADC/SBC)
 static void
-test_adc_sbc_bin(CPU *cpu, Bus *bus)
+test_adc_sbc_bin(struct cpu *cpu, struct bus *bus)
 {
 	// 0x1000: CLC        (18)
 	// 0x1001: LDA #$10   (A9 10)
@@ -96,7 +97,7 @@ test_adc_sbc_bin(CPU *cpu, Bus *bus)
 
 // BCD Arithmetic Test
 static void
-test_adc_sbc_bcd(CPU *cpu, Bus *bus)
+test_adc_sbc_bcd(struct cpu *cpu, struct bus *bus)
 {
 	// 0x1000: SED        (F8)      - Enter Decimal Mode
 	// 0x1001: CLC        (18)
@@ -133,7 +134,7 @@ test_adc_sbc_bcd(CPU *cpu, Bus *bus)
 
 // Branch Test
 static void
-test_branching(CPU *cpu, Bus *bus)
+test_branching(struct cpu *cpu, struct bus *bus)
 {
 	// 0x1000: LDA #$00   (A9 00)
 	// 0x1002: BNE +4     (D0 04) - should NOT branch (Z is set)
@@ -174,7 +175,7 @@ test_branching(CPU *cpu, Bus *bus)
 
 // JSR / RTS Test
 static void
-test_jsr_rts(CPU *cpu, Bus *bus)
+test_jsr_rts(struct cpu *cpu, struct bus *bus)
 {
 	// 0x1000: JSR $1200   (20 00 12)
 	// 0x1003: LDA #$0A    (A9 0A)
@@ -205,9 +206,9 @@ test_jsr_rts(CPU *cpu, Bus *bus)
 	assert(cpu->a == 0x0A);
 }
 
-// Open Bus Test
+// Open struct bus Test
 static void
-test_open_bus(CPU *cpu, Bus *bus)
+test_open_bus(struct cpu *cpu, struct bus *bus)
 {
 	(void)cpu;
 	// Disable randomize cold boot to have deterministic state
@@ -234,7 +235,7 @@ test_open_bus(CPU *cpu, Bus *bus)
 
 // Illegal Instructions Test (LAX, SAX, SLO, DCP)
 static void
-test_illegal_instructions(CPU *cpu, Bus *bus)
+test_illegal_instructions(struct cpu *cpu, struct bus *bus)
 {
 	// Disable randomize cold boot
 	bus->opts.randomize_cold_boot = false;
@@ -297,7 +298,7 @@ test_illegal_instructions(CPU *cpu, Bus *bus)
 
 // Dummy Write Side-Effects Test
 static void
-test_dummy_write_side_effects(CPU *cpu, Bus *bus)
+test_dummy_write_side_effects(struct cpu *cpu, struct bus *bus)
 {
 	// Disable timing throttling to run test quickly
 	bus->opts.randomize_cold_boot = false;
@@ -343,7 +344,7 @@ test_dummy_write_side_effects(CPU *cpu, Bus *bus)
 /* test_interrupts() has been moved to tests/test_interrupts.c */
 /* and is built as a standalone test_interrupts binary.        */
 static void
-test_interrupts(CPU *cpu, Bus *bus)
+test_interrupts(struct cpu *cpu, struct bus *bus)
 {
 	(void)cpu;
 	(void)bus;
@@ -366,7 +367,7 @@ mock_card_read(void *ctx, uint16_t addr, bool is_dummy)
 	(void)ctx;
 	mock_last_read_addr = addr;
 	mock_last_read_is_dummy = is_dummy;
-	return mock_read_val;
+	return (mock_read_val);
 }
 
 static void
@@ -379,7 +380,7 @@ mock_card_write(void *ctx, uint16_t addr, uint8_t val, bool is_dummy)
 }
 
 static void
-test_expansion_cards(CPU *cpu, Bus *bus)
+test_expansion_cards(struct cpu *cpu, struct bus *bus)
 {
 	(void)cpu;
 
@@ -388,7 +389,7 @@ test_expansion_cards(CPU *cpu, Bus *bus)
 	bus->opts.flat_bus = false;
 
 	// Create mock card
-	expansion_card_t mock_card;
+	struct expansion_card mock_card;
 
 	mock_card.name = "MockCard";
 	mock_card.base = 0xC100;
@@ -434,7 +435,7 @@ test_expansion_cards(CPU *cpu, Bus *bus)
 }
 
 static void
-test_disasm_and_breakpoints(CPU *cpu, Bus *bus)
+test_disasm_and_breakpoints(struct cpu *cpu, struct bus *bus)
 {
 	(void)cpu;
 	char buf[64];
@@ -492,7 +493,7 @@ test_disasm_and_breakpoints(CPU *cpu, Bus *bus)
 static void
 test_reset_vectors(void)
 {
-	Bus bus;
+	struct bus bus;
 
 	if (!bus_init(&bus, 16 * 1024)) {
 		fprintf(stderr, "Failed to init bus for Reset Vectors test\n");
@@ -534,13 +535,13 @@ static const uint8_t kProgram[] = {
 /* clang-format on */
 
 static void
-load_program(Bus *bus)
+load_program(struct bus *bus)
 {
 	memcpy(bus->ram + kEntry, kProgram, sizeof(kProgram));
 }
 
 static int
-run_emulator(CPU *cpu, debugger_t *dbg, int max_cycles)
+run_emulator(struct cpu *cpu, debugger_t *dbg, int max_cycles)
 {
 	int cycles = 0;
 	dbg->step_mode = false;
@@ -558,7 +559,7 @@ run_emulator(CPU *cpu, debugger_t *dbg, int max_cycles)
 			break;
 		}
 	}
-	return cycles;
+	return (cycles);
 }
 
 static void
@@ -566,11 +567,11 @@ test_cpu_breakpoint_smoke(void)
 {
 	// ---- Test 1: breakpoint fires before the instruction executes -----
 	{
-		Bus bus;
+		struct bus bus;
 		bus_init(&bus, 16 * 1024);
 		load_program(&bus);
 
-		CPU cpu;
+		struct cpu cpu;
 		cpu_init(&cpu, &bus);
 		cpu.halted = false;
 		cpu.pc = kEntry;
@@ -595,11 +596,11 @@ test_cpu_breakpoint_smoke(void)
 
 	// ---- Test 2: clearBreakpoint() resumes normal execution -----------
 	{
-		Bus bus;
+		struct bus bus;
 		bus_init(&bus, 16 * 1024);
 		load_program(&bus);
 
-		CPU cpu;
+		struct cpu cpu;
 		cpu_init(&cpu, &bus);
 		cpu.halted = false;
 		cpu.pc = kEntry;
@@ -626,11 +627,11 @@ test_cpu_breakpoint_smoke(void)
 
 	// ---- Test 3: manual step-over past the breakpoint ----------------
 	{
-		Bus bus;
+		struct bus bus;
 		bus_init(&bus, 16 * 1024);
 		load_program(&bus);
 
-		CPU cpu;
+		struct cpu cpu;
 		cpu_init(&cpu, &bus);
 		cpu.halted = false;
 		cpu.pc = kEntry;
@@ -660,11 +661,11 @@ test_cpu_breakpoint_smoke(void)
 
 	// ---- Test 4: no-breakpoint sanity (gate must not false-positive) --
 	{
-		Bus bus;
+		struct bus bus;
 		bus_init(&bus, 16 * 1024);
 		load_program(&bus);
 
-		CPU cpu;
+		struct cpu cpu;
 		cpu_init(&cpu, &bus);
 		cpu.halted = false;
 		cpu.pc = kEntry;
@@ -690,14 +691,14 @@ test_bruce_clark_decimal(void);
 int
 main(void)
 {
-	printf("Starting 6502 CPU Tests...\n");
+	printf("Starting 6502 struct cpu Tests...\n");
 
 	run_test("LDA and STA", test_lda_sta);
 	run_test("Binary ADC and SBC", test_adc_sbc_bin);
 	run_test("BCD ADC and SBC", test_adc_sbc_bcd);
 	run_test("Branching (BNE)", test_branching);
 	run_test("Subroutines (JSR/RTS)", test_jsr_rts);
-	run_test("Open Bus Memory Model", test_open_bus);
+	run_test("Open struct bus Memory Model", test_open_bus);
 	run_test("Illegal Instructions", test_illegal_instructions);
 	run_test("Dummy Write Side-Effects", test_dummy_write_side_effects);
 	/* Interrupts: see test_interrupts binary (tests/test_interrupts.c) */
@@ -709,16 +710,16 @@ main(void)
 	printf("Test PASS: Reset Vectors\n");
 
 	test_cpu_breakpoint_smoke();
-	printf("Test PASS: CPU Breakpoint Smoke\n");
+	printf("Test PASS: struct cpu Breakpoint Smoke\n");
 
 	test_cpu_watchpoint_smoke();
-	printf("Test PASS: CPU Watchpoint Smoke\n");
+	printf("Test PASS: struct cpu Watchpoint Smoke\n");
 
 	test_bruce_clark_decimal();
 	printf("Test PASS: Bruce Clark Decimal Test\n");
 
-	printf("\nAll CPU tests passed successfully!\n");
-	return 0;
+	printf("\nAll struct cpu tests passed successfully!\n");
+	return (0);
 }
 
 static void
@@ -735,11 +736,11 @@ test_cpu_watchpoint_smoke(void)
 
 	// ---- Test 1: Write watchpoint fires on STA -----
 	{
-		Bus bus;
+		struct bus bus;
 		bus_init(&bus, 16 * 1024);
 		memcpy(bus.ram + 0x0400, wp_program, sizeof(wp_program));
 
-		CPU cpu;
+		struct cpu cpu;
 		cpu_init(&cpu, &bus);
 		cpu.halted = false;
 		cpu.pc = 0x0400;
@@ -766,11 +767,11 @@ test_cpu_watchpoint_smoke(void)
 
 	// ---- Test 2: Read watchpoint fires on LDA $0200 -----
 	{
-		Bus bus;
+		struct bus bus;
 		bus_init(&bus, 16 * 1024);
 		memcpy(bus.ram + 0x0400, wp_program, sizeof(wp_program));
 
-		CPU cpu;
+		struct cpu cpu;
 		cpu_init(&cpu, &bus);
 		cpu.halted = false;
 		cpu.pc = 0x0400;
@@ -799,7 +800,7 @@ test_cpu_watchpoint_smoke(void)
 static void
 test_bruce_clark_decimal(void)
 {
-	Bus bus;
+	struct bus bus;
 	if (!bus_init(&bus, 65536)) {
 		fprintf(stderr, "Failed to init 64KB bus for Bruce Clark Decimal Test\n");
 		exit(1);
@@ -811,7 +812,7 @@ test_bruce_clark_decimal(void)
 		exit(1);
 	}
 
-	CPU cpu;
+	struct cpu cpu;
 	cpu_init(&cpu, &bus);
 	cpu.halted = false;
 	cpu.pc = 0x0400;

@@ -23,7 +23,7 @@ term_reset_pending(void);
 void
 term_run_config_wizard(void);
 
-/* Power state — when powered off the CRT goes dark and the CPU loop idles. */
+/* Power state — when powered off the CRT goes dark and the struct cpu loop idles. */
 bool
 term_is_powered(void);
 
@@ -36,7 +36,7 @@ term_is_paused(void);
 void
 term_trace_push(const char *line);
 
-/* Returns true if a CPU step was requested from the GUI debugger. */
+/* Returns true if a struct cpu step was requested from the GUI debugger. */
 bool
 term_should_step(void);
 
@@ -44,7 +44,7 @@ term_should_step(void);
 bool
 term_trace_active(void);
 
-/* Request a single CPU step from the GUI debugger. */
+/* Request a single struct cpu step from the GUI debugger. */
 void
 term_request_step(void);
 

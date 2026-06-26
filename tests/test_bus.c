@@ -1,23 +1,24 @@
-#include "../bus.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../bus.h"
+
 int
 main(void)
 {
-	Bus bus;
+	struct bus bus;
 	if (!bus_init(&bus, 4096)) {
 		fprintf(stderr, "Failed to init bus\n");
-		return 1;
+		return (1);
 	}
 
 	// Create a temporary wozmon dump
 	const char *tmp_txt = "test_wozmon.txt";
 	FILE *f = fopen(tmp_txt, "w");
 	if (!f)
-		return 1;
+		return (1);
 
 	// Wozmon dump with spaces, address change, and R command
 	fprintf(f, "0300: A9 01 8D 00  04\n");
@@ -69,5 +70,5 @@ main(void)
 	bus_free(&bus);
 
 	printf("test_bus passed.\n");
-	return 0;
+	return (0);
 }

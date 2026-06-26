@@ -1,41 +1,48 @@
-#include "krusader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
+#include "krusader.h"
+
+struct krusader_card {
 	uint8_t rom[4096];
 	uint32_t size;
-} krusader_card_t;
+};
 
 static uint8_t
 krusader_read(void *ctx, uint16_t addr, bool is_dummy)
 {
+	struct krusader_card *kru;
+	uint16_t offset;
+
 	(void)is_dummy;
-	krusader_card_t *kru = (krusader_card_t *)ctx;
-	uint16_t offset = addr & 0x0FFF;
+	kru = (struct krusader_card *)ctx;
+	offset = addr & 0x0FFF;
 
 	if (offset < kru->size) {
-		return kru->rom[offset];
+		return (kru->rom[offset]);
 	}
-	return 0x00;
+	return (0x00);
 }
 
-expansion_card_t *
+struct expansion_card *
 krusader_create(const char *rom_path)
 {
-	FILE *f = fopen(rom_path, "rb");
+	struct krusader_card *kru;
+	struct expansion_card *card;
+	FILE *f;
+	long size;
 
-	if (!f) {
+	f = fopen(rom_path, "rb");
+	if (f == NULL) {
 		fprintf(stderr,
 		    "Error: Could not open Krusader ROM file '%s'\n",
 		    rom_path);
-		return NULL;
+		return (NULL);
 	}
 
 	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
-
+	size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
 	if (size <= 0 || size > 4096) {
@@ -45,15 +52,14 @@ krusader_create(const char *rom_path)
 		    rom_path,
 		    size);
 		fclose(f);
-		return NULL;
+		return (NULL);
 	}
 
-	krusader_card_t *kru = malloc(sizeof(krusader_card_t));
-
-	if (!kru) {
+	kru = malloc(sizeof(struct krusader_card));
+	if (kru == NULL) {
 		perror("Failed to allocate Krusader context");
 		fclose(f);
-		return NULL;
+		return (NULL);
 	}
 	memset(kru->rom, 0xFF, 4096);
 
@@ -65,17 +71,16 @@ krusader_create(const char *rom_path)
 		    rom_path);
 		free(kru);
 		fclose(f);
-		return NULL;
+		return (NULL);
 	}
 	fclose(f);
 	kru->size = size;
 
-	expansion_card_t *card = malloc(sizeof(expansion_card_t));
-
-	if (!card) {
+	card = malloc(sizeof(struct expansion_card));
+	if (card == NULL) {
 		perror("Failed to allocate Krusader expansion card");
 		free(kru);
-		return NULL;
+		return (NULL);
 	}
 
 	card->name = "Krusader";
@@ -89,14 +94,14 @@ krusader_create(const char *rom_path)
 
 	printf("Registered Krusader card: ROM loaded at 0xE000 - 0x%04X\n",
 	    (uint16_t)(0xE000 + size - 1));
-	return card;
+	return (card);
 }
 
 void
-krusader_free(expansion_card_t *card)
+krusader_free(struct expansion_card *card)
 {
-	if (card) {
-		if (card->ctx) {
+	if (card != NULL) {
+		if (card->ctx != NULL) {
 			free(card->ctx);
 		}
 		free(card);
