@@ -11,7 +11,7 @@ tests/test_bus
 test_tomharte
 6502_functional_test.bin
 tests/tomharte/
-
+test_interrupts
 
 
 # runtime generated files
