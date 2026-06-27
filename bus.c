@@ -305,14 +305,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 	return (true);
 }
 
-#ifndef APPLE1_OMIT_DISKIO
 bool
 bus_load_rom(struct bus *bus, const char *rom_path)
 {
-	FILE *f;
-	size_t read_bytes;
-	long size;
-
 	if (rom_path == NULL) {
 #ifndef APPLE1_OMIT_WOZMON
 		memcpy(bus->rom, embedded_wozmon, 256);
@@ -324,52 +319,65 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 #endif
 	}
 
-	f = fopen(rom_path, "rb");
-	if (f == NULL) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Warning: '%s' not found, using embedded Wozmon ROM.",
-		    rom_path);
-		BUS_LOG(bus, BUS_LOG_WARN, msg);
+#ifndef APPLE1_OMIT_DISKIO
+	{
+		FILE *f;
+		size_t read_bytes;
+		long size;
+
+		f = fopen(rom_path, "rb");
+		if (f == NULL) {
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Warning: '%s' not found, using embedded Wozmon ROM.",
+			    rom_path);
+			BUS_LOG(bus, BUS_LOG_WARN, msg);
 #ifndef APPLE1_OMIT_WOZMON
-		memcpy(bus->rom, embedded_wozmon, 256);
+			memcpy(bus->rom, embedded_wozmon, 256);
+			bus->rom_loaded = true;
+			return (true);
+#else
+			BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
+			return (false);
+#endif
+		}
+
+		fseek(f, 0, SEEK_END);
+		size = ftell(f);
+		fseek(f, 0, SEEK_SET);
+
+		if (size != 256) {
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Error: ROM file '%s' is %ld bytes. "
+			    "Apple 1 Monitor ROM must be exactly 256 bytes.",
+			    rom_path, size);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			fclose(f);
+			return (false);
+		}
+
+		read_bytes = fread(bus->rom, 1, 256, f);
+		fclose(f);
+
+		if (read_bytes != 256) {
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Error: Failed to read 256 bytes from '%s'", rom_path);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			return (false);
+		}
+
 		bus->rom_loaded = true;
 		return (true);
+	}
 #else
-		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
-		return (false);
+	BUS_LOG(bus, BUS_LOG_ERROR, "Error: Disk I/O disabled, cannot load ROM from file.");
+	return (false);
 #endif
-	}
-
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	if (size != 256) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: ROM file '%s' is %ld bytes. "
-		    "Apple 1 Monitor ROM must be exactly 256 bytes.",
-		    rom_path, size);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
-		return (false);
-	}
-
-	read_bytes = fread(bus->rom, 1, 256, f);
-	fclose(f);
-
-	if (read_bytes != 256) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Failed to read 256 bytes from '%s'", rom_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		return (false);
-	}
-
-	bus->rom_loaded = true;
-	return (true);
 }
+
+#ifndef APPLE1_OMIT_DISKIO
 
 bool
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)

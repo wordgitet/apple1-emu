@@ -106,4 +106,12 @@
 #  define APPLE1_OMIT_WAV
 #endif
 
+/*
+ * Omit standard library I/O (printf, fprintf, stderr, stdout).
+ * Useful for embedded platforms lacking console streams.
+ */
+#ifndef APPLE1_OMIT_STDIO
+/* #define APPLE1_OMIT_STDIO */
+#endif
+
 #endif /* APPLE1LIMIT_H */

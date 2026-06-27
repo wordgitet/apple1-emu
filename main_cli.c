@@ -28,13 +28,26 @@
 #include "port.h"
 #include "term_apple1.h"
 
+#ifdef APPLE1_OMIT_STDIO
+#  define cli_error(...) ((void)0)
+#  define cli_warn(...)  ((void)0)
+#  define cli_printf(...) ((void)0)
+#else
+#  define cli_error(...)  (fprintf(stderr, __VA_ARGS__))
+#  define cli_warn(...)   (fprintf(stderr, __VA_ARGS__))
+#  define cli_printf(...) (printf(__VA_ARGS__))
+#endif
+
+
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
 #define CYCLES_PER_MS (CLOCK_RATE_HZ / 1000)
 
 /* Globals read by dbg.c, term_ansi.c, and term_internal.h */
 struct bus  *g_bus  = NULL;
 struct cpu  *g_cpu  = NULL;
+#ifndef APPLE1_OMIT_DEBUGGER
 debugger_t  *g_dbg  = NULL;
+#endif
 char        *g_argv0 = NULL;
 bool         g_debug_enabled = false;
 
@@ -67,12 +80,18 @@ handle_signal(int sig)
 static void
 stderr_log(void *ctx, int level, const char *msg)
 {
+#ifndef APPLE1_OMIT_STDIO
 	const char *prefix;
 
 	(void)ctx;
 	prefix = (level == BUS_LOG_ERROR) ? "Error" :
 	    (level == BUS_LOG_WARN)  ? "Warning" : "Info";
-	fprintf(stderr, "%s: %s\n", prefix, msg);
+	cli_error( "%s: %s\n", prefix, msg);
+#else
+	(void)ctx;
+	(void)level;
+	(void)msg;
+#endif
 }
 
 /* ------------------------------------------------------------------ */
@@ -82,7 +101,8 @@ stderr_log(void *ctx, int level, const char *msg)
 static void
 print_usage(const char *prog)
 {
-	fprintf(stderr,
+#ifndef APPLE1_OMIT_STDIO
+	cli_error(
 	    "Apple 1 Emulator (portable CLI build)\n"
 	    "Usage: %s [options] [flat_binary]\n"
 	    "\n"
@@ -108,6 +128,9 @@ print_usage(const char *prog)
 	    "  -k <rom>             Load Krusader assembler ROM\n"
 	    "  -h                   Show this help\n",
 	    prog);
+#else
+	(void)prog;
+#endif
 }
 
 /* ------------------------------------------------------------------ */
@@ -139,7 +162,7 @@ load_config_file(const char *path,
 
 	fp = fopen(path, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Warning: cannot open config '%s'\n", path);
+		cli_error( "Warning: cannot open config '%s'\n", path);
 		return;
 	}
 
@@ -274,6 +297,10 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 {
 	int i;
 
+#ifdef APPLE1_OMIT_ACI
+	(void)save_tape_path;
+#endif
+
 	for (i = 0; i < bus->num_cards; i++) {
 #ifndef APPLE1_OMIT_ACI
 		if (strcmp(bus->cards[i]->name, "ACI") == 0) {
@@ -303,7 +330,9 @@ main(int argc, char *argv[])
 {
 	uint8_t  static_ram[APPLE1_STATIC_RAM_SIZE];
 	struct bus bus;
+#ifndef APPLE1_OMIT_DEBUGGER
 	debugger_t dbg;
+#endif
 	struct cpu cpu;
 	char     trace_line[160];
 	char     disasm_buf[64];
@@ -340,6 +369,29 @@ main(int argc, char *argv[])
 	char *wozmon_txt_path;
 
 	g_argv0 = argv[0];
+
+	/* Silence unused warnings when building with OMIT flags */
+#ifdef APPLE1_OMIT_ACI
+	(void)aci_card;
+	(void)aci_path;
+	(void)save_tape_path;
+	(void)tape_path;
+#endif
+#ifdef APPLE1_OMIT_DISKIO
+	(void)bin_path;
+	(void)flat_bin_path;
+	(void)run_addr;
+	(void)has_run_addr;
+	(void)wozmon_txt_path;
+#endif
+#ifdef APPLE1_OMIT_KRUSADER
+	(void)krusader_path;
+#endif
+#ifdef APPLE1_OMIT_DISASM
+	(void)trace_line;
+	(void)disasm_buf;
+	(void)hex_bytes;
+#endif
 
 	/* Defaults */
 	aci_card       = NULL;
@@ -496,7 +548,7 @@ main(int argc, char *argv[])
 	/* Validate RAM size */
 	if (opt_flat_bus != 0) {
 		if (APPLE1_STATIC_RAM_SIZE < 65536) {
-			fprintf(stderr,
+			cli_error(
 			    "Error: Flat bus option requires 64 KB of RAM, but "
 			    "emulator was compiled with APPLE1_STATIC_RAM_SIZE = %u KB.\n",
 			    APPLE1_STATIC_RAM_SIZE / 1024);
@@ -508,7 +560,7 @@ main(int argc, char *argv[])
 		ram_size = APPLE1_DEFAULT_RAM_KB * 1024;
 	}
 	if (ram_size > APPLE1_STATIC_RAM_SIZE) {
-		fprintf(stderr,
+		cli_error(
 		    "Error: Requested RAM size (%u KB) exceeds maximum compiled static RAM size (%u KB).\n",
 		    ram_size / 1024, APPLE1_STATIC_RAM_SIZE / 1024);
 		return (1);
@@ -524,7 +576,7 @@ main(int argc, char *argv[])
 
 	/* Initialise bus with static buffer — no malloc required */
 	if (bus_init(&bus, static_ram, ram_size) == false) {
-		fprintf(stderr, "Error: bus_init failed\n");
+		cli_error( "Error: bus_init failed\n");
 		return (1);
 	}
 	bus.log     = stderr_log;
@@ -557,6 +609,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Load flat binary */
+#ifndef APPLE1_OMIT_DISKIO
 	if (flat_bin_path != NULL) {
 		if (bus_load_bin(&bus, flat_bin_path, 0x0000) == false) {
 			bus_free(&bus);
@@ -566,8 +619,10 @@ main(int argc, char *argv[])
 		bus.ram[RESET_VECTOR] = 0x00;
 		bus.ram[RESET_VECTOR + 1] = 0x04;
 	}
+#endif
 
 	/* Load -l binary */
+#ifndef APPLE1_OMIT_DISKIO
 	if (bin_path != NULL) {
 		if (bus_load_bin(&bus, bin_path, bin_address) == false) {
 			bus_free(&bus);
@@ -576,8 +631,10 @@ main(int argc, char *argv[])
 		port_free(bin_path);
 		bin_path = NULL;
 	}
+#endif
 
 	/* Load Woz Monitor text file */
+#ifndef APPLE1_OMIT_DISKIO
 	if (wozmon_txt_path != NULL) {
 		has_run_addr = false;
 		run_addr     = 0;
@@ -593,6 +650,7 @@ main(int argc, char *argv[])
 		port_free(wozmon_txt_path);
 		wozmon_txt_path = NULL;
 	}
+#endif
 
 	/* ACI expansion card */
 #ifndef APPLE1_OMIT_ACI
@@ -608,7 +666,7 @@ main(int argc, char *argv[])
 			}
 			bus_add_card(&bus, aci_card);
 		} else if (tape_path != NULL || save_tape_path != NULL) {
-			fprintf(stderr,
+			cli_error(
 			    "Error: ACI tape operations requested but ACI "
 			    "card failed to load.\n");
 			bus_free(&bus);
@@ -633,14 +691,18 @@ main(int argc, char *argv[])
 	/* Debugger init */
 	cpu_init(&cpu, &bus);
 	cpu_reset(&cpu);
+#ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
-	g_cpu = &cpu;
 	g_dbg = &dbg;
+#endif
+	g_cpu = &cpu;
 	g_debug_enabled = opt_debug;
 
+#ifndef APPLE1_OMIT_DEBUGGER
 	if (opt_debug != 0) {
 		dbg.step_mode = true;
 	}
+#endif
 
 	/* IO / terminal init */
 	if (opt_headless == false) {
@@ -672,6 +734,7 @@ main(int argc, char *argv[])
 		}
 
 		/* Debugger breakpoint / step */
+#ifndef APPLE1_OMIT_DEBUGGER
 		if (g_debug_enabled != 0) {
 			if (g_debug_break != 0 || dbg.step_mode != 0 ||
 			    dbg_has_breakpoint(&dbg, cpu.pc) != 0) {
@@ -679,8 +742,10 @@ main(int argc, char *argv[])
 				dbg_interactive_loop(&dbg);
 			}
 		}
+#endif
 
 		/* Optional CPU trace */
+#ifndef APPLE1_OMIT_DISASM
 		if (opt_trace != 0) {
 			uint8_t op;
 			int len;
@@ -706,13 +771,16 @@ main(int argc, char *argv[])
 			    "SP:%02X P:%02X",
 			    cpu.pc, hex_bytes, disasm_buf,
 			    cpu.a, cpu.x, cpu.y, cpu.s, cpu.p);
-			printf("%s\n", trace_line);
+			cli_printf("%s\n", trace_line);
 		}
+#endif
 
 		/* Step CPU */
+#ifndef APPLE1_OMIT_DEBUGGER
 		bus.access_cb     = dbg_check_access;
 		bus.access_cb_ctx = &dbg;
 		dbg.current_instruction_pc = cpu.pc;
+#endif
 		{
 			uint8_t cycles = cpu_step(&cpu);
 
@@ -734,11 +802,11 @@ main(int argc, char *argv[])
 				loop_count++;
 				if (loop_count >= 3) {
 					if (cpu.pc == 0x3469) {
-						printf("Klaus Dormann "
+						cli_printf("Klaus Dormann "
 						       "functional test: "
 						       "PASS\n");
 					} else {
-						fprintf(stderr,
+						cli_error(
 						    "FAIL: cpu trapped at "
 						    "$%04X\n",
 						    cpu.pc);

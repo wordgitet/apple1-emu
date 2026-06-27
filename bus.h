@@ -107,11 +107,11 @@ bus_load_wozmon_txt_buf(struct bus *bus,
     const char *text, size_t len,
     uint16_t *run_address, bool *has_run_address);
 
-#ifndef APPLE1_OMIT_DISKIO
 /* Load exactly 256-byte ROM image (Woz Monitor) at 0xFF00-0xFFFF */
 bool
 bus_load_rom(struct bus *bus, const char *rom_path);
 
+#ifndef APPLE1_OMIT_DISKIO
 /* Load arbitrary binary file into RAM at the specified starting address */
 bool
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address);
