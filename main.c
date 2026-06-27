@@ -658,7 +658,7 @@ main(int argc, char *argv[])
 	if (krusader_path != NULL) {
 		struct expansion_card *krusader_card;
 
-		krusader_card = krusader_create(krusader_path);
+		krusader_card = krusader_create(&bus, krusader_path);
 		if (krusader_card == NULL) {
 			cleanup_cards(&bus, NULL);
 			bus_free(&bus);

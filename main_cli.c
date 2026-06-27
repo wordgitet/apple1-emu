@@ -14,7 +14,6 @@
  *      term_ansi.c main_cli.c -o apple1
  */
 
-#define PORT_IMPLEMENT_SHIMS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -488,6 +487,9 @@ main(int argc, char *argv[])
 	}
 
 	/* Validate RAM size */
+	if (opt_flat_bus != 0) {
+		ram_size = 65536;
+	}
 	if (ram_size == 0) {
 		ram_size = 8 * 1024;
 	}
@@ -594,7 +596,7 @@ main(int argc, char *argv[])
 	/* Krusader */
 	if (krusader_path != NULL) {
 		struct expansion_card *kcard;
-		kcard = krusader_create(krusader_path);
+		kcard = krusader_create(&bus, krusader_path);
 		if (kcard != NULL) {
 			bus_add_card(&bus, kcard);
 		}

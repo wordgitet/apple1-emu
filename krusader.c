@@ -1,13 +1,19 @@
+/*
+ * krusader.c - Krusader 6502 assembler/disassembler expansion card.
+ *
+ * No malloc, no hardwired stderr.  All errors routed through BUS_LOG.
+ * Static storage supports one Krusader card instance at a time, which
+ * is all the real hardware ever allowed.
+ */
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#include "bus.h"
 #include "krusader.h"
 
-struct krusader_card {
-	uint8_t rom[4096];
-	uint32_t size;
-};
+static struct krusader_card  s_kru;
+static struct expansion_card s_card;
+static bool                  s_in_use = false;
 
 static uint8_t
 krusader_read(void *ctx, uint16_t addr, bool is_dummy)
@@ -16,7 +22,7 @@ krusader_read(void *ctx, uint16_t addr, bool is_dummy)
 	uint16_t offset;
 
 	(void)is_dummy;
-	kru = (struct krusader_card *)ctx;
+	kru    = (struct krusader_card *)ctx;
 	offset = addr & 0x0FFF;
 
 	if (offset < kru->size) {
@@ -26,18 +32,24 @@ krusader_read(void *ctx, uint16_t addr, bool is_dummy)
 }
 
 struct expansion_card *
-krusader_create(const char *rom_path)
+krusader_create(struct bus *bus, const char *rom_path)
 {
-	struct krusader_card *kru;
-	struct expansion_card *card;
 	FILE *f;
+	char msg[128];
 	long size;
+	size_t nread;
+
+	if (s_in_use != 0) {
+		BUS_LOG(bus, BUS_LOG_ERROR,
+		    "Krusader: only one instance supported");
+		return (NULL);
+	}
 
 	f = fopen(rom_path, "rb");
 	if (f == NULL) {
-		fprintf(stderr,
-		    "Error: Could not open Krusader ROM file '%s'\n",
-		    rom_path);
+		snprintf(msg, sizeof(msg),
+		    "Krusader: cannot open ROM '%s'", rom_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (NULL);
 	}
 
@@ -46,64 +58,55 @@ krusader_create(const char *rom_path)
 	fseek(f, 0, SEEK_SET);
 
 	if (size <= 0 || size > 4096) {
-		fprintf(stderr,
-		    "Error: Krusader ROM file '%s' is %ld bytes. Must be "
-		    "between 1 and 4096 bytes.\n",
-		    rom_path,
-		    size);
+		snprintf(msg, sizeof(msg),
+		    "Krusader: ROM '%s' is %ld bytes; must be 1-4096",
+		    rom_path, size);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		fclose(f);
 		return (NULL);
 	}
 
-	kru = malloc(sizeof(struct krusader_card));
-	if (kru == NULL) {
-		perror("Failed to allocate Krusader context");
-		fclose(f);
-		return (NULL);
-	}
-	memset(kru->rom, 0xFF, 4096);
-
-	if (fread(kru->rom, 1, size, f) != (size_t)size) {
-		fprintf(stderr,
-		    "Error: Failed to read %ld bytes from Krusader ROM "
-		    "'%s'\n",
-		    size,
-		    rom_path);
-		free(kru);
-		fclose(f);
-		return (NULL);
-	}
+	memset(s_kru.rom, 0xFF, 4096);
+	nread = fread(s_kru.rom, 1, (size_t)size, f);
 	fclose(f);
-	kru->size = size;
 
-	card = malloc(sizeof(struct expansion_card));
-	if (card == NULL) {
-		perror("Failed to allocate Krusader expansion card");
-		free(kru);
+	if (nread != (size_t)size) {
+		snprintf(msg, sizeof(msg),
+		    "Krusader: short read on '%s' (%lu of %ld bytes)",
+		    rom_path, (unsigned long)nread, size);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (NULL);
 	}
 
-	card->name = "Krusader";
-	card->base = 0xE000;
-	card->mask = 0xF000;
-	card->rom_only = true;
-	card->read = krusader_read;
-	card->write = NULL;
-	card->tick = NULL;
-	card->ctx = kru;
+	s_kru.size = (uint32_t)size;
 
-	printf("Registered Krusader card: ROM loaded at 0xE000 - 0x%04X\n",
+	s_card.name    = "Krusader";
+	s_card.base    = 0xE000;
+	s_card.mask    = 0xF000;
+	s_card.rom_only = true;
+	s_card.read    = krusader_read;
+	s_card.write   = NULL;
+	s_card.tick    = NULL;
+	s_card.ctx     = &s_kru;
+
+	s_in_use = true;
+
+	snprintf(msg, sizeof(msg),
+	    "Registered Krusader card: ROM at 0xE000-0x%04X",
 	    (uint16_t)(0xE000 + size - 1));
-	return (card);
+	BUS_LOG(bus, BUS_LOG_INFO, msg);
+
+	return (&s_card);
 }
 
 void
 krusader_free(struct expansion_card *card)
 {
-	if (card != NULL) {
-		if (card->ctx != NULL) {
-			free(card->ctx);
-		}
-		free(card);
+	if (card == NULL) {
+		return;
 	}
+	/* Static storage — nothing to free; just mark slot available. */
+	s_in_use = false;
+	memset(&s_kru,  0, sizeof(s_kru));
+	memset(&s_card, 0, sizeof(s_card));
 }
