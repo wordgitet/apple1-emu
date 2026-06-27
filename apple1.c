@@ -288,6 +288,124 @@ port_sleep_us(uint32_t us)
 {
 	taskDelay((int)(us * sysClkRateGet() / 1000000) + 1);
 }
+#elif defined(__OS2__)
+/* OS/2 */
+#  define INCL_DOS
+#  define INCL_DOSPROFILE
+#  include <os2.h>
+uint32_t
+port_gettime_us(void)
+{
+	QWORD timer;
+	ULONG freq;
+	double ticks;
+	ULONG ms;
+
+	freq = 0;
+	if (DosTmrQueryFreq(&freq) == 0 && freq != 0 &&
+	    DosTmrQueryTime(&timer) == 0) {
+		ticks = (double)timer.ulLo + ((double)timer.ulHi * 4294967296.0);
+		return ((uint32_t)((ticks * 1000000.0) / freq));
+	}
+	ms = 0;
+	DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &ms, sizeof(ms));
+	return ((uint32_t)(ms * 1000));
+}
+
+void
+port_sleep_us(uint32_t us)
+{
+	ULONG ms;
+
+	ms = (ULONG)((us + 999) / 1000);
+	DosSleep(ms);
+}
+#elif defined(__plan9__) || defined(__PLAN9__)
+/* Plan 9 */
+#  include <u.h>
+#  include <libc.h>
+uint32_t
+port_gettime_us(void)
+{
+	return ((uint32_t)(nsec() / 1000L));
+}
+
+void
+port_sleep_us(uint32_t us)
+{
+	sleep((long)((us + 999) / 1000));
+}
+#elif defined(__ELKS__)
+/* ELKS (16-bit Linux) */
+#  include <sys/time.h>
+#  include <unistd.h>
+uint32_t
+port_gettime_us(void)
+{
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+	return ((uint32_t)(tv.tv_sec * 1000000UL + tv.tv_usec));
+}
+
+void
+port_sleep_us(uint32_t us)
+{
+	usleep((useconds_t)us);
+}
+#elif defined(__ZEPHYR__)
+/* Zephyr RTOS */
+#  include <zephyr/kernel.h>
+uint32_t
+port_gettime_us(void)
+{
+	uint32_t cycles;
+
+	cycles = k_cycle_get_32();
+	return ((uint32_t)k_cyc_to_us_near32(cycles));
+}
+
+void
+port_sleep_us(uint32_t us)
+{
+	k_usleep(us);
+}
+#elif defined(PORT_USE_FREERTOS) || defined(__FreeRTOS__)
+/* FreeRTOS */
+#  include "FreeRTOS.h"
+#  include "task.h"
+uint32_t
+port_gettime_us(void)
+{
+	TickType_t ticks;
+
+	ticks = xTaskGetTickCount();
+	return ((uint32_t)((ticks * 1000000UL) / configTICK_RATE_HZ));
+}
+
+void
+port_sleep_us(uint32_t us)
+{
+	TickType_t ticks;
+
+	ticks = (us * configTICK_RATE_HZ + 999999UL) / 1000000UL;
+	vTaskDelay(ticks);
+}
+#elif defined(__MSDOS__) || defined(MSDOS) || defined(__dos__)
+/* MS-DOS */
+#  include <dos.h>
+#  include <time.h>
+uint32_t
+port_gettime_us(void)
+{
+	return ((uint32_t)(clock() * (1000000 / CLOCKS_PER_SEC)));
+}
+
+void
+port_sleep_us(uint32_t us)
+{
+	delay((unsigned int)((us + 999) / 1000));
+}
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
 #  ifndef _POSIX_C_SOURCE
