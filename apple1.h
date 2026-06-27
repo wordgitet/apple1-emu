@@ -55,6 +55,55 @@
 #endif
 
 /*
+ * Memory Allocator Portability Shim
+ */
+#if defined(APPLE1_ZERO_MALLOC)
+   /* Stub allocator: always returns NULL, never calls system heap.
+    * Allows linking on bare-metal systems with no allocator. */
+#  define port_malloc(sz)       (NULL)
+#  define port_free(ptr)        ((void)0)
+#  define port_realloc(ptr, sz) (NULL)
+#  define port_strdup(str)      (NULL)
+#elif defined(APPLE1_CUSTOM_MALLOC)
+   /* Pluggable allocator: the user defines these three functions
+    * elsewhere in their system (e.g., custom pool allocator). */
+   extern void *port_malloc(size_t sz);
+   extern void port_free(void *ptr);
+   extern void *port_realloc(void *ptr, size_t sz);
+   extern char *port_strdup(const char *str);
+#else
+   /* Default allocator: standard C library malloc/free/realloc. */
+#  include <stdlib.h>
+#  include <string.h>
+#  define port_malloc(sz)       malloc(sz)
+#  define port_free(ptr)        free(ptr)
+#  define port_realloc(ptr, sz) realloc(ptr, sz)
+
+static inline char *
+port_strdup(const char *str)
+{
+	size_t len;
+	char *dup;
+
+	if (str == NULL) {
+		return (NULL);
+	}
+	len = strlen(str) + 1;
+	dup = (char *)port_malloc(len);
+	if (dup != NULL) {
+		memcpy(dup, str, len);
+	}
+	return (dup);
+}
+#endif
+
+/*
+ * Portable Xorshift pseudo-random number generator (PRNG) shims
+ */
+uint32_t port_rand(void);
+void port_srand(uint32_t seed);
+
+/*
  * Getopt Shim Declaration
  */
 extern char *port_optarg;
@@ -84,6 +133,26 @@ int port_opterr = 1;
 int port_optopt = 0;
 
 static int optpos = 1;
+static uint32_t g_rand_state = 0xACE1; /* Default seed */
+
+uint32_t
+port_rand(void)
+{
+	uint32_t x;
+
+	x = g_rand_state;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	g_rand_state = x;
+	return (x);
+}
+
+void
+port_srand(uint32_t seed)
+{
+	g_rand_state = seed ? seed : 0xACE1;
+}
 
 int
 port_getopt(int argc, char *const argv[], const char *optstring)
@@ -104,9 +173,6 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 
 	if (ch == '\0' || optchar == NULL) {
 		port_optopt = ch;
-		if (port_opterr != 0) {
-			fprintf(stderr, "%s: illegal option -- %c\n", argv[0], ch);
-		}
 		optpos = 1;
 		port_optind++;
 		return ('?');
@@ -120,9 +186,6 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 			port_optarg = argv[port_optind];
 		} else {
 			port_optopt = ch;
-			if (port_opterr != 0) {
-				fprintf(stderr, "%s: option requires an argument -- %c\n", argv[0], ch);
-			}
 			optpos = 1;
 			port_optind++;
 			return (optstring[0] == ':' ? ':' : '?');
@@ -197,6 +260,22 @@ port_sleep_ns(uint64_t ns)
 	nanosleep(&req, NULL);
 }
 
+#elif defined(__RTP__) || defined(_WRS_KERNEL)
+/* VxWorks */
+#  include <tickLib.h>
+#  include <sysLib.h>
+#  include <taskLib.h>
+uint64_t
+port_gettime_ns(void)
+{
+	return ((uint64_t)tickGet() * 1000000000ULL / sysClkRateGet());
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	taskDelay((int)(ns * sysClkRateGet() / 1000000000ULL) + 1);
+}
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
 #  ifndef _POSIX_C_SOURCE
@@ -258,6 +337,7 @@ port_sleep_ns(uint64_t ns)
 #define RESET_VECTOR  0xFFFC
 
 /* amalgamation: omit #include "port.h" */
+#include "apple1limit.h"
 #include <stddef.h>
 
 /* Log severity levels */
@@ -275,12 +355,14 @@ port_sleep_ns(uint64_t ns)
             (bus)->log((bus)->log_ctx, (lvl), (msg)); \
     } while (0)
 
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 /* Callback fired on every non-dummy bus read and write.
  * addr     - the final (post-alias-resolution) address accessed
  * is_write - true for writes, false for reads
  * val      - the byte written or read */
 typedef void (
     *bus_access_cb_t)(void *ctx, uint16_t addr, bool is_write, uint8_t val);
+#endif
 
 struct pia_6821 {
 	uint8_t kbd_data;    /* 0xD010: Keyboard Data */
@@ -320,14 +402,16 @@ struct bus {
 	struct pia_6821 pia;
 	struct emu_opts opts;
 	uint8_t last_bus_value;
-	struct expansion_card *cards[8];
+	struct expansion_card *cards[APPLE1_MAX_CARDS];
 	int num_cards;
 	uint32_t kbd_bounce_cycles; /* remaining bounce window (in calls) */
 
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 	/* Optional callback fired on every non-dummy bus access (read or write).
 	 * Set to NULL to disable.  Used by the debugger for watchpoints. */
 	bus_access_cb_t access_cb;
 	void *access_cb_ctx;
+#endif
 
 	/* Optional log callback.  If NULL, all messages are silently dropped.
 	 * Frontends set this to route errors to stderr, a GUI log, or a UART. */
@@ -343,10 +427,22 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size);
 void
 bus_free(struct bus *bus);
 
+/* Load binary from buffer into RAM at address */
+bool
+bus_load_bin_buf(struct bus *bus,
+    const uint8_t *data, size_t len, uint16_t address);
+
+/* Load Woz Monitor formatted text from a buffer. */
+bool
+bus_load_wozmon_txt_buf(struct bus *bus,
+    const char *text, size_t len,
+    uint16_t *run_address, bool *has_run_address);
+
 /* Load exactly 256-byte ROM image (Woz Monitor) at 0xFF00-0xFFFF */
 bool
 bus_load_rom(struct bus *bus, const char *rom_path);
 
+#ifndef APPLE1_OMIT_DISKIO
 /* Load arbitrary binary file into RAM at the specified starting address */
 bool
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address);
@@ -359,6 +455,7 @@ bus_load_wozmon_txt(struct bus *bus,
     const char *txt_path,
     uint16_t *run_address,
     bool *has_run_address);
+#endif
 
 /* Read a byte from the bus */
 uint8_t
@@ -395,8 +492,7 @@ resolve_data_path(const char *rel_path, char *out_path, size_t max_len);
 #ifndef CPU_H
 #define CPU_H
 
-#include <stdbool.h>
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 
 /* amalgamation: omit #include "bus.h" */
 
@@ -465,12 +561,10 @@ cpu_nmi(struct cpu *cpu);
 #ifndef DBG_H
 #define DBG_H
 
-#include <stdbool.h>
+/* amalgamation: omit #include "port.h" */
+#include "apple1limit.h"
 
 /* amalgamation: omit #include "cpu.h" */
-
-#define MAX_BREAKPOINTS 32
-#define MAX_WATCHPOINTS 32
 
 typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
 
@@ -479,14 +573,22 @@ typedef struct {
 	wp_type_t type;
 } watchpoint_t;
 
+typedef void (*dbg_out_cb_t)(void *ctx, const char *msg);
+
 typedef struct {
+#ifndef APPLE1_OMIT_DEBUGGER
 	struct cpu *cpu;
-	uint16_t breakpoints[MAX_BREAKPOINTS];
+	uint16_t breakpoints[APPLE1_MAX_BREAKPOINTS];
 	int num_breakpoints;
-	watchpoint_t watchpoints[MAX_WATCHPOINTS];
+	watchpoint_t watchpoints[APPLE1_MAX_WATCHPOINTS];
 	int num_watchpoints;
 	bool step_mode;
 	uint16_t current_instruction_pc;
+	dbg_out_cb_t out;
+	void *out_ctx;
+#else
+	int dummy;
+#endif
 } debugger_t;
 
 void
@@ -517,6 +619,10 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line);
 #ifndef DISASM_H
 #define DISASM_H
 
+#include "apple1limit.h"
+
+#ifndef APPLE1_OMIT_DISASM
+
 #include <stdint.h>
 
 /* amalgamation: omit #include "bus.h" */
@@ -527,6 +633,8 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line);
 int
 cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str);
 
+#endif /* APPLE1_OMIT_DISASM */
+
 #endif /* DISASM_H */
 /* ======== end disasm.h ======== */
 
@@ -534,9 +642,12 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str);
 #ifndef ACI_H
 #define ACI_H
 
-#define ACI_CLOCK 1022727
-
+#include "apple1limit.h"
 /* amalgamation: omit #include "bus.h" */
+
+#ifndef APPLE1_OMIT_ACI
+
+#define ACI_CLOCK 1022727
 
 /* Create and initialize the ACI cassette interface card */
 struct expansion_card *
@@ -558,12 +669,18 @@ aci_free(struct expansion_card *card);
 uint32_t
 aci_get_recorded_count(struct expansion_card *card);
 
+#endif /* APPLE1_OMIT_ACI */
+
 #endif /* ACI_H */
 /* ======== end aci.h ======== */
 
 /* ======== begin krusader.h ======== */
 #ifndef KRUSADER_H
 #define KRUSADER_H
+
+#include "apple1limit.h"
+
+#ifndef APPLE1_OMIT_KRUSADER
 
 #include <stdint.h>
 
@@ -592,6 +709,8 @@ krusader_create(struct bus *bus, const char *rom_path);
 void
 krusader_free(struct expansion_card *card);
 
+#endif /* APPLE1_OMIT_KRUSADER */
+
 #endif /* KRUSADER_H */
 /* ======== end krusader.h ======== */
 
@@ -599,8 +718,7 @@ krusader_free(struct expansion_card *card);
 #ifndef IO_H
 #define IO_H
 
-#include <stdbool.h>
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 
 /* Initialize terminal to raw mode */
 void
@@ -646,8 +764,7 @@ io_reset(void);
 #ifndef TERM_APPLE1_H
 #define TERM_APPLE1_H
 
-#include <stdbool.h>
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 
 void
 term_init(void);

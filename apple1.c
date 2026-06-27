@@ -53,6 +53,55 @@
 #endif
 
 /*
+ * Memory Allocator Portability Shim
+ */
+#if defined(APPLE1_ZERO_MALLOC)
+   /* Stub allocator: always returns NULL, never calls system heap.
+    * Allows linking on bare-metal systems with no allocator. */
+#  define port_malloc(sz)       (NULL)
+#  define port_free(ptr)        ((void)0)
+#  define port_realloc(ptr, sz) (NULL)
+#  define port_strdup(str)      (NULL)
+#elif defined(APPLE1_CUSTOM_MALLOC)
+   /* Pluggable allocator: the user defines these three functions
+    * elsewhere in their system (e.g., custom pool allocator). */
+   extern void *port_malloc(size_t sz);
+   extern void port_free(void *ptr);
+   extern void *port_realloc(void *ptr, size_t sz);
+   extern char *port_strdup(const char *str);
+#else
+   /* Default allocator: standard C library malloc/free/realloc. */
+#  include <stdlib.h>
+#  include <string.h>
+#  define port_malloc(sz)       malloc(sz)
+#  define port_free(ptr)        free(ptr)
+#  define port_realloc(ptr, sz) realloc(ptr, sz)
+
+static inline char *
+port_strdup(const char *str)
+{
+	size_t len;
+	char *dup;
+
+	if (str == NULL) {
+		return (NULL);
+	}
+	len = strlen(str) + 1;
+	dup = (char *)port_malloc(len);
+	if (dup != NULL) {
+		memcpy(dup, str, len);
+	}
+	return (dup);
+}
+#endif
+
+/*
+ * Portable Xorshift pseudo-random number generator (PRNG) shims
+ */
+uint32_t port_rand(void);
+void port_srand(uint32_t seed);
+
+/*
  * Getopt Shim Declaration
  */
 extern char *port_optarg;
@@ -82,6 +131,26 @@ int port_opterr = 1;
 int port_optopt = 0;
 
 static int optpos = 1;
+static uint32_t g_rand_state = 0xACE1; /* Default seed */
+
+uint32_t
+port_rand(void)
+{
+	uint32_t x;
+
+	x = g_rand_state;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	g_rand_state = x;
+	return (x);
+}
+
+void
+port_srand(uint32_t seed)
+{
+	g_rand_state = seed ? seed : 0xACE1;
+}
 
 int
 port_getopt(int argc, char *const argv[], const char *optstring)
@@ -102,9 +171,6 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 
 	if (ch == '\0' || optchar == NULL) {
 		port_optopt = ch;
-		if (port_opterr != 0) {
-			fprintf(stderr, "%s: illegal option -- %c\n", argv[0], ch);
-		}
 		optpos = 1;
 		port_optind++;
 		return ('?');
@@ -118,9 +184,6 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 			port_optarg = argv[port_optind];
 		} else {
 			port_optopt = ch;
-			if (port_opterr != 0) {
-				fprintf(stderr, "%s: option requires an argument -- %c\n", argv[0], ch);
-			}
 			optpos = 1;
 			port_optind++;
 			return (optstring[0] == ':' ? ':' : '?');
@@ -195,6 +258,22 @@ port_sleep_ns(uint64_t ns)
 	nanosleep(&req, NULL);
 }
 
+#elif defined(__RTP__) || defined(_WRS_KERNEL)
+/* VxWorks */
+#  include <tickLib.h>
+#  include <sysLib.h>
+#  include <taskLib.h>
+uint64_t
+port_gettime_ns(void)
+{
+	return ((uint64_t)tickGet() * 1000000000ULL / sysClkRateGet());
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	taskDelay((int)(ns * sysClkRateGet() / 1000000000ULL) + 1);
+}
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
 #  ifndef _POSIX_C_SOURCE
@@ -479,124 +558,39 @@ bus_free(struct bus *bus)
 	bus->ram = NULL;
 }
 
-bool
-bus_load_rom(struct bus *bus, const char *rom_path)
-{
-	FILE *f;
-	size_t read_bytes;
-	long size;
 
-	if (rom_path == NULL) {
-		memcpy(bus->rom, embedded_wozmon, 256);
-		bus->rom_loaded = true;
-		return (true);
-	}
-
-	f = fopen(rom_path, "rb");
-	if (f == NULL) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Warning: '%s' not found, using embedded Wozmon ROM.",
-		    rom_path);
-		BUS_LOG(bus, BUS_LOG_WARN, msg);
-		memcpy(bus->rom, embedded_wozmon, 256);
-		bus->rom_loaded = true;
-		return (true);
-	}
-
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	if (size != 256) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: ROM file '%s' is %ld bytes. "
-		    "Apple 1 Monitor ROM must be exactly 256 bytes.",
-		    rom_path, size);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
-		return (false);
-	}
-
-	read_bytes = fread(bus->rom, 1, 256, f);
-	fclose(f);
-
-	if (read_bytes != 256) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Failed to read 256 bytes from '%s'", rom_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		return (false);
-	}
-
-	bus->rom_loaded = true;
-	return (true);
-}
 
 bool
-bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
+bus_load_bin_buf(struct bus *bus,
+    const uint8_t *data, size_t len, uint16_t address)
 {
-	FILE *f;
-	size_t read_bytes;
-	long size;
 	uint32_t addr;
 
-	f = fopen(bin_path, "rb");
-	if (f == NULL) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Could not open binary file '%s'", bin_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+	if (len == 0) {
+		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Binary buffer is empty.");
 		return (false);
 	}
 
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	if (size <= 0) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Binary file '%s' is empty.", bin_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
-		return (false);
-	}
-
-	for (addr = address; addr < (uint32_t)address + size; addr++) {
+	for (addr = address; addr < (uint32_t)address + len; addr++) {
 		if (addr > 0xFFFF ||
 		    bus_is_ram_address(bus, (uint16_t)addr) == 0) {
-			char msg[512];
+			char msg[256];
 			snprintf(msg, sizeof(msg),
-			    "Error: Binary file '%s' (%ld bytes) at "
-			    "0x%04X exceeds RAM size (%u KB).",
-			    bin_path, size, address,
-			    bus->ram_size / 1024);
+			    "Error: Binary buffer (%lu bytes) at 0x%04X "
+			    "exceeds RAM size (%u KB).",
+			    (unsigned long)len, address, bus->ram_size / 1024);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
-			fclose(f);
 			return (false);
 		}
 	}
 
-	read_bytes = fread(bus->ram + address, 1, size, f);
-	fclose(f);
-
-	if (read_bytes != (size_t)size) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Failed to read entire binary file '%s'",
-		    bin_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		return (false);
-	}
+	memcpy(bus->ram + address, data, len);
 
 	{
-		char msg[512];
+		char msg[256];
 		snprintf(msg, sizeof(msg),
-		    "Loaded '%s' (%ld bytes) into RAM at 0x%04X-0x%04X",
-		    bin_path, size, address,
-		    (uint16_t)(address + size - 1));
+		    "Loaded buffer (%lu bytes) into RAM at 0x%04X-0x%04X",
+		    (unsigned long)len, address, (uint16_t)(address + len - 1));
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
 	}
 	return (true);
@@ -615,84 +609,52 @@ hex_val(char c)
 }
 
 bool
-bus_load_wozmon_txt(struct bus *bus,
-    const char *txt_path,
-    uint16_t *run_address,
-    bool *has_run_address)
+bus_load_wozmon_txt_buf(struct bus *bus,
+    const char *text, size_t len,
+    uint16_t *run_address, bool *has_run_address)
 {
-	char *cleaned, *content;
-	size_t read_bytes, w;
-	long size;
+	char *cleaned;
 	uint16_t current_addr;
 	int total_bytes;
 	bool first_addr, in_comment;
-	size_t i;
-	FILE *f;
+	size_t i, w;
 
-	f = fopen(txt_path, "r");
-	if (f == NULL) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Could not open text file '%s'", txt_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+	if (len == 0) {
+		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Text buffer is empty.");
 		return (false);
 	}
-
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	if (size <= 0) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Text file '%s' is empty.", txt_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
-		return (false);
-	}
-
-	content = malloc(size + 1);
-	if (content == NULL) {
-		fclose(f);
-		return (false);
-	}
-
-	read_bytes = fread(content, 1, size, f);
-	content[read_bytes] = '\0';
-	fclose(f);
 
 	/* Strip inline comments */
-	cleaned = malloc(size + 1);
+	cleaned = port_malloc(len + 1);
 	if (cleaned == NULL) {
-		free(content);
+		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Failed to allocate wozmon parser buffer");
 		return (false);
 	}
 
 	w = 0;
 	in_comment = false;
-	for (i = 0; i < read_bytes; i++) {
-		if (content[i] == '\n' || content[i] == '\r') {
+	for (i = 0; i < len; i++) {
+		if (text[i] == '\n' || text[i] == '\r') {
 			in_comment = false;
-			cleaned[w++] = content[i];
+			cleaned[w++] = text[i];
 			continue;
 		}
 		if (in_comment != 0)
 			continue;
 
 		/* Start of comment */
-		if (content[i] == '#' || content[i] == ';') {
+		if (text[i] == '#' || text[i] == ';') {
 			in_comment = true;
 			continue;
 		}
-		if (content[i] == '/' && i + 1 < read_bytes &&
-		    content[i + 1] == '/') {
+		if (text[i] == '/' && i + 1 < len &&
+		    text[i + 1] == '/') {
 			in_comment = true;
 			continue;
 		}
-		cleaned[w++] = content[i];
+		cleaned[w++] = text[i];
 	}
 	cleaned[w] = '\0';
-	free(content);
 
 	current_addr = 0;
 	first_addr = true;
@@ -811,8 +773,6 @@ bus_load_wozmon_txt(struct bus *bus,
 				    hex_val(cleaned[hex_start + j + 1]);
 				if (bus_is_ram_address(bus, current_addr) != 0) {
 					bus->ram[current_addr] = val;
-				} else {
-					/* write exceeds bounds or write is not to RAM */
 				}
 				current_addr++;
 				total_bytes++;
@@ -823,7 +783,7 @@ bus_load_wozmon_txt(struct bus *bus,
 		i++;
 	}
 
-	free(cleaned);
+	port_free(cleaned);
 
 	if (total_bytes == 0 && first_addr != 0) {
 		/* Nothing loaded, completely invalid format or empty */
@@ -833,12 +793,189 @@ bus_load_wozmon_txt(struct bus *bus,
 	{
 		char msg[256];
 		snprintf(msg, sizeof(msg),
-		    "Loaded '%s' (%d bytes) via Woz Monitor text format",
-		    txt_path, total_bytes);
+		    "Loaded %d bytes via Woz Monitor text format",
+		    total_bytes);
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
 	}
 	return (true);
 }
+
+bool
+bus_load_rom(struct bus *bus, const char *rom_path)
+{
+	if (rom_path == NULL) {
+#ifndef APPLE1_OMIT_WOZMON
+		memcpy(bus->rom, embedded_wozmon, 256);
+		bus->rom_loaded = true;
+		return (true);
+#else
+		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
+		return (false);
+#endif
+	}
+
+#ifndef APPLE1_OMIT_DISKIO
+	{
+		FILE *f;
+		size_t read_bytes;
+		long size;
+
+		f = fopen(rom_path, "rb");
+		if (f == NULL) {
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Warning: '%s' not found, using embedded Wozmon ROM.",
+			    rom_path);
+			BUS_LOG(bus, BUS_LOG_WARN, msg);
+#ifndef APPLE1_OMIT_WOZMON
+			memcpy(bus->rom, embedded_wozmon, 256);
+			bus->rom_loaded = true;
+			return (true);
+#else
+			BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
+			return (false);
+#endif
+		}
+
+		fseek(f, 0, SEEK_END);
+		size = ftell(f);
+		fseek(f, 0, SEEK_SET);
+
+		if (size != 256) {
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Error: ROM file '%s' is %ld bytes. "
+			    "Apple 1 Monitor ROM must be exactly 256 bytes.",
+			    rom_path, size);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			fclose(f);
+			return (false);
+		}
+
+		read_bytes = fread(bus->rom, 1, 256, f);
+		fclose(f);
+
+		if (read_bytes != 256) {
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Error: Failed to read 256 bytes from '%s'", rom_path);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			return (false);
+		}
+
+		bus->rom_loaded = true;
+		return (true);
+	}
+#else
+	BUS_LOG(bus, BUS_LOG_ERROR, "Error: Disk I/O disabled, cannot load ROM from file.");
+	return (false);
+#endif
+}
+
+#ifndef APPLE1_OMIT_DISKIO
+
+bool
+bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
+{
+	FILE *f;
+	uint8_t *buf;
+	long size;
+	bool ret;
+
+	f = fopen(bin_path, "rb");
+	if (f == NULL) {
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Could not open binary file '%s'", bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		return (false);
+	}
+
+	fseek(f, 0, SEEK_END);
+	size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	if (size <= 0) {
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Binary file '%s' is empty.", bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		fclose(f);
+		return (false);
+	}
+
+	buf = port_malloc(size);
+	if (buf == NULL) {
+		fclose(f);
+		return (false);
+	}
+
+	if (fread(buf, 1, size, f) != (size_t)size) {
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Failed to read entire binary file '%s'", bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		port_free(buf);
+		fclose(f);
+		return (false);
+	}
+	fclose(f);
+
+	ret = bus_load_bin_buf(bus, buf, size, address);
+	port_free(buf);
+	return (ret);
+}
+
+bool
+bus_load_wozmon_txt(struct bus *bus,
+    const char *txt_path,
+    uint16_t *run_address,
+    bool *has_run_address)
+{
+	char *content;
+	size_t read_bytes;
+	long size;
+	FILE *f;
+	bool ret;
+
+	f = fopen(txt_path, "r");
+	if (f == NULL) {
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Could not open text file '%s'", txt_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		return (false);
+	}
+
+	fseek(f, 0, SEEK_END);
+	size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	if (size <= 0) {
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Text file '%s' is empty.", txt_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		fclose(f);
+		return (false);
+	}
+
+	content = port_malloc(size + 1);
+	if (content == NULL) {
+		fclose(f);
+		return (false);
+	}
+
+	read_bytes = fread(content, 1, size, f);
+	content[read_bytes] = '\0';
+	fclose(f);
+
+	ret = bus_load_wozmon_txt_buf(bus, content, read_bytes,
+	    run_address, has_run_address);
+	port_free(content);
+	return (ret);
+}
+#endif
 
 static uint8_t
 pia_read(struct bus *bus, uint16_t address)
@@ -954,8 +1091,10 @@ bus_read(struct bus *bus, uint16_t address)
 		}
 	}
 
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 	if (bus->access_cb != NULL)
 		bus->access_cb(bus->access_cb_ctx, address, false, result);
+#endif
 	return (result);
 }
 
@@ -979,10 +1118,12 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		if ((address & 0xF000) == 0xD000)
 			address = PIA_BASE | (address & 0x03);
 
+#ifndef APPLE1_OMIT_PIA_THROTTLE
 		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
 		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
 			delay_nanoseconds(977);
+#endif
 
 		if (address >= ROM_BASE) {
 			/* ROM is read-only - silently ignore */
@@ -1011,9 +1152,11 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 
 	/* Fire watchpoint callback for real (non-phantom) writes only
 	 * (unless flat_bus is enabled) */
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 	if ((is_dummy == 0 || bus->opts.flat_bus != 0) &&
 	    bus->access_cb != NULL)
 		bus->access_cb(bus->access_cb_ctx, address, true, value);
+#endif
 }
 
 void
@@ -1042,11 +1185,13 @@ bus_update_keyboard(struct bus *bus)
 	 * strobe bit is left exactly as the struct cpu last left it (cleared after the
 	 * $D010 read) - no toggling, no fake rising edges.
 	 */
+#ifndef APPLE1_OMIT_KBD_BOUNCE
 	if (bus->opts.emulate_kbd_bounce != 0 &&
 	    bus->kbd_bounce_cycles > 0) {
 		bus->kbd_bounce_cycles--;
 		return; /* encoder still settling - ignore new input */
 	}
+#endif
 
 	/* Check if keyboard strobe is clear */
 	if ((bus->pia.kbd_control & 0x80) == 0) {
@@ -1064,10 +1209,12 @@ bus_update_keyboard(struct bus *bus)
 				 * Result: ~1 250-3 750 calls = realistic MM5740
 				 * inter-key settle time.
 				 */
+#ifndef APPLE1_OMIT_KBD_BOUNCE
 				if (bus->opts.emulate_kbd_bounce != 0) {
 					bus->kbd_bounce_cycles = 1250 +
-					    (uint32_t)(rand() % 2500);
+					    (uint32_t)(port_rand() % 2500);
 				}
+#endif
 			}
 		}
 	}
@@ -1086,11 +1233,14 @@ bus_reset(struct bus *bus)
 void
 bus_add_card(struct bus *bus, struct expansion_card *card)
 {
-	if (bus->num_cards < 8) {
+	if (bus->num_cards < APPLE1_MAX_CARDS) {
 		bus->cards[bus->num_cards++] = card;
 	} else {
-		BUS_LOG(bus, BUS_LOG_ERROR,
-		    "Error: Maximum number of expansion cards (8) exceeded.");
+		char msg[128];
+		snprintf(msg, sizeof(msg),
+		    "Error: Maximum number of expansion cards (%d) exceeded.",
+		    APPLE1_MAX_CARDS);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 	}
 }
 /* ======== end bus.c ======== */
@@ -4082,9 +4232,11 @@ cpu_nmi(struct cpu *cpu)
 /* ======== end cpu.c ======== */
 
 /* ======== begin disasm.c ======== */
+#ifndef APPLE1_OMIT_DISASM
 #include <stdint.h>
 #include <stdio.h>
 
+/* amalgamation: omit #include "bus.h" */
 /* amalgamation: omit #include "disasm.h" */
 
 typedef enum {
@@ -4489,13 +4641,16 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 
 	return (bytes);
 }
+
+#endif /* APPLE1_OMIT_DISASM */
 /* ======== end disasm.c ======== */
 
 /* ======== begin aci.c ======== */
+#ifndef APPLE1_OMIT_ACI
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+/* amalgamation: omit #include "bus.h" */
 /* amalgamation: omit #include "aci.h" */
 
 struct aci_card {
@@ -4540,7 +4695,7 @@ aci_record_toggle(struct aci_card *aci)
 				new_cap = aci->recorded_capacity == 0
 				    ? 4096
 				    : aci->recorded_capacity * 2;
-				buf = realloc(aci->recorded_durations,
+				buf = port_realloc(aci->recorded_durations,
 				    new_cap * sizeof(uint32_t));
 				if (buf != NULL) {
 					aci->recorded_durations = buf;
@@ -4680,16 +4835,16 @@ aci_create(struct bus *bus, const char *rom_path)
 		snprintf(msg, sizeof(msg),
 		    "Error: Failed to read ACI ROM '%s'", rom_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		free(aci);
+		port_free(aci);
 		fclose(f);
 		return (NULL);
 	}
 	fclose(f);
 
-	card = malloc(sizeof(struct expansion_card));
+	card = port_malloc(sizeof(struct expansion_card));
 	if (card == NULL) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI expansion card");
-		free(aci);
+		port_free(aci);
 		return (NULL);
 	}
 
@@ -4748,7 +4903,7 @@ pcm_to_durations(struct bus *bus,
 
 	cap = 4096;
 	count = 0;
-	durations = malloc(cap * sizeof(uint32_t));
+	durations = port_malloc(cap * sizeof(uint32_t));
 
 	if (durations == NULL) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate durations buffer");
@@ -4780,17 +4935,17 @@ pcm_to_durations(struct bus *bus,
 					BUS_LOG(bus, BUS_LOG_ERROR,
 					    "Error: Cassette signal durations "
 					    "array overflow");
-					free(durations);
+					port_free(durations);
 					return (false);
 				}
 				cap *= 2;
 				new_buf =
-				    realloc(durations, cap * sizeof(uint32_t));
+				    port_realloc(durations, cap * sizeof(uint32_t));
 
 				if (new_buf == NULL) {
 					BUS_LOG(bus, BUS_LOG_ERROR,
 					    "Failed to reallocate durations buffer");
-					free(durations);
+					port_free(durations);
 					return (false);
 				}
 				durations = new_buf;
@@ -4802,7 +4957,7 @@ pcm_to_durations(struct bus *bus,
 	}
 
 	if (count == 0) {
-		free(durations);
+		port_free(durations);
 		return (false);
 	}
 
@@ -4890,7 +5045,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			}
 		} else if (memcmp(chunk_header, "data", 4) == 0) {
 			data_size = chunk_size;
-			data_chunk = malloc(data_size);
+			data_chunk = port_malloc(data_size);
 			if (data_chunk == NULL) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate data chunk buffer");
 				fclose(f);
@@ -4898,7 +5053,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			}
 			if (fread(data_chunk, 1, data_size, f) != data_size) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated data chunk");
-				free(data_chunk);
+				port_free(data_chunk);
 				fclose(f);
 				return (false);
 			}
@@ -4918,14 +5073,14 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	}
 	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV format details");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 	if (audio_format != 1 && audio_format != 3) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR,
 		    "Error: Unsupported WAV format (only PCM and float32 "
 		    "are supported)");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 
@@ -4933,7 +5088,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	if (bytes_per_sample == 0 ||
 	    data_size < bytes_per_sample * channels) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Unsupported WAV sample format");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 
@@ -4942,13 +5097,13 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		BUS_LOG(aci->bus, BUS_LOG_ERROR,
 		    "Error: WAV file is too large (integer overflow "
 		    "prevention)");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
-	mono_samples = malloc(frame_count * sizeof(float));
+	mono_samples = port_malloc(frame_count * sizeof(float));
 	if (mono_samples == NULL) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate mixed mono samples buffer");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 
@@ -4999,7 +5154,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		mono_samples[i] = mixed / (float)channels;
 	}
 
-	free(data_chunk);
+	port_free(data_chunk);
 
 	durations = NULL;
 	count = 0;
@@ -5012,14 +5167,14 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		&durations,
 		&count,
 		&initial_level) == 0) {
-		free(mono_samples);
+		port_free(mono_samples);
 		return (false);
 	}
 
-	free(mono_samples);
+	port_free(mono_samples);
 
 	if (aci->durations != NULL) {
-		free(aci->durations);
+		port_free(aci->durations);
 	}
 
 	aci->durations = durations;
@@ -5231,14 +5386,14 @@ aci_free(struct expansion_card *card)
 		if (card->ctx != NULL) {
 			aci = (struct aci_card *)card->ctx;
 			if (aci->durations != NULL) {
-				free(aci->durations);
+				port_free(aci->durations);
 			}
 			if (aci->recorded_durations != NULL) {
-				free(aci->recorded_durations);
+				port_free(aci->recorded_durations);
 			}
-			free(aci);
+			port_free(aci);
 		}
-		free(card);
+		port_free(card);
 	}
 }
 
@@ -5253,6 +5408,8 @@ aci_get_recorded_count(struct expansion_card *card)
 	aci = (struct aci_card *)card->ctx;
 	return (aci->recorded_count);
 }
+
+#endif /* APPLE1_OMIT_ACI */
 /* ======== end aci.c ======== */
 
 /* ======== begin krusader.c ======== */
@@ -5263,6 +5420,7 @@ aci_get_recorded_count(struct expansion_card *card)
  * Static storage supports one Krusader card instance at a time, which
  * is all the real hardware ever allowed.
  */
+#ifndef APPLE1_OMIT_KRUSADER
 #include <stdio.h>
 #include <string.h>
 
@@ -5368,6 +5526,8 @@ krusader_free(struct expansion_card *card)
 	memset(&s_kru,  0, sizeof(s_kru));
 	memset(&s_card, 0, sizeof(s_card));
 }
+
+#endif /* APPLE1_OMIT_KRUSADER */
 /* ======== end krusader.c ======== */
 
 /* ======== begin dbg.c ======== */
@@ -5382,6 +5542,8 @@ krusader_free(struct expansion_card *card)
 /* amalgamation: omit #include "disasm.h" */
 /* amalgamation: omit #include "io.h" */
 /* amalgamation: omit #include "term_apple1.h" */
+
+static debugger_t *s_active_dbg = NULL;
 
 int
 dbg_printf(const char *format, ...);
@@ -5476,6 +5638,9 @@ dbg_init(debugger_t *dbg, struct cpu *cpu)
 	dbg->num_watchpoints = 0;
 	dbg->step_mode = true;
 	dbg->current_instruction_pc = 0;
+	dbg->out = NULL;
+	dbg->out_ctx = NULL;
+	s_active_dbg = dbg;
 }
 
 void
@@ -5494,9 +5659,9 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 		}
 	}
 
-	if (dbg->num_watchpoints >= MAX_WATCHPOINTS) {
+	if (dbg->num_watchpoints >= APPLE1_MAX_WATCHPOINTS) {
 		printf("Error: Maximum number of watchpoints reached (%d).\n",
-		    MAX_WATCHPOINTS);
+		    APPLE1_MAX_WATCHPOINTS);
 		return;
 	}
 
@@ -5586,9 +5751,9 @@ dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
 		printf("Breakpoint at $%04X already exists.\n", addr);
 		return;
 	}
-	if (dbg->num_breakpoints >= MAX_BREAKPOINTS) {
+	if (dbg->num_breakpoints >= APPLE1_MAX_BREAKPOINTS) {
 		printf("Error: Maximum number of breakpoints reached (%d).\n",
-		    MAX_BREAKPOINTS);
+		    APPLE1_MAX_BREAKPOINTS);
 		return;
 	}
 	dbg->breakpoints[dbg->num_breakpoints++] = addr;
@@ -5949,7 +6114,9 @@ dbg_printf(const char *format, ...)
 	ret = vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
 
-	if (g_bus != NULL && g_bus->opts.headless != 0) {
+	if (s_active_dbg != NULL && s_active_dbg->out != NULL) {
+		s_active_dbg->out(s_active_dbg->out_ctx, buf);
+	} else if (g_bus != NULL && g_bus->opts.headless != 0) {
 		fputs(buf, stdout);
 		fflush(stdout);
 	} else {
@@ -6111,6 +6278,9 @@ io_has_buffered_key(void)
 #  include <conio.h>
 #  include <windows.h>
 #  define TERM_WINDOWS
+#elif defined(__RTP__) || defined(_WRS_KERNEL)
+/* VxWorks doesn't support unix-style raw mode, use headless/dummy */
+#  define TERM_NO_OS
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__QNX__) || defined(__haiku__) || defined(__rtems__)
 #  include <sys/select.h>
 #  include <termios.h>
@@ -6154,6 +6324,35 @@ scroll_up(void)
 	memset(vram[23], 0x20, 40);
 }
 
+static void
+ansi_out(const char *buf, size_t len)
+{
+#if defined(TERM_WINDOWS)
+	HANDLE h_out;
+	DWORD written;
+
+	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (h_out != INVALID_HANDLE_VALUE) {
+		WriteConsoleA(h_out, buf, (DWORD)len, &written, NULL);
+	}
+#elif defined(TERM_POSIX)
+	(void)write(STDOUT_FILENO, buf, len);
+#else
+	/* No OS / VxWorks: fallback to stdout if available */
+	size_t i;
+	for (i = 0; i < len; i++) {
+		putchar(buf[i]);
+	}
+	fflush(stdout);
+#endif
+}
+
+static void
+ansi_out_char(char c)
+{
+	ansi_out(&c, 1);
+}
+
 void
 term_init(void)
 {
@@ -6190,16 +6389,14 @@ term_init(void)
 	(void)raw_mode_active;
 #endif
 	/* Hide cursor and clear physical screen */
-	printf("\x1b[?25l\x1b[2J\x1b[H");
-	fflush(stdout);
+	ansi_out("\x1b[?25l\x1b[2J\x1b[H", 12);
 }
 
 void
 term_shutdown(void)
 {
 	/* Show cursor, clear screen, reset attributes */
-	printf("\x1b[?25h\x1b[0m\x1b[2J\x1b[H");
-	fflush(stdout);
+	ansi_out("\x1b[?25h\x1b[0m\x1b[2J\x1b[H", 16);
 
 	if (raw_mode_active == true) {
 #if defined(TERM_WINDOWS)
@@ -6268,19 +6465,18 @@ term_update(void)
 {
 	int x, y;
 
-	printf("\x1b[H");
+	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
 			uint8_t c = vram[y][x];
 			if (c == 0x00) {
-				printf("\x1b[7m@\x1b[0m");
+				ansi_out("\x1b[7m@\x1b[0m", 11);
 			} else {
-				putchar(c);
+				ansi_out_char((char)c);
 			}
 		}
-		putchar('\n');
+		ansi_out_char('\n');
 	}
-	fflush(stdout);
 }
 
 uint8_t
@@ -6416,13 +6612,26 @@ term_open_debugger(void)
 /* amalgamation: omit #include "port.h" */
 /* amalgamation: omit #include "term_apple1.h" */
 
+#ifdef APPLE1_OMIT_STDIO
+#  define cli_error(...) ((void)0)
+#  define cli_warn(...)  ((void)0)
+#  define cli_printf(...) ((void)0)
+#else
+#  define cli_error(...)  (fprintf(stderr, __VA_ARGS__))
+#  define cli_warn(...)   (fprintf(stderr, __VA_ARGS__))
+#  define cli_printf(...) (printf(__VA_ARGS__))
+#endif
+
+
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
 #define CYCLES_PER_MS (CLOCK_RATE_HZ / 1000)
 
 /* Globals read by dbg.c, term_ansi.c, and term_internal.h */
 struct bus  *g_bus  = NULL;
 struct cpu  *g_cpu  = NULL;
+#ifndef APPLE1_OMIT_DEBUGGER
 debugger_t  *g_dbg  = NULL;
+#endif
 char        *g_argv0 = NULL;
 bool         g_debug_enabled = false;
 
@@ -6455,12 +6664,18 @@ handle_signal(int sig)
 static void
 stderr_log(void *ctx, int level, const char *msg)
 {
+#ifndef APPLE1_OMIT_STDIO
 	const char *prefix;
 
 	(void)ctx;
 	prefix = (level == BUS_LOG_ERROR) ? "Error" :
 	    (level == BUS_LOG_WARN)  ? "Warning" : "Info";
-	fprintf(stderr, "%s: %s\n", prefix, msg);
+	cli_error( "%s: %s\n", prefix, msg);
+#else
+	(void)ctx;
+	(void)level;
+	(void)msg;
+#endif
 }
 
 /* ------------------------------------------------------------------ */
@@ -6470,7 +6685,8 @@ stderr_log(void *ctx, int level, const char *msg)
 static void
 print_usage(const char *prog)
 {
-	fprintf(stderr,
+#ifndef APPLE1_OMIT_STDIO
+	cli_error(
 	    "Apple 1 Emulator (portable CLI build)\n"
 	    "Usage: %s [options] [flat_binary]\n"
 	    "\n"
@@ -6496,6 +6712,9 @@ print_usage(const char *prog)
 	    "  -k <rom>             Load Krusader assembler ROM\n"
 	    "  -h                   Show this help\n",
 	    prog);
+#else
+	(void)prog;
+#endif
 }
 
 /* ------------------------------------------------------------------ */
@@ -6527,7 +6746,7 @@ load_config_file(const char *path,
 
 	fp = fopen(path, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Warning: cannot open config '%s'\n", path);
+		cli_error( "Warning: cannot open config '%s'\n", path);
 		return;
 	}
 
@@ -6565,8 +6784,8 @@ load_config_file(const char *path,
 		case 'r':
 			if (has_val != 0) {
 				if (*rom_path != NULL)
-					free(*rom_path);
-				*rom_path = strdup(val);
+					port_free(*rom_path);
+				*rom_path = port_strdup(val);
 			}
 			break;
 		case 'm':
@@ -6578,17 +6797,17 @@ load_config_file(const char *path,
 			break;
 		case 'l':
 			if (has_val != 0) {
-				char *dup = strdup(val);
+				char *dup = port_strdup(val);
 				char *at  = strchr(dup, '@');
 				if (at != NULL) {
 					*at = '\0';
 					if (*bin_path != NULL)
-						free(*bin_path);
-					*bin_path    = strdup(dup);
+						port_free(*bin_path);
+					*bin_path    = port_strdup(dup);
 					*bin_address = (uint16_t)strtol(at + 1,
 					    NULL, 16);
 				}
-				free(dup);
+				port_free(dup);
 			}
 			break;
 		case 'c':
@@ -6621,29 +6840,29 @@ load_config_file(const char *path,
 		case 'a':
 			if (has_val != 0) {
 				if (*aci_path != NULL)
-					free(*aci_path);
-				*aci_path = strdup(val);
+					port_free(*aci_path);
+				*aci_path = port_strdup(val);
 			}
 			break;
 		case 'e':
 			if (has_val != 0) {
 				if (*tape_path != NULL)
-					free(*tape_path);
-				*tape_path = strdup(val);
+					port_free(*tape_path);
+				*tape_path = port_strdup(val);
 			}
 			break;
 		case 'E':
 			if (has_val != 0) {
 				if (*save_tape_path != NULL)
-					free(*save_tape_path);
-				*save_tape_path = strdup(val);
+					port_free(*save_tape_path);
+				*save_tape_path = port_strdup(val);
 			}
 			break;
 		case 'k':
 			if (has_val != 0) {
 				if (*krusader_path != NULL)
-					free(*krusader_path);
-				*krusader_path = strdup(val);
+					port_free(*krusader_path);
+				*krusader_path = port_strdup(val);
 			}
 			break;
 		default:
@@ -6662,15 +6881,26 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 {
 	int i;
 
+#ifdef APPLE1_OMIT_ACI
+	(void)save_tape_path;
+#endif
+
 	for (i = 0; i < bus->num_cards; i++) {
+#ifndef APPLE1_OMIT_ACI
 		if (strcmp(bus->cards[i]->name, "ACI") == 0) {
 			if (save_tape_path != NULL) {
 				aci_save_tape(bus->cards[i], save_tape_path);
 			}
 			aci_free(bus->cards[i]);
-		} else if (strcmp(bus->cards[i]->name, "Krusader") == 0) {
+		} else
+#endif
+#ifndef APPLE1_OMIT_KRUSADER
+		if (strcmp(bus->cards[i]->name, "Krusader") == 0) {
 			krusader_free(bus->cards[i]);
 		}
+#else
+		(void)0;
+#endif
 	}
 	bus->num_cards = 0;
 }
@@ -6682,13 +6912,15 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 int
 main(int argc, char *argv[])
 {
+	uint8_t  static_ram[APPLE1_STATIC_RAM_SIZE];
 	struct bus bus;
-	struct cpu cpu;
+#ifndef APPLE1_OMIT_DEBUGGER
 	debugger_t dbg;
-	uint8_t  static_ram[65536];
+#endif
+	struct cpu cpu;
+	char     trace_line[160];
 	char     disasm_buf[64];
 	char     hex_bytes[16];
-	char     trace_line[160];
 	uint64_t last_time;
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
@@ -6721,6 +6953,29 @@ main(int argc, char *argv[])
 	char *wozmon_txt_path;
 
 	g_argv0 = argv[0];
+
+	/* Silence unused warnings when building with OMIT flags */
+#ifdef APPLE1_OMIT_ACI
+	(void)aci_card;
+	(void)aci_path;
+	(void)save_tape_path;
+	(void)tape_path;
+#endif
+#ifdef APPLE1_OMIT_DISKIO
+	(void)bin_path;
+	(void)flat_bin_path;
+	(void)run_addr;
+	(void)has_run_addr;
+	(void)wozmon_txt_path;
+#endif
+#ifdef APPLE1_OMIT_KRUSADER
+	(void)krusader_path;
+#endif
+#ifdef APPLE1_OMIT_DISASM
+	(void)trace_line;
+	(void)disasm_buf;
+	(void)hex_bytes;
+#endif
 
 	/* Defaults */
 	aci_card       = NULL;
@@ -6780,8 +7035,8 @@ main(int argc, char *argv[])
 			break;
 		case 'r':
 			if (rom_path != NULL)
-				free(rom_path);
-			rom_path = strdup(port_optarg);
+				port_free(rom_path);
+			rom_path = port_strdup(port_optarg);
 			break;
 		case 'm': {
 			int kb = atoi(port_optarg);
@@ -6790,36 +7045,36 @@ main(int argc, char *argv[])
 			break;
 		}
 		case 'l': {
-			char *dup = strdup(port_optarg);
+			char *dup = port_strdup(port_optarg);
 			char *at  = strchr(dup, '@');
 			if (at != NULL) {
 				*at = '\0';
 				if (bin_path != NULL)
-					free(bin_path);
-				bin_path    = strdup(dup);
+					port_free(bin_path);
+				bin_path    = port_strdup(dup);
 				bin_address = (uint16_t)strtol(at + 1,
 				    NULL, 16);
 			}
-			free(dup);
+			port_free(dup);
 			break;
 		}
 		case 'w':
-			wozmon_txt_path = strdup(port_optarg);
+			wozmon_txt_path = port_strdup(port_optarg);
 			break;
 		case 'a':
 			if (aci_path != NULL)
-				free(aci_path);
-			aci_path = strdup(port_optarg);
+				port_free(aci_path);
+			aci_path = port_strdup(port_optarg);
 			break;
 		case 'e':
 			if (tape_path != NULL)
-				free(tape_path);
-			tape_path = strdup(port_optarg);
+				port_free(tape_path);
+			tape_path = port_strdup(port_optarg);
 			break;
 		case 'E':
 			if (save_tape_path != NULL)
-				free(save_tape_path);
-			save_tape_path = strdup(port_optarg);
+				port_free(save_tape_path);
+			save_tape_path = port_strdup(port_optarg);
 			break;
 		case 'B': {
 			int baud = atoi(port_optarg);
@@ -6829,8 +7084,8 @@ main(int argc, char *argv[])
 		}
 		case 'k':
 			if (krusader_path != NULL)
-				free(krusader_path);
-			krusader_path = strdup(port_optarg);
+				port_free(krusader_path);
+			krusader_path = port_strdup(port_optarg);
 			break;
 		case 'c':
 			opt_uncapped = false;
@@ -6876,24 +7131,36 @@ main(int argc, char *argv[])
 
 	/* Validate RAM size */
 	if (opt_flat_bus != 0) {
+		if (APPLE1_STATIC_RAM_SIZE < 65536) {
+			cli_error(
+			    "Error: Flat bus option requires 64 KB of RAM, but "
+			    "emulator was compiled with APPLE1_STATIC_RAM_SIZE = %u KB.\n",
+			    APPLE1_STATIC_RAM_SIZE / 1024);
+			return (1);
+		}
 		ram_size = 65536;
 	}
 	if (ram_size == 0) {
-		ram_size = 8 * 1024;
+		ram_size = APPLE1_DEFAULT_RAM_KB * 1024;
 	}
-	if (ram_size > 65536) {
-		ram_size = 65536;
+	if (ram_size > APPLE1_STATIC_RAM_SIZE) {
+		cli_error(
+		    "Error: Requested RAM size (%u KB) exceeds maximum compiled static RAM size (%u KB).\n",
+		    ram_size / 1024, APPLE1_STATIC_RAM_SIZE / 1024);
+		return (1);
 	}
 
 	/* Install signal handler */
+#ifdef SIGINT
 	signal(SIGINT,  handle_signal);
+#endif
 #ifdef SIGTERM
 	signal(SIGTERM, handle_signal);
 #endif
 
 	/* Initialise bus with static buffer — no malloc required */
 	if (bus_init(&bus, static_ram, ram_size) == false) {
-		fprintf(stderr, "Error: bus_init failed\n");
+		cli_error( "Error: bus_init failed\n");
 		return (1);
 	}
 	bus.log     = stderr_log;
@@ -6926,6 +7193,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Load flat binary */
+#ifndef APPLE1_OMIT_DISKIO
 	if (flat_bin_path != NULL) {
 		if (bus_load_bin(&bus, flat_bin_path, 0x0000) == false) {
 			bus_free(&bus);
@@ -6935,18 +7203,22 @@ main(int argc, char *argv[])
 		bus.ram[RESET_VECTOR] = 0x00;
 		bus.ram[RESET_VECTOR + 1] = 0x04;
 	}
+#endif
 
 	/* Load -l binary */
+#ifndef APPLE1_OMIT_DISKIO
 	if (bin_path != NULL) {
 		if (bus_load_bin(&bus, bin_path, bin_address) == false) {
 			bus_free(&bus);
 			return (1);
 		}
-		free(bin_path);
+		port_free(bin_path);
 		bin_path = NULL;
 	}
+#endif
 
 	/* Load Woz Monitor text file */
+#ifndef APPLE1_OMIT_DISKIO
 	if (wozmon_txt_path != NULL) {
 		has_run_addr = false;
 		run_addr     = 0;
@@ -6959,11 +7231,13 @@ main(int argc, char *argv[])
 			bus.ram[0xFFFC] = (uint8_t)(run_addr & 0xFF);
 			bus.ram[0xFFFD] = (uint8_t)(run_addr >> 8);
 		}
-		free(wozmon_txt_path);
+		port_free(wozmon_txt_path);
 		wozmon_txt_path = NULL;
 	}
+#endif
 
 	/* ACI expansion card */
+#ifndef APPLE1_OMIT_ACI
 	if (aci_path != NULL) {
 		aci_card = aci_create(&bus, aci_path);
 		if (aci_card != NULL) {
@@ -6976,36 +7250,43 @@ main(int argc, char *argv[])
 			}
 			bus_add_card(&bus, aci_card);
 		} else if (tape_path != NULL || save_tape_path != NULL) {
-			fprintf(stderr,
+			cli_error(
 			    "Error: ACI tape operations requested but ACI "
 			    "card failed to load.\n");
 			bus_free(&bus);
 			return (1);
 		}
 	}
+#endif /* APPLE1_OMIT_ACI */
 
 	/* Krusader */
+#ifndef APPLE1_OMIT_KRUSADER
 	if (krusader_path != NULL) {
 		struct expansion_card *kcard;
 		kcard = krusader_create(&bus, krusader_path);
 		if (kcard != NULL) {
 			bus_add_card(&bus, kcard);
 		}
-		free(krusader_path);
+		port_free(krusader_path);
 		krusader_path = NULL;
 	}
+#endif /* APPLE1_OMIT_KRUSADER */
 
 	/* Debugger init */
 	cpu_init(&cpu, &bus);
 	cpu_reset(&cpu);
+#ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
-	g_cpu = &cpu;
 	g_dbg = &dbg;
+#endif
+	g_cpu = &cpu;
 	g_debug_enabled = opt_debug;
 
+#ifndef APPLE1_OMIT_DEBUGGER
 	if (opt_debug != 0) {
 		dbg.step_mode = true;
 	}
+#endif
 
 	/* IO / terminal init */
 	if (opt_headless == false) {
@@ -7037,6 +7318,7 @@ main(int argc, char *argv[])
 		}
 
 		/* Debugger breakpoint / step */
+#ifndef APPLE1_OMIT_DEBUGGER
 		if (g_debug_enabled != 0) {
 			if (g_debug_break != 0 || dbg.step_mode != 0 ||
 			    dbg_has_breakpoint(&dbg, cpu.pc) != 0) {
@@ -7044,8 +7326,10 @@ main(int argc, char *argv[])
 				dbg_interactive_loop(&dbg);
 			}
 		}
+#endif
 
 		/* Optional CPU trace */
+#ifndef APPLE1_OMIT_DISASM
 		if (opt_trace != 0) {
 			uint8_t op;
 			int len;
@@ -7071,13 +7355,16 @@ main(int argc, char *argv[])
 			    "SP:%02X P:%02X",
 			    cpu.pc, hex_bytes, disasm_buf,
 			    cpu.a, cpu.x, cpu.y, cpu.s, cpu.p);
-			printf("%s\n", trace_line);
+			cli_printf("%s\n", trace_line);
 		}
+#endif
 
 		/* Step CPU */
+#ifndef APPLE1_OMIT_DEBUGGER
 		bus.access_cb     = dbg_check_access;
 		bus.access_cb_ctx = &dbg;
 		dbg.current_instruction_pc = cpu.pc;
+#endif
 		{
 			uint8_t cycles = cpu_step(&cpu);
 
@@ -7099,11 +7386,11 @@ main(int argc, char *argv[])
 				loop_count++;
 				if (loop_count >= 3) {
 					if (cpu.pc == 0x3469) {
-						printf("Klaus Dormann "
+						cli_printf("Klaus Dormann "
 						       "functional test: "
 						       "PASS\n");
 					} else {
-						fprintf(stderr,
+						cli_error(
 						    "FAIL: cpu trapped at "
 						    "$%04X\n",
 						    cpu.pc);
