@@ -40,15 +40,11 @@ bus_is_ram_address(struct bus *bus, uint16_t address)
 }
 
 bool
-bus_init(struct bus *bus, uint32_t ram_size)
+bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 {
 	memset(bus, 0, sizeof(struct bus));
 	bus->ram_size = ram_size;
-	bus->ram = malloc(65536);
-	if (bus->ram == NULL) {
-		perror("Failed to allocate RAM");
-		return (false);
-	}
+	bus->ram = ram_buf;
 	/* Set default options */
 	bus->opts.uncapped = true;
 	bus->opts.throttle_pia = true;
@@ -58,7 +54,7 @@ bus_init(struct bus *bus, uint32_t ram_size)
 	bus->opts.flat_bus = false;
 	bus->opts.headless = false;
 
-	memset(bus->ram, 0, 65536);
+	memset(bus->ram, 0, ram_size);
 	/* Default display control (bit 7 set = ready) */
 	bus->pia.dsp_control = 0x80;
 
@@ -68,10 +64,7 @@ bus_init(struct bus *bus, uint32_t ram_size)
 void
 bus_free(struct bus *bus)
 {
-	if (bus->ram != NULL) {
-		free(bus->ram);
-		bus->ram = NULL;
-	}
+	bus->ram = NULL;
 }
 
 bool

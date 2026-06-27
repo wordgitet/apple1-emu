@@ -32,13 +32,14 @@
  *   $01FB = P    (last push)
  */
 
+static uint8_t test_ram[65536];
 static struct bus bus;
 static struct cpu cpu;
 
 static void
 setup(void)
 {
-	if (!bus_init(&bus, 16 * 1024)) {
+	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "bus_init failed\n");
 		exit(1);
 	}

@@ -14,6 +14,8 @@
  * the 244 non-JAM opcodes.
  */
 
+static uint8_t test_ram[65536];
+
 typedef struct {
 	uint16_t addr;
 	uint8_t val;
@@ -152,7 +154,7 @@ main(int argc, char **argv)
 	}
 
 	struct bus bus;
-	if (!bus_init(&bus, 65536)) {
+	if (bus_init(&bus, test_ram, 65536) == false) {
 		fclose(f);
 		return (1);
 	}

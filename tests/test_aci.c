@@ -10,7 +10,9 @@
 #include "../dbg.h"
 #include "../io.h"
 
-// Mock keyboard buffer queue
+static uint8_t test_ram[65536];
+
+/* Mock keyboard buffer queue */
 static char kbd_queue[512];
 static int kbd_read_idx = 0;
 static int kbd_write_idx = 0;
@@ -103,7 +105,7 @@ run_roundtrip_test(const char *tape_path,
 	// -------------------------------------------------------------
 	printf("  Phase 1: Starting ACI WRITE execution...\n");
 	struct bus bus;
-	if (!bus_init(&bus, 16 * 1024)) {
+	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "Failed to init bus for ACI write test\n");
 		return (1);
 	}
@@ -205,7 +207,7 @@ run_roundtrip_test(const char *tape_path,
 	// -------------------------------------------------------------
 	printf("  Phase 3: Restoring tape in a fresh struct cpu/struct bus instance...\n");
 	struct bus read_bus;
-	if (!bus_init(&read_bus, 16 * 1024)) {
+	if (bus_init(&read_bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "Failed to init read bus\n");
 		unlink(tape_path);
 		return (1);

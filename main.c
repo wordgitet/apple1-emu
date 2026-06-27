@@ -292,40 +292,43 @@ load_config_file(const char *path,
 int
 main(int argc, char *argv[])
 {
-	char *rom_path;
-	char *bin_path;
-	char *wozmon_txt_path;
-	char *aci_path;
-	char *tape_path;
-	char *save_tape_path;
-	char *krusader_path;
-	char *flat_bin_path;
-	uint16_t bin_address;
-	uint32_t ram_size;
-	bool opt_uncapped;
-	bool opt_throttle_pia;
-	bool opt_emulate_dram;
-	bool opt_emulate_bounce;
-	bool opt_randomize_cold;
-	bool opt_flat_bus;
-	bool opt_headless;
-	bool opt_debug;
-	bool opt_trace;
-	char config_path[512];
-	uint32_t cycle_accumulator;
-	struct timespec last_time;
-	uint16_t prev_pc;
-	int loop_count;
-	int opt;
-	uint32_t k;
-	int i, j;
 	struct bus bus;
 	struct cpu cpu;
 	debugger_t dbg;
+	char config_path[512];
+	struct timespec last_time;
+	char *aci_path;
+	char *bin_path;
+	char *flat_bin_path;
+	char *krusader_path;
+	uint8_t *ram;
+	char *rom_path;
+	char *save_tape_path;
+	char *tape_path;
+	char *wozmon_txt_path;
+	int i;
+	int j;
+	int loop_count;
+	int opt;
+	uint32_t cycle_accumulator;
+	uint32_t k;
+	uint32_t ram_size;
+	uint16_t bin_address;
+	uint16_t prev_pc;
+	bool opt_debug;
+	bool opt_emulate_bounce;
+	bool opt_emulate_dram;
+	bool opt_flat_bus;
+	bool opt_headless;
+	bool opt_randomize_cold;
+	bool opt_throttle_pia;
+	bool opt_trace;
+	bool opt_uncapped;
 
 	g_argv0 = argv[0];
 	srand(time(NULL));
 
+	ram = NULL;
 	rom_path = NULL;
 	bin_path = NULL;
 	wozmon_txt_path = NULL;
@@ -532,7 +535,13 @@ main(int argc, char *argv[])
 	}
 
 	/* Initialize systems */
-	if (bus_init(&bus, ram_size) == 0) {
+	ram = malloc(65536);
+	if (ram == NULL) {
+		perror("Failed to allocate RAM");
+		return (1);
+	}
+	if (bus_init(&bus, ram, ram_size) == 0) {
+		free(ram);
 		return (1);
 	}
 	g_bus = &bus;
@@ -831,5 +840,6 @@ main(int argc, char *argv[])
 	/* Free resources (unreachable due to infinite loop and exit signals) */
 	cleanup_cards(&bus, save_tape_path);
 	bus_free(&bus);
+	free(ram);
 	return (0);
 }

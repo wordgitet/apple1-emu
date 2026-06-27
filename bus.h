@@ -64,11 +64,11 @@ struct bus {
 	void *access_cb_ctx;
 };
 
-/* Initialize the memory bus with a configured RAM size */
+/* Initialize the memory bus with a configured RAM size and buffer */
 bool
-bus_init(struct bus *bus, uint32_t ram_size);
+bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size);
 
-/* Clean up and free allocated RAM */
+/* Clean up */
 void
 bus_free(struct bus *bus);
 

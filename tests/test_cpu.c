@@ -8,14 +8,16 @@
 #include "../dbg.h"
 #include "../disasm.h"
 
+static uint8_t test_ram[65536];
+
 static void
 run_test(const char *name, void (*test_fn)(struct cpu *, struct bus *))
 {
 	struct bus bus;
 	struct cpu cpu;
 
-	// Initialize 16KB mock RAM for testing
-	if (!bus_init(&bus, 16 * 1024)) {
+	/* Initialize 16KB mock RAM for testing */
+	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "Failed to init bus for test: %s\n", name);
 		exit(1);
 	}
@@ -495,7 +497,7 @@ test_reset_vectors(void)
 {
 	struct bus bus;
 
-	if (!bus_init(&bus, 16 * 1024)) {
+	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "Failed to init bus for Reset Vectors test\n");
 		exit(1);
 	}
@@ -568,7 +570,7 @@ test_cpu_breakpoint_smoke(void)
 	// ---- Test 1: breakpoint fires before the instruction executes -----
 	{
 		struct bus bus;
-		bus_init(&bus, 16 * 1024);
+		bus_init(&bus, test_ram, 16 * 1024);
 		load_program(&bus);
 
 		struct cpu cpu;
@@ -597,7 +599,7 @@ test_cpu_breakpoint_smoke(void)
 	// ---- Test 2: clearBreakpoint() resumes normal execution -----------
 	{
 		struct bus bus;
-		bus_init(&bus, 16 * 1024);
+		bus_init(&bus, test_ram, 16 * 1024);
 		load_program(&bus);
 
 		struct cpu cpu;
@@ -628,7 +630,7 @@ test_cpu_breakpoint_smoke(void)
 	// ---- Test 3: manual step-over past the breakpoint ----------------
 	{
 		struct bus bus;
-		bus_init(&bus, 16 * 1024);
+		bus_init(&bus, test_ram, 16 * 1024);
 		load_program(&bus);
 
 		struct cpu cpu;
@@ -662,7 +664,7 @@ test_cpu_breakpoint_smoke(void)
 	// ---- Test 4: no-breakpoint sanity (gate must not false-positive) --
 	{
 		struct bus bus;
-		bus_init(&bus, 16 * 1024);
+		bus_init(&bus, test_ram, 16 * 1024);
 		load_program(&bus);
 
 		struct cpu cpu;
@@ -737,7 +739,7 @@ test_cpu_watchpoint_smoke(void)
 	// ---- Test 1: Write watchpoint fires on STA -----
 	{
 		struct bus bus;
-		bus_init(&bus, 16 * 1024);
+		bus_init(&bus, test_ram, 16 * 1024);
 		memcpy(bus.ram + 0x0400, wp_program, sizeof(wp_program));
 
 		struct cpu cpu;
@@ -768,7 +770,7 @@ test_cpu_watchpoint_smoke(void)
 	// ---- Test 2: Read watchpoint fires on LDA $0200 -----
 	{
 		struct bus bus;
-		bus_init(&bus, 16 * 1024);
+		bus_init(&bus, test_ram, 16 * 1024);
 		memcpy(bus.ram + 0x0400, wp_program, sizeof(wp_program));
 
 		struct cpu cpu;
@@ -801,7 +803,7 @@ static void
 test_bruce_clark_decimal(void)
 {
 	struct bus bus;
-	if (!bus_init(&bus, 65536)) {
+	if (bus_init(&bus, test_ram, 65536) == false) {
 		fprintf(stderr, "Failed to init 64KB bus for Bruce Clark Decimal Test\n");
 		exit(1);
 	}

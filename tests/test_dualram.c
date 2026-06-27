@@ -4,6 +4,8 @@
 
 #include "../bus.h"
 
+static uint8_t test_ram[65536];
+
 static void
 expect_writable(struct bus *bus, uint16_t address, uint8_t value)
 {
@@ -14,19 +16,19 @@ expect_writable(struct bus *bus, uint16_t address, uint8_t value)
 static void
 expect_unmapped(struct bus *bus, uint16_t address, uint8_t value)
 {
-	// Before write, the underlying RAM cell must be 0x00
+	/* Before write, the underlying RAM cell must be 0x00 */
 	assert(bus->ram[address] == 0x00);
 
-	// Write to the unmapped address
+	/* Write to the unmapped address */
 	bus_write(bus, address, value);
 
-	// The underlying RAM must STILL be 0x00
+	/* The underlying RAM must STILL be 0x00 */
 	assert(bus->ram[address] == 0x00);
 
-	// Change last_bus_value by writing to a mapped RAM address
+	/* Change last_bus_value by writing to a mapped RAM address */
 	bus_write(bus, 0x0000, 0xAA);
 
-	// Reading from the unmapped address should return the last bus value (0xAA), not value
+	/* Reading from the unmapped address should return the last bus value (0xAA), not value */
 	assert(bus_read(bus, address) == 0xAA);
 }
 
@@ -35,7 +37,7 @@ test_pia_mirroring(void)
 {
 	struct bus bus;
 
-	if (!bus_init(&bus, 8192)) {
+	if (bus_init(&bus, test_ram, 8192) == false) {
 		fprintf(stderr,
 		    "Failed to initialize bus for PIA mirroring test\n");
 		exit(1);
@@ -72,8 +74,8 @@ main(void)
 
 	struct bus bus;
 
-	// Initialize with 8 KB (8192 bytes) RAM size
-	if (!bus_init(&bus, 8192)) {
+	/* Initialize with 8 KB (8192 bytes) RAM size */
+	if (bus_init(&bus, test_ram, 8192) == false) {
 		fprintf(stderr, "Failed to initialize bus with 8KB RAM\n");
 		return (1);
 	}

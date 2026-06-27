@@ -5,22 +5,24 @@
 
 #include "../bus.h"
 
+static uint8_t test_ram[65536];
+
 int
 main(void)
 {
 	struct bus bus;
-	if (!bus_init(&bus, 4096)) {
+	if (bus_init(&bus, test_ram, 4096) == false) {
 		fprintf(stderr, "Failed to init bus\n");
 		return (1);
 	}
 
-	// Create a temporary wozmon dump
+	/* Create a temporary wozmon dump */
 	const char *tmp_txt = "test_wozmon.txt";
 	FILE *f = fopen(tmp_txt, "w");
-	if (!f)
+	if (f == NULL)
 		return (1);
 
-	// Wozmon dump with spaces, address change, and R command
+	/* Wozmon dump with spaces, address change, and R command */
 	fprintf(f, "0300: A9 01 8D 00  04\n");
 	fprintf(f, "0305: A9 02 8D 01 04\n");
 	fprintf(f, "  # A comment\n");
