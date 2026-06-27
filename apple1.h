@@ -197,9 +197,11 @@ port_sleep_ns(uint64_t ns)
 	nanosleep(&req, NULL);
 }
 
-#else
+#elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
-#  define _POSIX_C_SOURCE 199309L
+#  ifndef _POSIX_C_SOURCE
+#    define _POSIX_C_SOURCE 199309L
+#  endif
 #  include <time.h>
 uint64_t
 port_gettime_ns(void)
@@ -220,6 +222,25 @@ port_sleep_ns(uint64_t ns)
 	req.tv_sec = (time_t)(ns / 1000000000ULL);
 	req.tv_nsec = (long)(ns % 1000000000ULL);
 	nanosleep(&req, NULL);
+}
+#else
+/* Bare-metal / custom RTOS mock fallback */
+uint64_t
+port_gettime_ns(void)
+{
+	static uint64_t mock_ticks = 0;
+	/* Pretend 1 millisecond passes each check */
+	return (mock_ticks += 1000000ULL);
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	/* Busy loop fallback */
+	volatile uint64_t count;
+	for (count = 0; count < ns / 10ULL; count++) {
+		/* no-op */
+	}
 }
 #endif
 

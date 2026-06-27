@@ -195,9 +195,11 @@ port_sleep_ns(uint64_t ns)
 	nanosleep(&req, NULL);
 }
 
-#else
+#elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
-#  define _POSIX_C_SOURCE 199309L
+#  ifndef _POSIX_C_SOURCE
+#    define _POSIX_C_SOURCE 199309L
+#  endif
 #  include <time.h>
 uint64_t
 port_gettime_ns(void)
@@ -218,6 +220,25 @@ port_sleep_ns(uint64_t ns)
 	req.tv_sec = (time_t)(ns / 1000000000ULL);
 	req.tv_nsec = (long)(ns % 1000000000ULL);
 	nanosleep(&req, NULL);
+}
+#else
+/* Bare-metal / custom RTOS mock fallback */
+uint64_t
+port_gettime_ns(void)
+{
+	static uint64_t mock_ticks = 0;
+	/* Pretend 1 millisecond passes each check */
+	return (mock_ticks += 1000000ULL);
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	/* Busy loop fallback */
+	volatile uint64_t count;
+	for (count = 0; count < ns / 10ULL; count++) {
+		/* no-op */
+	}
 }
 #endif
 
@@ -6089,10 +6110,14 @@ io_has_buffered_key(void)
 #if defined(_WIN32) || defined(_WIN64)
 #  include <conio.h>
 #  include <windows.h>
-#else
+#  define TERM_WINDOWS
+#elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__QNX__) || defined(__haiku__) || defined(__rtems__)
 #  include <sys/select.h>
 #  include <termios.h>
 #  include <unistd.h>
+#  define TERM_POSIX
+#else
+#  define TERM_NO_OS
 #endif
 
 #include <stdio.h>
@@ -6105,9 +6130,9 @@ io_has_buffered_key(void)
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
 static uint8_t vram[24][40];
-#if !defined(_WIN32) && !defined(_WIN64)
+#if defined(TERM_POSIX)
 static struct termios orig_termios;
-#else
+#elif defined(TERM_WINDOWS)
 static DWORD orig_console_mode;
 #endif
 static int cursor_x = 0;
@@ -6136,7 +6161,7 @@ term_init(void)
 	cursor_x = 0;
 	cursor_y = 0;
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(TERM_WINDOWS)
 	HANDLE h_out;
 	DWORD mode;
 
@@ -6147,7 +6172,7 @@ term_init(void)
 		SetConsoleMode(h_out, mode);
 	}
 	raw_mode_active = true;
-#else
+#elif defined(TERM_POSIX)
 	struct termios raw;
 
 	if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
@@ -6160,6 +6185,9 @@ term_init(void)
 			raw_mode_active = true;
 		}
 	}
+#else
+	/* No OS: Stubs for console initialization */
+	(void)raw_mode_active;
 #endif
 	/* Hide cursor and clear physical screen */
 	printf("\x1b[?25l\x1b[2J\x1b[H");
@@ -6174,14 +6202,14 @@ term_shutdown(void)
 	fflush(stdout);
 
 	if (raw_mode_active == true) {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(TERM_WINDOWS)
 		HANDLE h_out;
 
 		h_out = GetStdHandle(STD_OUTPUT_HANDLE);
 		if (h_out != INVALID_HANDLE_VALUE) {
 			SetConsoleMode(h_out, orig_console_mode);
 		}
-#else
+#elif defined(TERM_POSIX)
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 #endif
 		raw_mode_active = false;
@@ -6261,15 +6289,18 @@ term_poll(void)
 	uint8_t ch;
 
 	ch = 0;
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(TERM_WINDOWS)
 	if (_kbhit() != 0) {
 		ch = (uint8_t)_getch();
 	}
-#else
+#elif defined(TERM_POSIX)
 	char c;
 	if (read(STDIN_FILENO, &c, 1) == 1) {
 		ch = (uint8_t)c;
 	}
+#else
+	/* No OS: Stub for input polling */
+	(void)ch;
 #endif
 
 	if (ch != 0) {
