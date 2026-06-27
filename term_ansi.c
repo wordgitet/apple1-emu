@@ -80,6 +80,7 @@ ansi_out_char(char c)
 void
 term_init(void)
 {
+	int x, y;
 #if defined(TERM_WINDOWS)
 	HANDLE h_out;
 	DWORD mode;
@@ -87,7 +88,11 @@ term_init(void)
 	struct termios raw;
 #endif
 
-	memset(vram, 0x20, sizeof(vram));
+	for (y = 0; y < 24; y++) {
+		for (x = 0; x < 40; x++) {
+			vram[y][x] = ((x + y) & 1) ? 0x5F : 0x00;
+		}
+	}
 	cursor_x = 0;
 	cursor_y = 0;
 
@@ -191,13 +196,22 @@ void
 term_update(void)
 {
 	int x, y;
+	uint32_t now;
+	bool blink_on;
+
+	now = port_gettime_us();
+	blink_on = ((now / 250000UL) & 1) != 0;
 
 	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
 			uint8_t c = vram[y][x];
 			if (c == 0x00) {
-				ansi_out("\x1b[7m@\x1b[0m", 11);
+				if (blink_on != 0) {
+					ansi_out_char('@');
+				} else {
+					ansi_out_char(' ');
+				}
 			} else {
 				ansi_out_char((char)c);
 			}

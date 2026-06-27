@@ -724,7 +724,9 @@ main(int argc, char *argv[])
 
 	/* Debugger init */
 	cpu_init(&cpu, &bus);
-	cpu_reset(&cpu);
+	if (opt_headless != false) {
+		cpu_reset(&cpu);
+	}
 #ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
 	g_dbg = &dbg;

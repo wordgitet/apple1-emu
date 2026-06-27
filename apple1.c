@@ -6413,6 +6413,7 @@ ansi_out_char(char c)
 void
 term_init(void)
 {
+	int x, y;
 #if defined(TERM_WINDOWS)
 	HANDLE h_out;
 	DWORD mode;
@@ -6420,7 +6421,11 @@ term_init(void)
 	struct termios raw;
 #endif
 
-	memset(vram, 0x20, sizeof(vram));
+	for (y = 0; y < 24; y++) {
+		for (x = 0; x < 40; x++) {
+			vram[y][x] = ((x + y) & 1) ? 0x5F : 0x00;
+		}
+	}
 	cursor_x = 0;
 	cursor_y = 0;
 
@@ -6524,13 +6529,22 @@ void
 term_update(void)
 {
 	int x, y;
+	uint32_t now;
+	bool blink_on;
+
+	now = port_gettime_us();
+	blink_on = ((now / 250000UL) & 1) != 0;
 
 	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
 			uint8_t c = vram[y][x];
 			if (c == 0x00) {
-				ansi_out("\x1b[7m@\x1b[0m", 11);
+				if (blink_on != 0) {
+					ansi_out_char('@');
+				} else {
+					ansi_out_char(' ');
+				}
 			} else {
 				ansi_out_char((char)c);
 			}
@@ -6562,6 +6576,19 @@ term_poll(void)
 #endif
 
 	if (ch != 0) {
+		if (ch == 0x03) {
+			/* Ctrl-C (quit) */
+			term_shutdown();
+			exit(0);
+		}
+		if (ch == 0x0C) {
+			/* Ctrl-L (clear screen) */
+			memset(vram, 0x20, sizeof(vram));
+			cursor_x = 0;
+			cursor_y = 0;
+			vram[0][0] = 0x00;
+			return (0);
+		}
 		if (ch == 0x12) {
 			/* Ctrl-R (Reset) */
 			reset_pending = true;
@@ -7016,6 +7043,7 @@ main(int argc, char *argv[])
 	char     trace_line[160];
 	char     disasm_buf[64];
 	char     hex_bytes[16];
+	uint32_t last_render;
 	uint32_t last_time;
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
@@ -7369,7 +7397,9 @@ main(int argc, char *argv[])
 
 	/* Debugger init */
 	cpu_init(&cpu, &bus);
-	cpu_reset(&cpu);
+	if (opt_headless != false) {
+		cpu_reset(&cpu);
+	}
 #ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
 	g_dbg = &dbg;
@@ -7389,7 +7419,8 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time  = port_gettime_us();
+	last_time   = port_gettime_us();
+	last_render = port_gettime_us();
 	prev_pc    = 0xFFFF;
 	loop_count = 0;
 
@@ -7526,9 +7557,13 @@ main(int argc, char *argv[])
 			cycle_accumulator = 0;
 		}
 
-		/* Render terminal */
-		if (opt_headless == false && opt_uncapped == false) {
-			term_update();
+		/* Render terminal at ~30 fps regardless of speed mode */
+		if (opt_headless == false) {
+			uint32_t now = port_gettime_us();
+			if (now - last_render >= 33333UL) {
+				term_update();
+				last_render = now;
+			}
 		}
 	}
 
