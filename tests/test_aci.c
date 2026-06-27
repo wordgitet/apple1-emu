@@ -98,13 +98,28 @@ run_roundtrip_test(const char *tape_path,
     uint16_t from,
     uint16_t to)
 {
+	struct bus bus;
+	struct bus read_bus;
+	struct cpu cpu;
+	struct cpu read_cpu;
+	char cmd_buf[64];
+	struct expansion_card *aci_card;
+	struct expansion_card *read_aci_card;
+	int64_t cycles_since_growth;
+	int64_t total_cycles;
+	int current_slice;
+	int i;
+	int read_slice;
+	int slice_cycles;
+	uint32_t last_transition_count;
+	bool matched;
+
 	printf("Running ACI roundtrip test for path: %s\n", tape_path);
 
-	// -------------------------------------------------------------
-	// PHASE 1: Write RAM to tape (using ACI WRITE ROM routine)
-	// -------------------------------------------------------------
+	/* -------------------------------------------------------------
+	 * PHASE 1: Write RAM to tape (using ACI WRITE ROM routine)
+	 * ------------------------------------------------------------- */
 	printf("  Phase 1: Starting ACI WRITE execution...\n");
-	struct bus bus;
 	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "Failed to init bus for ACI write test\n");
 		return (1);
@@ -113,49 +128,47 @@ run_roundtrip_test(const char *tape_path,
 	bus.opts.flat_bus = false;
 	bus.opts.headless = true;
 
-	if (!bus_load_rom(&bus, "wozmon.bin")) {
+	if (bus_load_rom(&bus, "wozmon.bin") == false) {
 		fprintf(stderr, "Failed to load wozmon.bin\n");
 		bus_free(&bus);
 		return (1);
 	}
 
-	struct expansion_card *aci_card = aci_create("roms/ACI.rom");
-	if (!aci_card) {
+	aci_card = aci_create(&bus, "roms/ACI.rom");
+	if (aci_card == NULL) {
 		fprintf(stderr, "Failed to create ACI card\n");
 		bus_free(&bus);
 		return (1);
 	}
 	bus_add_card(&bus, aci_card);
 
-	// Put pattern in RAM
+	/* Put pattern in RAM */
 	memcpy(bus.ram + from, pattern, size);
 
-	struct cpu cpu;
 	cpu_init(&cpu, &bus);
 	cpu_reset(&cpu);
 
 	reset_kbd_queue();
 	queue_wozmon_command("C100R");
-	char cmd_buf[64];
 	sprintf(cmd_buf, "%04X.%04XW", from, to);
 	queue_wozmon_command(cmd_buf);
 
-	// Run WRITE routine until transition count stops growing
-	uint32_t last_transition_count = 0;
-	int64_t cycles_since_growth = 0;
-	int64_t total_cycles = 0;
-	const int slice_cycles = 50000;
+	/* Run WRITE routine until transition count stops growing */
+	last_transition_count = 0;
+	cycles_since_growth = 0;
+	total_cycles = 0;
+	slice_cycles = 50000;
 
 	while (total_cycles < 200000000LL) {
-		int current_slice = 0;
-		while (current_slice < slice_cycles && !cpu.halted) {
+		current_slice = 0;
+		while (current_slice < slice_cycles && cpu.halted == false) {
 			bus_update_keyboard(&bus);
 			uint8_t c = cpu_step(&cpu);
 			current_slice += c;
 
-			for (int i = 0; i < bus.num_cards; i++) {
+			for (i = 0; i < bus.num_cards; i++) {
 				struct expansion_card *card = bus.cards[i];
-				if (card->tick) {
+				if (card->tick != NULL) {
 					card->tick(card->ctx, c);
 				}
 			}
@@ -188,11 +201,11 @@ run_roundtrip_test(const char *tape_path,
 		return (1);
 	}
 
-	// -------------------------------------------------------------
-	// PHASE 2: Save the recorded tape
-	// -------------------------------------------------------------
+	/* -------------------------------------------------------------
+	 * PHASE 2: Save the recorded tape
+	 * ------------------------------------------------------------- */
 	printf("  Phase 2: Saving tape to '%s'...\n", tape_path);
-	if (!aci_save_tape(aci_card, tape_path)) {
+	if (aci_save_tape(aci_card, tape_path) == false) {
 		fprintf(stderr, "FAIL: Failed to save recorded ACI tape.\n");
 		aci_free(aci_card);
 		bus_free(&bus);
@@ -202,11 +215,10 @@ run_roundtrip_test(const char *tape_path,
 	aci_free(aci_card);
 	bus_free(&bus);
 
-	// -------------------------------------------------------------
-	// PHASE 3: Read back the tape in a fresh system
-	// -------------------------------------------------------------
+	/* -------------------------------------------------------------
+	 * PHASE 3: Read back the tape in a fresh system
+	 * ------------------------------------------------------------- */
 	printf("  Phase 3: Restoring tape in a fresh struct cpu/struct bus instance...\n");
-	struct bus read_bus;
 	if (bus_init(&read_bus, test_ram, 16 * 1024) == false) {
 		fprintf(stderr, "Failed to init read bus\n");
 		unlink(tape_path);
@@ -216,15 +228,15 @@ run_roundtrip_test(const char *tape_path,
 	read_bus.opts.flat_bus = false;
 	read_bus.opts.headless = true;
 
-	if (!bus_load_rom(&read_bus, "wozmon.bin")) {
+	if (bus_load_rom(&read_bus, "wozmon.bin") == false) {
 		fprintf(stderr, "Failed to load read wozmon.bin\n");
 		bus_free(&read_bus);
 		unlink(tape_path);
 		return (1);
 	}
 
-	struct expansion_card *read_aci_card = aci_create("roms/ACI.rom");
-	if (!read_aci_card) {
+	read_aci_card = aci_create(&read_bus, "roms/ACI.rom");
+	if (read_aci_card == NULL) {
 		fprintf(stderr, "Failed to create read ACI card\n");
 		bus_free(&read_bus);
 		unlink(tape_path);
@@ -232,7 +244,7 @@ run_roundtrip_test(const char *tape_path,
 	}
 	bus_add_card(&read_bus, read_aci_card);
 
-	if (!aci_load_tape(read_aci_card, tape_path)) {
+	if (aci_load_tape(read_aci_card, tape_path) == false) {
 		fprintf(stderr,
 		    "FAIL: Failed to load ACI tape file '%s'\n",
 		    tape_path);
@@ -244,7 +256,6 @@ run_roundtrip_test(const char *tape_path,
 
 	memset(read_bus.ram + from, 0x00, size);
 
-	struct cpu read_cpu;
 	cpu_init(&read_cpu, &read_bus);
 	cpu_reset(&read_cpu);
 
@@ -254,19 +265,19 @@ run_roundtrip_test(const char *tape_path,
 	queue_wozmon_command(cmd_buf);
 
 	total_cycles = 0;
-	bool matched = false;
-	const int read_slice = 50000;
+	matched = false;
+	read_slice = 50000;
 
 	while (total_cycles < 200000000LL) {
-		int current_slice = 0;
-		while (current_slice < read_slice && !read_cpu.halted) {
+		current_slice = 0;
+		while (current_slice < read_slice && read_cpu.halted == false) {
 			bus_update_keyboard(&read_bus);
 			uint8_t c = cpu_step(&read_cpu);
 			current_slice += c;
 
-			for (int i = 0; i < read_bus.num_cards; i++) {
+			for (i = 0; i < read_bus.num_cards; i++) {
 				struct expansion_card *card = read_bus.cards[i];
-				if (card->tick) {
+				if (card->tick != NULL) {
 					card->tick(card->ctx, c);
 				}
 			}
@@ -283,7 +294,7 @@ run_roundtrip_test(const char *tape_path,
 	    (long long)total_cycles,
 	    matched ? "yes" : "no");
 
-	if (!matched) {
+	if (matched == false) {
 		fprintf(stderr, "FAIL: Memory pattern mismatch after read.\n");
 		aci_free(read_aci_card);
 		bus_free(&read_bus);

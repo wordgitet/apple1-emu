@@ -309,6 +309,7 @@ main(int argc, char *argv[])
 	debugger_t dbg;
 	char config_path[512];
 	uint64_t last_time;
+	struct expansion_card *aci_card;
 	char *aci_path;
 	char *bin_path;
 	char *flat_bin_path;
@@ -340,6 +341,7 @@ main(int argc, char *argv[])
 	g_argv0 = argv[0];
 	srand(time(NULL));
 
+	aci_card = NULL;
 	ram = NULL;
 	rom_path = NULL;
 	bin_path = NULL;
@@ -632,7 +634,7 @@ main(int argc, char *argv[])
 
 	/* Load ACI expansion card if path is specified */
 	if (aci_path != NULL) {
-		struct expansion_card *aci_card = aci_create(aci_path);
+		aci_card = aci_create(&bus, aci_path);
 
 		if (aci_card != NULL) {
 			if (tape_path != NULL) {

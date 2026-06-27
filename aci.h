@@ -7,7 +7,7 @@
 
 /* Create and initialize the ACI cassette interface card */
 struct expansion_card *
-aci_create(const char *rom_path);
+aci_create(struct bus *bus, const char *rom_path);
 
 /* Load a .aci tape file into the ACI card */
 bool

@@ -193,16 +193,20 @@ scroll_up(void)
 static struct expansion_card *
 get_or_add_aci(void)
 {
-	if (!g_bus)
+	struct expansion_card *aci_card;
+	const char *aci_path;
+	int i;
+
+	if (g_bus == NULL)
 		return (NULL);
-	for (int i = 0; i < g_bus->num_cards; i++) {
+	for (i = 0; i < g_bus->num_cards; i++) {
 		if (strcmp(g_bus->cards[i]->name, "ACI") == 0) {
 			return (g_bus->cards[i]);
 		}
 	}
 
-	const char *aci_path = NULL;
-	for (int i = 0; i < NF - 1; i++) {
+	aci_path = NULL;
+	for (i = 0; i < NF - 1; i++) {
 		if (fields[i].flag == 'a') {
 			if (fields[i].sval[0] != '\0') {
 				aci_path = fields[i].sval;
@@ -211,14 +215,14 @@ get_or_add_aci(void)
 		}
 	}
 
-	struct expansion_card *aci_card = aci_create(aci_path);
+	aci_card = aci_create(g_bus, aci_path);
 
-	if (aci_card) {
+	if (aci_card != NULL) {
 		bus_add_card(g_bus, aci_card);
 		strncpy(status_text,
 		    "ACI CARD LOADED",
 		    sizeof(status_text) - 1);
-	} else if (!aci_path) {
+	} else if (aci_path == NULL) {
 		strncpy(status_text,
 		    "NO ACI ROM PATH SET",
 		    sizeof(status_text) - 1);

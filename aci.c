@@ -6,29 +6,24 @@
 
 struct aci_card {
 	uint8_t rom[256];
-
-	/* Tape playback state */
+	struct bus *bus;
 	uint32_t *durations;
-	uint32_t num_durations;
-	uint32_t playback_index;
-
+	uint32_t *recorded_durations;
 	uint64_t current_cycle;
+	uint64_t last_output_toggle_cycle;
 	uint64_t last_read_cycle;
 	int32_t cycles_until_toggle;
+	uint32_t num_durations;
+	uint32_t playback_index;
+	uint32_t recorded_capacity;
+	uint32_t recorded_count;
 	bool input_level;
 	bool initial_level;
-
-	bool tape_loaded;
-	bool tape_active;
-
-	/* Tape recording state */
-	bool output_level;
 	bool output_initial_level;
-	uint64_t last_output_toggle_cycle;
+	bool output_level;
 	bool recording_started;
-	uint32_t *recorded_durations;
-	uint32_t recorded_count;
-	uint32_t recorded_capacity;
+	bool tape_active;
+	bool tape_loaded;
 };
 
 static void
@@ -150,7 +145,7 @@ aci_tick(void *ctx, uint8_t cycles)
 }
 
 struct expansion_card *
-aci_create(const char *rom_path)
+aci_create(struct bus *bus, const char *rom_path)
 {
 	struct aci_card *aci;
 	struct expansion_card *card;
@@ -169,26 +164,28 @@ aci_create(const char *rom_path)
 	fseek(f, 0, SEEK_SET);
 
 	if (size != 256) {
-		fprintf(stderr,
-		    "Error: ACI ROM '%s' is %ld bytes, must be exactly "
-		    "256.\n",
-		    rom_path,
-		    size);
+		char msg[128];
+		snprintf(msg, sizeof(msg),
+		    "Error: ACI ROM '%s' is %ld bytes, must be exactly 256.",
+		    rom_path, size);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		fclose(f);
 		return (NULL);
 	}
 
 	aci = calloc(1, sizeof(struct aci_card));
 	if (aci == NULL) {
-		perror("Failed to allocate ACI card context");
+		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI card context");
 		fclose(f);
 		return (NULL);
 	}
+	aci->bus = bus;
 
 	if (fread(aci->rom, 1, 256, f) != 256) {
-		fprintf(stderr,
-		    "Error: Failed to read ACI ROM '%s'\n",
-		    rom_path);
+		char msg[128];
+		snprintf(msg, sizeof(msg),
+		    "Error: Failed to read ACI ROM '%s'", rom_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		free(aci);
 		fclose(f);
 		return (NULL);
@@ -197,7 +194,7 @@ aci_create(const char *rom_path)
 
 	card = malloc(sizeof(struct expansion_card));
 	if (card == NULL) {
-		perror("Failed to allocate ACI expansion card");
+		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI expansion card");
 		free(aci);
 		return (NULL);
 	}
@@ -211,13 +208,15 @@ aci_create(const char *rom_path)
 	card->tick = aci_tick;
 	card->ctx = aci;
 
-	printf("Registered ACI card: ROM mapped at 0xC100 - 0xC1FF, registers "
-	       "at 0xC000 - 0xC0FF\n");
+	BUS_LOG(bus, BUS_LOG_INFO,
+	    "Registered ACI card: ROM mapped at 0xC100 - 0xC1FF, registers "
+	    "at 0xC000 - 0xC0FF");
 	return (card);
 }
 
 static bool
-pcm_to_durations(const float *mono,
+pcm_to_durations(struct bus *bus,
+    const float *mono,
     uint32_t num_samples,
     uint32_t sample_rate,
     uint32_t **out_durations,
@@ -243,9 +242,9 @@ pcm_to_durations(const float *mono,
 	}
 
 	if (first_active == num_samples) {
-		fprintf(stderr,
+		BUS_LOG(bus, BUS_LOG_ERROR,
 		    "Error: Audio file does not contain a detectable "
-		    "cassette signal\n");
+		    "cassette signal");
 		return (false);
 	}
 
@@ -258,7 +257,7 @@ pcm_to_durations(const float *mono,
 	durations = malloc(cap * sizeof(uint32_t));
 
 	if (durations == NULL) {
-		perror("Failed to allocate durations buffer");
+		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate durations buffer");
 		return (false);
 	}
 
@@ -284,9 +283,9 @@ pcm_to_durations(const float *mono,
 
 			if (count >= cap) {
 				if (cap > (UINT32_MAX / 2) / sizeof(uint32_t)) {
-					fprintf(stderr,
+					BUS_LOG(bus, BUS_LOG_ERROR,
 					    "Error: Cassette signal durations "
-					    "array overflow\n");
+					    "array overflow");
 					free(durations);
 					return (false);
 				}
@@ -295,8 +294,8 @@ pcm_to_durations(const float *mono,
 				    realloc(durations, cap * sizeof(uint32_t));
 
 				if (new_buf == NULL) {
-					perror("Failed to reallocate durations "
-					       "buffer");
+					BUS_LOG(bus, BUS_LOG_ERROR,
+					    "Failed to reallocate durations buffer");
 					free(durations);
 					return (false);
 				}
@@ -334,21 +333,23 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 
 	f = fopen(tape_path, "rb");
 	if (f == NULL) {
-		fprintf(stderr,
-		    "Error: Could not open WAV file '%s'\n",
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Could not open WAV file '%s'",
 		    tape_path);
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
 	if (fread(riff_header, 1, 12, f) != 12) {
-		fprintf(stderr, "Error: Truncated WAV header\n");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated WAV header");
 		fclose(f);
 		return (false);
 	}
 
 	if (memcmp(riff_header, "RIFF", 4) != 0 ||
 	    memcmp(riff_header + 8, "WAVE", 4) != 0) {
-		fprintf(stderr, "Error: Invalid WAV format\n");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Invalid WAV format");
 		fclose(f);
 		return (false);
 	}
@@ -375,13 +376,12 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			uint8_t fmt_data[16];
 
 			if (chunk_size < 16) {
-				fprintf(stderr,
-				    "Error: Invalid fmt chunk size\n");
+				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Invalid fmt chunk size");
 				fclose(f);
 				return (false);
 			}
 			if (fread(fmt_data, 1, 16, f) != 16) {
-				fprintf(stderr, "Error: Truncated fmt chunk\n");
+				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated fmt chunk");
 				fclose(f);
 				return (false);
 			}
@@ -398,13 +398,12 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			data_size = chunk_size;
 			data_chunk = malloc(data_size);
 			if (data_chunk == NULL) {
-				perror("Failed to allocate data chunk buffer");
+				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate data chunk buffer");
 				fclose(f);
 				return (false);
 			}
 			if (fread(data_chunk, 1, data_size, f) != data_size) {
-				fprintf(stderr,
-				    "Error: Truncated data chunk\n");
+				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated data chunk");
 				free(data_chunk);
 				fclose(f);
 				return (false);
@@ -420,18 +419,18 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	fclose(f);
 
 	if (data_chunk == NULL) {
-		fprintf(stderr, "Error: Missing WAV data chunk\n");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV data chunk");
 		return (false);
 	}
 	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
-		fprintf(stderr, "Error: Missing WAV format details\n");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV format details");
 		free(data_chunk);
 		return (false);
 	}
 	if (audio_format != 1 && audio_format != 3) {
-		fprintf(stderr,
+		BUS_LOG(aci->bus, BUS_LOG_ERROR,
 		    "Error: Unsupported WAV format (only PCM and float32 "
-		    "are supported)\n");
+		    "are supported)");
 		free(data_chunk);
 		return (false);
 	}
@@ -439,22 +438,22 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	bytes_per_sample = bits_per_sample / 8;
 	if (bytes_per_sample == 0 ||
 	    data_size < bytes_per_sample * channels) {
-		fprintf(stderr, "Error: Unsupported WAV sample format\n");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Unsupported WAV sample format");
 		free(data_chunk);
 		return (false);
 	}
 
 	frame_count = data_size / (bytes_per_sample * channels);
 	if (frame_count > UINT32_MAX / sizeof(float)) {
-		fprintf(stderr,
+		BUS_LOG(aci->bus, BUS_LOG_ERROR,
 		    "Error: WAV file is too large (integer overflow "
-		    "prevention)\n");
+		    "prevention)");
 		free(data_chunk);
 		return (false);
 	}
 	mono_samples = malloc(frame_count * sizeof(float));
 	if (mono_samples == NULL) {
-		perror("Failed to allocate mixed mono samples buffer");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate mixed mono samples buffer");
 		free(data_chunk);
 		return (false);
 	}
@@ -512,7 +511,8 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	count = 0;
 	initial_level = false;
 
-	if (pcm_to_durations(mono_samples,
+	if (pcm_to_durations(aci->bus,
+		mono_samples,
 		frame_count,
 		sample_rate,
 		&durations,
@@ -539,26 +539,42 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	aci->tape_loaded = true;
 	aci->tape_active = true;
 
-	printf("Loaded WAV tape '%s' (%u pulses, sample rate %u Hz)\n",
-	    tape_path,
-	    count,
-	    sample_rate);
+	{
+		char msg[256];
+		snprintf(msg, sizeof(msg),
+		    "Loaded WAV tape '%s' (%u pulses, sample rate %u Hz)",
+		    tape_path, count, sample_rate);
+		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
+	}
 	return (true);
 }
 
 static bool
 save_wav_tape(struct aci_card *aci, const char *tape_path)
 {
+	FILE *f;
+	uint64_t total_samples;
+	uint32_t byte_rate;
+	uint32_t data_size;
+	uint32_t riff_size;
+	uint32_t trailing_count;
+	uint32_t wav_sample_rate;
+	int16_t sample;
+	uint8_t bytes[4];
+	uint8_t word[2];
+	bool level;
+	uint32_t i, s;
+
 	if (aci->recorded_count == 0) {
-		fprintf(stderr,
-		    "ACI: No tape output was recorded. Nothing to save.\n");
+		BUS_LOG(aci->bus, BUS_LOG_WARN,
+		    "ACI: No tape output was recorded. Nothing to save.");
 		return (false);
 	}
 
-	uint32_t wav_sample_rate = 44100;
-	uint64_t total_samples = 0;
+	wav_sample_rate = 44100;
+	total_samples = 0;
 
-	for (uint32_t i = 0; i < aci->recorded_count; i++) {
+	for (i = 0; i < aci->recorded_count; i++) {
 		uint32_t duration = aci->recorded_durations[i];
 		uint32_t sample_count =
 		    (uint32_t)(((double)duration * (double)wav_sample_rate) /
@@ -574,26 +590,25 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	total_samples += wav_sample_rate / 10;
 
 	if (total_samples > UINT32_MAX / 2) {
-		fprintf(stderr,
-		    "Error: Recording is too long to save as WAV\n");
+		BUS_LOG(aci->bus, BUS_LOG_ERROR,
+		    "Error: Recording is too long to save as WAV");
 		return (false);
 	}
 
-	uint32_t data_size = (uint32_t)(total_samples * sizeof(int16_t));
-	uint32_t riff_size = 36 + data_size;
+	data_size = (uint32_t)(total_samples * sizeof(int16_t));
+	riff_size = 36 + data_size;
 
-	FILE *f = fopen(tape_path, "wb");
-
-	if (!f) {
-		fprintf(stderr,
-		    "Error: Could not open '%s' for writing\n",
+	f = fopen(tape_path, "wb");
+	if (f == NULL) {
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Could not open '%s' for writing",
 		    tape_path);
+		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
 	fwrite("RIFF", 1, 4, f);
-
-	uint8_t bytes[4];
 
 	bytes[0] = riff_size & 0xFF;
 	bytes[1] = (riff_size >> 8) & 0xFF;
@@ -610,8 +625,6 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	bytes[3] = 0;
 	fwrite(bytes, 1, 4, f);
 
-	uint8_t word[2];
-
 	word[0] = 1;
 	word[1] = 0;
 	fwrite(word, 1, 2, f);
@@ -626,7 +639,7 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	bytes[3] = (wav_sample_rate >> 24) & 0xFF;
 	fwrite(bytes, 1, 4, f);
 
-	uint32_t byte_rate = wav_sample_rate * sizeof(int16_t);
+	byte_rate = wav_sample_rate * sizeof(int16_t);
 
 	bytes[0] = byte_rate & 0xFF;
 	bytes[1] = (byte_rate >> 8) & 0xFF;
@@ -650,9 +663,9 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	bytes[3] = (data_size >> 24) & 0xFF;
 	fwrite(bytes, 1, 4, f);
 
-	bool level = aci->output_initial_level;
+	level = aci->output_initial_level;
 
-	for (uint32_t i = 0; i < aci->recorded_count; i++) {
+	for (i = 0; i < aci->recorded_count; i++) {
 		uint32_t duration = aci->recorded_durations[i];
 		uint32_t sample_count =
 		    (uint32_t)(((double)duration * (double)wav_sample_rate) /
@@ -662,9 +675,9 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 		if (sample_count == 0) {
 			sample_count = 1;
 		}
-		int16_t sample = level ? 14000 : -14000;
+		sample = level ? 14000 : -14000;
 
-		for (uint32_t s = 0; s < sample_count; s++) {
+		for (s = 0; s < sample_count; s++) {
 			word[0] = sample & 0xFF;
 			word[1] = (sample >> 8) & 0xFF;
 			fwrite(word, 1, 2, f);
@@ -672,17 +685,22 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 		level = !level;
 	}
 
-	int16_t sample = level ? 14000 : -14000;
-	uint32_t trailing_count = wav_sample_rate / 10;
+	sample = level ? 14000 : -14000;
+	trailing_count = wav_sample_rate / 10;
 
-	for (uint32_t s = 0; s < trailing_count; s++) {
+	for (s = 0; s < trailing_count; s++) {
 		word[0] = sample & 0xFF;
 		word[1] = (sample >> 8) & 0xFF;
 		fwrite(word, 1, 2, f);
 	}
 
 	fclose(f);
-	printf("Saved ACI tape '%s' as WAV format\n", tape_path);
+	{
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Saved ACI tape '%s' as WAV format", tape_path);
+		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
+	}
 	return (true);
 }
 
