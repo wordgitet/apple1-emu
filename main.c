@@ -308,7 +308,7 @@ main(int argc, char *argv[])
 	struct cpu cpu;
 	debugger_t dbg;
 	char config_path[512];
-	uint64_t last_time;
+	uint32_t last_time;
 	struct expansion_card *aci_card;
 	char *aci_path;
 	char *bin_path;
@@ -686,7 +686,7 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time = port_gettime_ns();
+	last_time = port_gettime_us();
 	prev_pc = 0xFFFF;
 	loop_count = 0;
 
@@ -696,7 +696,7 @@ main(int argc, char *argv[])
 			(term_is_paused() != 0 &&
 				term_should_step() == 0))) {
 			term_poll();
-			port_sleep_ns(10000000ULL); /* 10ms */
+			port_sleep_us(10000UL); /* 10ms */
 			continue;
 		}
 
@@ -723,7 +723,7 @@ main(int argc, char *argv[])
 					dbg.step_mode = true;
 					term_poll();
 					if (term_should_step() == 0) {
-						port_sleep_ns(1000000ULL); /* 1ms */
+						port_sleep_us(1000UL); /* 1ms */
 						continue;
 					}
 				}
@@ -822,19 +822,19 @@ main(int argc, char *argv[])
 		/* 3. Timing throttler (capped mode) */
 		if (bus.opts.uncapped == 0 && bus.opts.headless == 0 &&
 		    cycle_accumulator >= CYCLES_PER_MS) {
-			uint64_t current_time;
-			uint64_t elapsed_ns;
-			uint64_t expected_ns;
+			uint32_t current_time;
+			uint32_t elapsed_us;
+			uint32_t expected_us;
 
-			current_time = port_gettime_ns();
-			elapsed_ns = current_time - last_time;
-			expected_ns = 1000000ULL; /* 1 millisecond */
+			current_time = port_gettime_us();
+			elapsed_us = current_time - last_time;
+			expected_us = 1000UL; /* 1 millisecond */
 
-			if (elapsed_ns < expected_ns)
-				port_sleep_ns(expected_ns - elapsed_ns);
+			if (elapsed_us < expected_us)
+				port_sleep_us(expected_us - elapsed_us);
 
 			/* Sync timing reference */
-			last_time = port_gettime_ns();
+			last_time = port_gettime_us();
 			cycle_accumulator = 0;
 		}
 	}
