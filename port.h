@@ -1,0 +1,213 @@
+#ifndef PORT_H
+#define PORT_H
+
+/*
+ * C89 / C99 Type Portability Shim
+ */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#  include <stdbool.h>
+#  include <stdint.h>
+#else
+#  ifndef uint8_t
+     typedef unsigned char uint8_t;
+#  endif
+#  ifndef uint16_t
+     typedef unsigned short uint16_t;
+#  endif
+#  ifndef uint32_t
+     typedef unsigned int uint32_t;
+#  endif
+#  ifndef uint64_t
+     typedef unsigned long long uint64_t;
+#  endif
+#  ifndef int8_t
+     typedef signed char int8_t;
+#  endif
+#  ifndef int16_t
+     typedef signed short int16_t;
+#  endif
+#  ifndef int32_t
+     typedef signed int int32_t;
+#  endif
+#  ifndef int64_t
+     typedef signed long long int64_t;
+#  endif
+#  ifndef bool
+#    define bool int
+#    define true 1
+#    define false 0
+#  endif
+#endif
+
+/*
+ * Getopt Shim Declaration
+ */
+extern char *port_optarg;
+extern int port_optind;
+extern int port_opterr;
+extern int port_optopt;
+
+int port_getopt(int argc, char *const argv[], const char *optstring);
+
+/*
+ * High-resolution timer and sleep shims
+ */
+uint64_t port_gettime_ns(void);
+void port_sleep_ns(uint64_t ns);
+
+/*
+ * Implementations
+ */
+#ifdef PORT_IMPLEMENT_SHIMS
+
+#include <stdio.h>
+#include <string.h>
+
+char *port_optarg = NULL;
+int port_optind = 1;
+int port_opterr = 1;
+int port_optopt = 0;
+
+static int optpos = 1;
+
+int
+port_getopt(int argc, char *const argv[], const char *optstring)
+{
+	char *arg;
+	char *optchar;
+	int ch;
+
+	port_optarg = NULL;
+	if (port_optind >= argc || argv[port_optind] == NULL ||
+	    argv[port_optind][0] != '-' || argv[port_optind][1] == '\0') {
+		return (-1);
+	}
+
+	arg = argv[port_optind];
+	ch = arg[optpos];
+	optchar = strchr(optstring, ch);
+
+	if (ch == '\0' || optchar == NULL) {
+		port_optopt = ch;
+		if (port_opterr != 0) {
+			fprintf(stderr, "%s: illegal option -- %c\n", argv[0], ch);
+		}
+		optpos = 1;
+		port_optind++;
+		return ('?');
+	}
+
+	if (optchar[1] == ':') {
+		if (arg[optpos + 1] != '\0') {
+			port_optarg = &arg[optpos + 1];
+		} else if (port_optind + 1 < argc) {
+			port_optind++;
+			port_optarg = argv[port_optind];
+		} else {
+			port_optopt = ch;
+			if (port_opterr != 0) {
+				fprintf(stderr, "%s: option requires an argument -- %c\n", argv[0], ch);
+			}
+			optpos = 1;
+			port_optind++;
+			return (optstring[0] == ':' ? ':' : '?');
+		}
+		optpos = 1;
+		port_optind++;
+	} else {
+		optpos++;
+		if (arg[optpos] == '\0') {
+			optpos = 1;
+			port_optind++;
+		}
+	}
+	return (ch);
+}
+
+/*
+ * Platform-specific timing implementation
+ */
+#if defined(_WIN32) || defined(_WIN64)
+#  include <windows.h>
+uint64_t
+port_gettime_ns(void)
+{
+	LARGE_INTEGER freq;
+	LARGE_INTEGER counter;
+
+	QueryPerformanceFrequency(&freq);
+	QueryPerformanceCounter(&counter);
+	return ((uint64_t)(counter.QuadPart * 1000000000LL / freq.QuadPart));
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	Sleep((DWORD)(ns / 1000000ULL));
+}
+
+#elif defined(__HAIKU__)
+#  include <kernel/OS.h>
+uint64_t
+port_gettime_ns(void)
+{
+	return ((uint64_t)system_time() * 1000ULL);
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	snooze((bigtime_t)(ns / 1000ULL));
+}
+
+#elif defined(__QNXNTO__)
+#  include <sys/neutrino.h>
+#  include <sys/syspage.h>
+uint64_t
+port_gettime_ns(void)
+{
+	uint64_t cycles;
+
+	cycles = ClockCycles();
+	return ((uint64_t)(cycles * 1000000000ULL / SYSPAGE_ENTRY(qtime)->cycles_per_sec));
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	struct timespec req;
+
+	req.tv_sec = (time_t)(ns / 1000000000ULL);
+	req.tv_nsec = (long)(ns % 1000000000ULL);
+	nanosleep(&req, NULL);
+}
+
+#else
+/* Standard POSIX default */
+#  define _POSIX_C_SOURCE 199309L
+#  include <time.h>
+uint64_t
+port_gettime_ns(void)
+{
+	struct timespec ts;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+		return ((uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec);
+	}
+	return (0);
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	struct timespec req;
+
+	req.tv_sec = (time_t)(ns / 1000000000ULL);
+	req.tv_nsec = (long)(ns % 1000000000ULL);
+	nanosleep(&req, NULL);
+}
+#endif
+
+#endif /* PORT_IMPLEMENT_SHIMS */
+
+#endif /* PORT_H */
