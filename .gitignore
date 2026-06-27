@@ -69,3 +69,7 @@ POM1/
 # Build targets
 /apple1-cli
 
+# Reference files/directories
+/sqlite/
+/style.9
+
