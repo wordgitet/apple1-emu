@@ -543,6 +543,9 @@ main(int argc, char *argv[])
 			bus_free(&bus);
 			return (1);
 		}
+		/* Overwrite Reset Vector to point to $0400 */
+		bus.ram[RESET_VECTOR] = 0x00;
+		bus.ram[RESET_VECTOR + 1] = 0x04;
 	}
 
 	/* Load -l binary */
