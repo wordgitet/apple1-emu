@@ -177,8 +177,8 @@ load_config_file(const char *path,
 		case 'r':
 			if (has_val != 0) {
 				if (*rom_path != NULL)
-					free(*rom_path);
-				*rom_path = strdup(val);
+					port_free(*rom_path);
+				*rom_path = port_strdup(val);
 			}
 			break;
 		case 'm':
@@ -190,17 +190,17 @@ load_config_file(const char *path,
 			break;
 		case 'l':
 			if (has_val != 0) {
-				char *dup = strdup(val);
+				char *dup = port_strdup(val);
 				char *at  = strchr(dup, '@');
 				if (at != NULL) {
 					*at = '\0';
 					if (*bin_path != NULL)
-						free(*bin_path);
-					*bin_path    = strdup(dup);
+						port_free(*bin_path);
+					*bin_path    = port_strdup(dup);
 					*bin_address = (uint16_t)strtol(at + 1,
 					    NULL, 16);
 				}
-				free(dup);
+				port_free(dup);
 			}
 			break;
 		case 'c':
@@ -233,29 +233,29 @@ load_config_file(const char *path,
 		case 'a':
 			if (has_val != 0) {
 				if (*aci_path != NULL)
-					free(*aci_path);
-				*aci_path = strdup(val);
+					port_free(*aci_path);
+				*aci_path = port_strdup(val);
 			}
 			break;
 		case 'e':
 			if (has_val != 0) {
 				if (*tape_path != NULL)
-					free(*tape_path);
-				*tape_path = strdup(val);
+					port_free(*tape_path);
+				*tape_path = port_strdup(val);
 			}
 			break;
 		case 'E':
 			if (has_val != 0) {
 				if (*save_tape_path != NULL)
-					free(*save_tape_path);
-				*save_tape_path = strdup(val);
+					port_free(*save_tape_path);
+				*save_tape_path = port_strdup(val);
 			}
 			break;
 		case 'k':
 			if (has_val != 0) {
 				if (*krusader_path != NULL)
-					free(*krusader_path);
-				*krusader_path = strdup(val);
+					port_free(*krusader_path);
+				*krusader_path = port_strdup(val);
 			}
 			break;
 		default:
@@ -399,8 +399,8 @@ main(int argc, char *argv[])
 			break;
 		case 'r':
 			if (rom_path != NULL)
-				free(rom_path);
-			rom_path = strdup(port_optarg);
+				port_free(rom_path);
+			rom_path = port_strdup(port_optarg);
 			break;
 		case 'm': {
 			int kb = atoi(port_optarg);
@@ -409,36 +409,36 @@ main(int argc, char *argv[])
 			break;
 		}
 		case 'l': {
-			char *dup = strdup(port_optarg);
+			char *dup = port_strdup(port_optarg);
 			char *at  = strchr(dup, '@');
 			if (at != NULL) {
 				*at = '\0';
 				if (bin_path != NULL)
-					free(bin_path);
-				bin_path    = strdup(dup);
+					port_free(bin_path);
+				bin_path    = port_strdup(dup);
 				bin_address = (uint16_t)strtol(at + 1,
 				    NULL, 16);
 			}
-			free(dup);
+			port_free(dup);
 			break;
 		}
 		case 'w':
-			wozmon_txt_path = strdup(port_optarg);
+			wozmon_txt_path = port_strdup(port_optarg);
 			break;
 		case 'a':
 			if (aci_path != NULL)
-				free(aci_path);
-			aci_path = strdup(port_optarg);
+				port_free(aci_path);
+			aci_path = port_strdup(port_optarg);
 			break;
 		case 'e':
 			if (tape_path != NULL)
-				free(tape_path);
-			tape_path = strdup(port_optarg);
+				port_free(tape_path);
+			tape_path = port_strdup(port_optarg);
 			break;
 		case 'E':
 			if (save_tape_path != NULL)
-				free(save_tape_path);
-			save_tape_path = strdup(port_optarg);
+				port_free(save_tape_path);
+			save_tape_path = port_strdup(port_optarg);
 			break;
 		case 'B': {
 			int baud = atoi(port_optarg);
@@ -448,8 +448,8 @@ main(int argc, char *argv[])
 		}
 		case 'k':
 			if (krusader_path != NULL)
-				free(krusader_path);
-			krusader_path = strdup(port_optarg);
+				port_free(krusader_path);
+			krusader_path = port_strdup(port_optarg);
 			break;
 		case 'c':
 			opt_uncapped = false;
@@ -573,7 +573,7 @@ main(int argc, char *argv[])
 			bus_free(&bus);
 			return (1);
 		}
-		free(bin_path);
+		port_free(bin_path);
 		bin_path = NULL;
 	}
 
@@ -590,7 +590,7 @@ main(int argc, char *argv[])
 			bus.ram[0xFFFC] = (uint8_t)(run_addr & 0xFF);
 			bus.ram[0xFFFD] = (uint8_t)(run_addr >> 8);
 		}
-		free(wozmon_txt_path);
+		port_free(wozmon_txt_path);
 		wozmon_txt_path = NULL;
 	}
 
@@ -625,7 +625,7 @@ main(int argc, char *argv[])
 		if (kcard != NULL) {
 			bus_add_card(&bus, kcard);
 		}
-		free(krusader_path);
+		port_free(krusader_path);
 		krusader_path = NULL;
 	}
 #endif /* APPLE1_OMIT_KRUSADER */

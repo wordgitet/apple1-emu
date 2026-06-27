@@ -48,18 +48,38 @@
 #  define port_malloc(sz)       (NULL)
 #  define port_free(ptr)        ((void)0)
 #  define port_realloc(ptr, sz) (NULL)
+#  define port_strdup(str)      (NULL)
 #elif defined(APPLE1_CUSTOM_MALLOC)
    /* Pluggable allocator: the user defines these three functions
     * elsewhere in their system (e.g., custom pool allocator). */
    extern void *port_malloc(size_t sz);
    extern void port_free(void *ptr);
    extern void *port_realloc(void *ptr, size_t sz);
+   extern char *port_strdup(const char *str);
 #else
    /* Default allocator: standard C library malloc/free/realloc. */
 #  include <stdlib.h>
+#  include <string.h>
 #  define port_malloc(sz)       malloc(sz)
 #  define port_free(ptr)        free(ptr)
 #  define port_realloc(ptr, sz) realloc(ptr, sz)
+
+static inline char *
+port_strdup(const char *str)
+{
+	size_t len;
+	char *dup;
+
+	if (str == NULL) {
+		return (NULL);
+	}
+	len = strlen(str) + 1;
+	dup = (char *)port_malloc(len);
+	if (dup != NULL) {
+		memcpy(dup, str, len);
+	}
+	return (dup);
+}
 #endif
 
 /*
