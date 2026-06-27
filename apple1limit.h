@@ -63,10 +63,27 @@
 #endif
 
 /*
+ * Maximum static RAM size in bytes for the emulator (default 65536).
+ * Can be overridden to compile for memory-constrained targets (e.g. 4096).
+ */
+#ifndef APPLE1_STATIC_RAM_SIZE
+#  define APPLE1_STATIC_RAM_SIZE 65536
+#endif
+#if APPLE1_STATIC_RAM_SIZE < 4096
+#  error "APPLE1_STATIC_RAM_SIZE must be at least 4096 (4KB)"
+#endif
+#if APPLE1_STATIC_RAM_SIZE > 65536
+#  error "APPLE1_STATIC_RAM_SIZE cannot exceed 65536 (64KB)"
+#endif
+
+/*
  * Default parameters.
  */
 #ifndef APPLE1_DEFAULT_RAM_KB
 #  define APPLE1_DEFAULT_RAM_KB 8
+#endif
+#if (APPLE1_DEFAULT_RAM_KB * 1024) > APPLE1_STATIC_RAM_SIZE
+#  error "APPLE1_DEFAULT_RAM_KB is larger than APPLE1_STATIC_RAM_SIZE"
 #endif
 
 #ifndef APPLE1_DEFAULT_CPU_HZ

@@ -301,13 +301,13 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 int
 main(int argc, char *argv[])
 {
+	uint8_t  static_ram[APPLE1_STATIC_RAM_SIZE];
 	struct bus bus;
-	struct cpu cpu;
 	debugger_t dbg;
-	uint8_t  static_ram[65536];
+	struct cpu cpu;
+	char     trace_line[160];
 	char     disasm_buf[64];
 	char     hex_bytes[16];
-	char     trace_line[160];
 	uint64_t last_time;
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
@@ -495,13 +495,23 @@ main(int argc, char *argv[])
 
 	/* Validate RAM size */
 	if (opt_flat_bus != 0) {
+		if (APPLE1_STATIC_RAM_SIZE < 65536) {
+			fprintf(stderr,
+			    "Error: Flat bus option requires 64 KB of RAM, but "
+			    "emulator was compiled with APPLE1_STATIC_RAM_SIZE = %u KB.\n",
+			    APPLE1_STATIC_RAM_SIZE / 1024);
+			return (1);
+		}
 		ram_size = 65536;
 	}
 	if (ram_size == 0) {
-		ram_size = 8 * 1024;
+		ram_size = APPLE1_DEFAULT_RAM_KB * 1024;
 	}
-	if (ram_size > 65536) {
-		ram_size = 65536;
+	if (ram_size > APPLE1_STATIC_RAM_SIZE) {
+		fprintf(stderr,
+		    "Error: Requested RAM size (%u KB) exceeds maximum compiled static RAM size (%u KB).\n",
+		    ram_size / 1024, APPLE1_STATIC_RAM_SIZE / 1024);
+		return (1);
 	}
 
 	/* Install signal handler */
