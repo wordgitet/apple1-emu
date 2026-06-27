@@ -1,3 +1,4 @@
+#ifndef APPLE1_OMIT_DEBUGGER
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -583,3 +584,74 @@ dbg_printf(const char *format, ...)
 	}
 	return (ret);
 }
+#else /* APPLE1_OMIT_DEBUGGER */
+
+#include "dbg.h"
+
+void
+dbg_init(debugger_t *dbg, struct cpu *cpu)
+{
+	(void)dbg;
+	(void)cpu;
+}
+
+void
+dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
+{
+	(void)dbg;
+	(void)addr;
+}
+
+void
+dbg_remove_breakpoint(debugger_t *dbg, uint16_t addr)
+{
+	(void)dbg;
+	(void)addr;
+}
+
+bool
+dbg_has_breakpoint(debugger_t *dbg, uint16_t addr)
+{
+	(void)dbg;
+	(void)addr;
+	return (false);
+}
+
+void
+dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
+{
+	(void)dbg;
+	(void)addr;
+	(void)type;
+}
+
+void
+dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr)
+{
+	(void)dbg;
+	(void)addr;
+}
+
+void
+dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
+{
+	(void)ctx;
+	(void)addr;
+	(void)is_write;
+	(void)val;
+}
+
+void
+dbg_interactive_loop(debugger_t *dbg)
+{
+	(void)dbg;
+}
+
+void
+dbg_run_command(debugger_t *dbg, const char *cmd_line)
+{
+	(void)dbg;
+	(void)cmd_line;
+}
+
+#endif /* APPLE1_OMIT_DEBUGGER */
