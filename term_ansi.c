@@ -229,6 +229,19 @@ term_poll(void)
 #endif
 
 	if (ch != 0) {
+		if (ch == 0x03) {
+			/* Ctrl-C (quit) */
+			term_shutdown();
+			exit(0);
+		}
+		if (ch == 0x0C) {
+			/* Ctrl-L (clear screen) */
+			memset(vram, 0x20, sizeof(vram));
+			cursor_x = 0;
+			cursor_y = 0;
+			vram[0][0] = 0x00;
+			return (0);
+		}
 		if (ch == 0x12) {
 			/* Ctrl-R (Reset) */
 			reset_pending = true;
