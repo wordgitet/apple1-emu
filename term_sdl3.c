@@ -1,3 +1,6 @@
+#ifdef __APPLE__
+#  define _DARWIN_C_SOURCE
+#endif
 #define _POSIX_C_SOURCE 200809L
 #include <sys/types.h>
 #include <SDL3/SDL.h>
@@ -17,7 +20,6 @@
 #include "dbg.h"
 #include "disasm.h"
 #include "embedded_roms.h"
-#include "font5x7.h"
 #include "krusader.h"
 #include "term_apple1.h"
 #include "term_config.h"
