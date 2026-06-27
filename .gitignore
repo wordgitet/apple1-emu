@@ -63,3 +63,9 @@ POM1/
 /test_dualram
 /test_bus
 
+# macOS debug symbols
+*.dSYM/
+
+# Build targets
+/apple1-cli
+
