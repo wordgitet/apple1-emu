@@ -5,9 +5,23 @@
 #define ROM_BASE      0xFF00
 #define RESET_VECTOR  0xFFFC
 
-#include <stdbool.h>
+#include "port.h"
 #include <stddef.h>
-#include <stdint.h>
+
+/* Log severity levels */
+#define BUS_LOG_INFO  0
+#define BUS_LOG_WARN  1
+#define BUS_LOG_ERROR 2
+
+/*
+ * Route a log message through the bus log callback.
+ * Silently dropped when log is NULL (embedded targets with no output).
+ */
+#define BUS_LOG(bus, lvl, msg) \
+    do { \
+        if ((bus)->log != NULL) \
+            (bus)->log((bus)->log_ctx, (lvl), (msg)); \
+    } while (0)
 
 /* Callback fired on every non-dummy bus read and write.
  * addr     - the final (post-alias-resolution) address accessed
@@ -62,6 +76,11 @@ struct bus {
 	 * Set to NULL to disable.  Used by the debugger for watchpoints. */
 	bus_access_cb_t access_cb;
 	void *access_cb_ctx;
+
+	/* Optional log callback.  If NULL, all messages are silently dropped.
+	 * Frontends set this to route errors to stderr, a GUI log, or a UART. */
+	void (*log)(void *log_ctx, int level, const char *msg);
+	void *log_ctx;
 };
 
 /* Initialize the memory bus with a configured RAM size and buffer */

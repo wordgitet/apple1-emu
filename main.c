@@ -40,6 +40,18 @@ handle_signal(int sig)
 	}
 }
 
+/* stderr log callback installed on the bus for the SDL3 and CLI frontends */
+static void
+stderr_log(void *ctx, int level, const char *msg)
+{
+	const char *prefix;
+
+	(void)ctx;
+	prefix = (level == BUS_LOG_ERROR) ? "Error" :
+	    (level == BUS_LOG_WARN)  ? "Warning" : "Info";
+	fprintf(stderr, "%s: %s\n", prefix, msg);
+}
+
 static void
 print_usage(const char *prog_name)
 {
@@ -296,7 +308,7 @@ main(int argc, char *argv[])
 	struct cpu cpu;
 	debugger_t dbg;
 	char config_path[512];
-	struct timespec last_time;
+	uint64_t last_time;
 	char *aci_path;
 	char *bin_path;
 	char *flat_bin_path;
@@ -546,6 +558,10 @@ main(int argc, char *argv[])
 	}
 	g_bus = &bus;
 
+	/* Route bus errors/warnings to stderr */
+	bus.log = stderr_log;
+	bus.log_ctx = NULL;
+
 	/* Apply configured option overrides */
 	bus.opts.uncapped = opt_uncapped;
 	bus.opts.throttle_pia = opt_throttle_pia;
@@ -668,7 +684,7 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	clock_gettime(CLOCK_MONOTONIC, &last_time);
+	last_time = port_gettime_ns();
 	prev_pc = 0xFFFF;
 	loop_count = 0;
 
@@ -677,12 +693,8 @@ main(int argc, char *argv[])
 		    (term_is_powered() == 0 ||
 			(term_is_paused() != 0 &&
 				term_should_step() == 0))) {
-			struct timespec req;
-
 			term_poll();
-			req.tv_sec = 0;
-			req.tv_nsec = 10000000; /* 10ms */
-			nanosleep(&req, NULL);
+			port_sleep_ns(10000000ULL); /* 10ms */
 			continue;
 		}
 
@@ -706,14 +718,10 @@ main(int argc, char *argv[])
 				if (bus.opts.headless != 0) {
 					dbg_interactive_loop(&dbg);
 				} else {
-					struct timespec req;
-
 					dbg.step_mode = true;
 					term_poll();
 					if (term_should_step() == 0) {
-						req.tv_sec = 0;
-						req.tv_nsec = 1000000; /* 1ms */
-						nanosleep(&req, NULL);
+						port_sleep_ns(1000000ULL); /* 1ms */
 						continue;
 					}
 				}
@@ -812,27 +820,19 @@ main(int argc, char *argv[])
 		/* 3. Timing throttler (capped mode) */
 		if (bus.opts.uncapped == 0 && bus.opts.headless == 0 &&
 		    cycle_accumulator >= CYCLES_PER_MS) {
-			struct timespec current_time;
-			long elapsed_ns, expected_ns;
+			uint64_t current_time;
+			uint64_t elapsed_ns;
+			uint64_t expected_ns;
 
-			clock_gettime(CLOCK_MONOTONIC, &current_time);
+			current_time = port_gettime_ns();
+			elapsed_ns = current_time - last_time;
+			expected_ns = 1000000ULL; /* 1 millisecond */
 
-			elapsed_ns =
-			    (current_time.tv_sec - last_time.tv_sec) *
-				1000000000L +
-			    (current_time.tv_nsec - last_time.tv_nsec);
-			expected_ns = 1000000L; /* 1 millisecond in nanoseconds */
-
-			if (elapsed_ns < expected_ns) {
-				struct timespec sleep_time;
-
-				sleep_time.tv_sec = 0;
-				sleep_time.tv_nsec = expected_ns - elapsed_ns;
-				nanosleep(&sleep_time, NULL);
-			}
+			if (elapsed_ns < expected_ns)
+				port_sleep_ns(expected_ns - elapsed_ns);
 
 			/* Sync timing reference */
-			clock_gettime(CLOCK_MONOTONIC, &last_time);
+			last_time = port_gettime_ns();
 			cycle_accumulator = 0;
 		}
 	}

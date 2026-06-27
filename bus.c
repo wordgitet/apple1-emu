@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
+#define PORT_IMPLEMENT_SHIMS
 #include "bus.h"
 #include "embedded_roms.h"
 #include "io.h"
@@ -11,17 +11,13 @@
 static void
 delay_nanoseconds(long ns)
 {
-	struct timespec current, start;
-	long elapsed;
+	uint64_t start, now;
 
-	clock_gettime(CLOCK_MONOTONIC, &start);
+	start = port_gettime_ns();
 	for (;;) {
-		clock_gettime(CLOCK_MONOTONIC, &current);
-		elapsed = (current.tv_sec - start.tv_sec) * 1000000000L +
-		    (current.tv_nsec - start.tv_nsec);
-		if (elapsed >= ns) {
+		now = port_gettime_ns();
+		if ((now - start) >= (uint64_t)ns)
 			break;
-		}
 	}
 }
 
@@ -82,9 +78,11 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 
 	f = fopen(rom_path, "rb");
 	if (f == NULL) {
-		fprintf(stderr,
-		    "Warning: '%s' not found, using embedded Wozmon ROM.\n",
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Warning: '%s' not found, using embedded Wozmon ROM.",
 		    rom_path);
+		BUS_LOG(bus, BUS_LOG_WARN, msg);
 		memcpy(bus->rom, embedded_wozmon, 256);
 		bus->rom_loaded = true;
 		return (true);
@@ -95,11 +93,12 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 	fseek(f, 0, SEEK_SET);
 
 	if (size != 256) {
-		fprintf(stderr,
-		    "Error: ROM file '%s' is %ld bytes. Apple 1 Monitor "
-		    "ROM must be exactly 256 bytes.\n",
-		    rom_path,
-		    size);
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: ROM file '%s' is %ld bytes. "
+		    "Apple 1 Monitor ROM must be exactly 256 bytes.",
+		    rom_path, size);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		fclose(f);
 		return (false);
 	}
@@ -108,9 +107,10 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 	fclose(f);
 
 	if (read_bytes != 256) {
-		fprintf(stderr,
-		    "Error: Failed to read 256 bytes from '%s'\n",
-		    rom_path);
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Failed to read 256 bytes from '%s'", rom_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
@@ -128,9 +128,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 
 	f = fopen(bin_path, "rb");
 	if (f == NULL) {
-		fprintf(stderr,
-		    "Error: Could not open binary file '%s'\n",
-		    bin_path);
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Could not open binary file '%s'", bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
@@ -139,9 +140,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 	fseek(f, 0, SEEK_SET);
 
 	if (size <= 0) {
-		fprintf(stderr,
-		    "Error: Binary file '%s' is empty.\n",
-		    bin_path);
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Binary file '%s' is empty.", bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		fclose(f);
 		return (false);
 	}
@@ -149,14 +151,13 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 	for (addr = address; addr < (uint32_t)address + size; addr++) {
 		if (addr > 0xFFFF ||
 		    bus_is_ram_address(bus, (uint16_t)addr) == 0) {
-			fprintf(stderr,
-			    "Error: Binary file '%s' (size %ld bytes) "
-			    "loaded at "
-			    "0x%04X exceeds configured RAM size (%u KB).\n",
-			    bin_path,
-			    size,
-			    address,
+			char msg[512];
+			snprintf(msg, sizeof(msg),
+			    "Error: Binary file '%s' (%ld bytes) at "
+			    "0x%04X exceeds RAM size (%u KB).",
+			    bin_path, size, address,
 			    bus->ram_size / 1024);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			fclose(f);
 			return (false);
 		}
@@ -166,17 +167,22 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 	fclose(f);
 
 	if (read_bytes != (size_t)size) {
-		fprintf(stderr,
-		    "Error: Failed to read entire binary file '%s'\n",
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Failed to read entire binary file '%s'",
 		    bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
-	printf("Loaded '%s' (%ld bytes) into RAM at 0x%04X - 0x%04X\n",
-	    bin_path,
-	    size,
-	    address,
-	    (uint16_t)(address + size - 1));
+	{
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Loaded '%s' (%ld bytes) into RAM at 0x%04X-0x%04X",
+		    bin_path, size, address,
+		    (uint16_t)(address + size - 1));
+		BUS_LOG(bus, BUS_LOG_INFO, msg);
+	}
 	return (true);
 }
 
@@ -209,9 +215,10 @@ bus_load_wozmon_txt(struct bus *bus,
 
 	f = fopen(txt_path, "r");
 	if (f == NULL) {
-		fprintf(stderr,
-		    "Error: Could not open text file '%s'\n",
-		    txt_path);
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Could not open text file '%s'", txt_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
@@ -220,7 +227,10 @@ bus_load_wozmon_txt(struct bus *bus,
 	fseek(f, 0, SEEK_SET);
 
 	if (size <= 0) {
-		fprintf(stderr, "Error: Text file '%s' is empty.\n", txt_path);
+		char msg[512];
+		snprintf(msg, sizeof(msg),
+		    "Error: Text file '%s' is empty.", txt_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		fclose(f);
 		return (false);
 	}
@@ -404,9 +414,13 @@ bus_load_wozmon_txt(struct bus *bus,
 		return (false);
 	}
 
-	printf("Loaded '%s' (%d bytes) via Woz Monitor text format\n",
-	    txt_path,
-	    total_bytes);
+	{
+		char msg[256];
+		snprintf(msg, sizeof(msg),
+		    "Loaded '%s' (%d bytes) via Woz Monitor text format",
+		    txt_path, total_bytes);
+		BUS_LOG(bus, BUS_LOG_INFO, msg);
+	}
 	return (true);
 }
 
@@ -659,8 +673,7 @@ bus_add_card(struct bus *bus, struct expansion_card *card)
 	if (bus->num_cards < 8) {
 		bus->cards[bus->num_cards++] = card;
 	} else {
-		fprintf(stderr,
-		    "Error: Maximum number of expansion cards (8) "
-		    "exceeded.\n");
+		BUS_LOG(bus, BUS_LOG_ERROR,
+		    "Error: Maximum number of expansion cards (8) exceeded.");
 	}
 }
