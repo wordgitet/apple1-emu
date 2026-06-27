@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "bus.h"
 #include "disasm.h"
 
 typedef enum {

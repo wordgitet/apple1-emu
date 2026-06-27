@@ -4,9 +4,8 @@
 #include "port.h"
 #include "apple1limit.h"
 
-#ifndef APPLE1_OMIT_DEBUGGER
-
 #include <stdbool.h>
+
 #include "cpu.h"
 
 typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
@@ -19,6 +18,7 @@ typedef struct {
 typedef void (*dbg_out_cb_t)(void *ctx, const char *msg);
 
 typedef struct {
+#ifndef APPLE1_OMIT_DEBUGGER
 	struct cpu *cpu;
 	uint16_t breakpoints[APPLE1_MAX_BREAKPOINTS];
 	int num_breakpoints;
@@ -28,6 +28,9 @@ typedef struct {
 	uint16_t current_instruction_pc;
 	dbg_out_cb_t out;
 	void *out_ctx;
+#else
+	int dummy;
+#endif
 } debugger_t;
 
 void
@@ -50,7 +53,5 @@ void
 dbg_interactive_loop(debugger_t *dbg);
 void
 dbg_run_command(debugger_t *dbg, const char *cmd_line);
-
-#endif /* APPLE1_OMIT_DEBUGGER */
 
 #endif /* DBG_H */
