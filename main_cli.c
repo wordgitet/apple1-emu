@@ -275,14 +275,21 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 	int i;
 
 	for (i = 0; i < bus->num_cards; i++) {
+#ifndef APPLE1_OMIT_ACI
 		if (strcmp(bus->cards[i]->name, "ACI") == 0) {
 			if (save_tape_path != NULL) {
 				aci_save_tape(bus->cards[i], save_tape_path);
 			}
 			aci_free(bus->cards[i]);
-		} else if (strcmp(bus->cards[i]->name, "Krusader") == 0) {
+		} else
+#endif
+#ifndef APPLE1_OMIT_KRUSADER
+		if (strcmp(bus->cards[i]->name, "Krusader") == 0) {
 			krusader_free(bus->cards[i]);
 		}
+#else
+		(void)0;
+#endif
 	}
 	bus->num_cards = 0;
 }
@@ -498,7 +505,9 @@ main(int argc, char *argv[])
 	}
 
 	/* Install signal handler */
+#ifdef SIGINT
 	signal(SIGINT,  handle_signal);
+#endif
 #ifdef SIGTERM
 	signal(SIGTERM, handle_signal);
 #endif
@@ -576,6 +585,7 @@ main(int argc, char *argv[])
 	}
 
 	/* ACI expansion card */
+#ifndef APPLE1_OMIT_ACI
 	if (aci_path != NULL) {
 		aci_card = aci_create(&bus, aci_path);
 		if (aci_card != NULL) {
@@ -595,8 +605,10 @@ main(int argc, char *argv[])
 			return (1);
 		}
 	}
+#endif /* APPLE1_OMIT_ACI */
 
 	/* Krusader */
+#ifndef APPLE1_OMIT_KRUSADER
 	if (krusader_path != NULL) {
 		struct expansion_card *kcard;
 		kcard = krusader_create(&bus, krusader_path);
@@ -606,6 +618,7 @@ main(int argc, char *argv[])
 		free(krusader_path);
 		krusader_path = NULL;
 	}
+#endif /* APPLE1_OMIT_KRUSADER */
 
 	/* Debugger init */
 	cpu_init(&cpu, &bus);

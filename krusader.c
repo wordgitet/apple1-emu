@@ -5,6 +5,7 @@
  * Static storage supports one Krusader card instance at a time, which
  * is all the real hardware ever allowed.
  */
+#ifndef APPLE1_OMIT_KRUSADER
 #include <stdio.h>
 #include <string.h>
 
@@ -110,3 +111,5 @@ krusader_free(struct expansion_card *card)
 	memset(&s_kru,  0, sizeof(s_kru));
 	memset(&s_card, 0, sizeof(s_card));
 }
+
+#endif /* APPLE1_OMIT_KRUSADER */

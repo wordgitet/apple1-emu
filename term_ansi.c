@@ -2,6 +2,9 @@
 #  include <conio.h>
 #  include <windows.h>
 #  define TERM_WINDOWS
+#elif defined(__RTP__) || defined(_WRS_KERNEL)
+/* VxWorks doesn't support unix-style raw mode, use headless/dummy */
+#  define TERM_NO_OS
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__QNX__) || defined(__haiku__) || defined(__rtems__)
 #  include <sys/select.h>
 #  include <termios.h>
@@ -45,6 +48,35 @@ scroll_up(void)
 	memset(vram[23], 0x20, 40);
 }
 
+static void
+ansi_out(const char *buf, size_t len)
+{
+#if defined(TERM_WINDOWS)
+	HANDLE h_out;
+	DWORD written;
+
+	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (h_out != INVALID_HANDLE_VALUE) {
+		WriteConsoleA(h_out, buf, (DWORD)len, &written, NULL);
+	}
+#elif defined(TERM_POSIX)
+	(void)write(STDOUT_FILENO, buf, len);
+#else
+	/* No OS / VxWorks: fallback to stdout if available */
+	size_t i;
+	for (i = 0; i < len; i++) {
+		putchar(buf[i]);
+	}
+	fflush(stdout);
+#endif
+}
+
+static void
+ansi_out_char(char c)
+{
+	ansi_out(&c, 1);
+}
+
 void
 term_init(void)
 {
@@ -81,16 +113,14 @@ term_init(void)
 	(void)raw_mode_active;
 #endif
 	/* Hide cursor and clear physical screen */
-	printf("\x1b[?25l\x1b[2J\x1b[H");
-	fflush(stdout);
+	ansi_out("\x1b[?25l\x1b[2J\x1b[H", 12);
 }
 
 void
 term_shutdown(void)
 {
 	/* Show cursor, clear screen, reset attributes */
-	printf("\x1b[?25h\x1b[0m\x1b[2J\x1b[H");
-	fflush(stdout);
+	ansi_out("\x1b[?25h\x1b[0m\x1b[2J\x1b[H", 16);
 
 	if (raw_mode_active == true) {
 #if defined(TERM_WINDOWS)
@@ -159,19 +189,18 @@ term_update(void)
 {
 	int x, y;
 
-	printf("\x1b[H");
+	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
 			uint8_t c = vram[y][x];
 			if (c == 0x00) {
-				printf("\x1b[7m@\x1b[0m");
+				ansi_out("\x1b[7m@\x1b[0m", 11);
 			} else {
-				putchar(c);
+				ansi_out_char((char)c);
 			}
 		}
-		putchar('\n');
+		ansi_out_char('\n');
 	}
-	fflush(stdout);
 }
 
 uint8_t

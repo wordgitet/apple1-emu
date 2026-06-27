@@ -10,6 +10,8 @@
 #include "io.h"
 #include "term_apple1.h"
 
+static debugger_t *s_active_dbg = NULL;
+
 int
 dbg_printf(const char *format, ...);
 #define printf(...) dbg_printf(__VA_ARGS__)
@@ -103,6 +105,9 @@ dbg_init(debugger_t *dbg, struct cpu *cpu)
 	dbg->num_watchpoints = 0;
 	dbg->step_mode = true;
 	dbg->current_instruction_pc = 0;
+	dbg->out = NULL;
+	dbg->out_ctx = NULL;
+	s_active_dbg = dbg;
 }
 
 void
@@ -121,9 +126,9 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 		}
 	}
 
-	if (dbg->num_watchpoints >= MAX_WATCHPOINTS) {
+	if (dbg->num_watchpoints >= APPLE1_MAX_WATCHPOINTS) {
 		printf("Error: Maximum number of watchpoints reached (%d).\n",
-		    MAX_WATCHPOINTS);
+		    APPLE1_MAX_WATCHPOINTS);
 		return;
 	}
 
@@ -213,9 +218,9 @@ dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
 		printf("Breakpoint at $%04X already exists.\n", addr);
 		return;
 	}
-	if (dbg->num_breakpoints >= MAX_BREAKPOINTS) {
+	if (dbg->num_breakpoints >= APPLE1_MAX_BREAKPOINTS) {
 		printf("Error: Maximum number of breakpoints reached (%d).\n",
-		    MAX_BREAKPOINTS);
+		    APPLE1_MAX_BREAKPOINTS);
 		return;
 	}
 	dbg->breakpoints[dbg->num_breakpoints++] = addr;
@@ -576,7 +581,9 @@ dbg_printf(const char *format, ...)
 	ret = vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
 
-	if (g_bus != NULL && g_bus->opts.headless != 0) {
+	if (s_active_dbg != NULL && s_active_dbg->out != NULL) {
+		s_active_dbg->out(s_active_dbg->out_ctx, buf);
+	} else if (g_bus != NULL && g_bus->opts.headless != 0) {
 		fputs(buf, stdout);
 		fflush(stdout);
 	} else {

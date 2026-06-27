@@ -40,6 +40,35 @@
 #endif
 
 /*
+ * Memory Allocator Portability Shim
+ */
+#if defined(APPLE1_ZERO_MALLOC)
+   /* Stub allocator: always returns NULL, never calls system heap.
+    * Allows linking on bare-metal systems with no allocator. */
+#  define port_malloc(sz)       (NULL)
+#  define port_free(ptr)        ((void)0)
+#  define port_realloc(ptr, sz) (NULL)
+#elif defined(APPLE1_CUSTOM_MALLOC)
+   /* Pluggable allocator: the user defines these three functions
+    * elsewhere in their system (e.g., custom pool allocator). */
+   extern void *port_malloc(size_t sz);
+   extern void port_free(void *ptr);
+   extern void *port_realloc(void *ptr, size_t sz);
+#else
+   /* Default allocator: standard C library malloc/free/realloc. */
+#  include <stdlib.h>
+#  define port_malloc(sz)       malloc(sz)
+#  define port_free(ptr)        free(ptr)
+#  define port_realloc(ptr, sz) realloc(ptr, sz)
+#endif
+
+/*
+ * Portable Xorshift pseudo-random number generator (PRNG) shims
+ */
+uint32_t port_rand(void);
+void port_srand(uint32_t seed);
+
+/*
  * Getopt Shim Declaration
  */
 extern char *port_optarg;
@@ -69,6 +98,26 @@ int port_opterr = 1;
 int port_optopt = 0;
 
 static int optpos = 1;
+static uint32_t g_rand_state = 0xACE1; /* Default seed */
+
+uint32_t
+port_rand(void)
+{
+	uint32_t x;
+
+	x = g_rand_state;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	g_rand_state = x;
+	return (x);
+}
+
+void
+port_srand(uint32_t seed)
+{
+	g_rand_state = seed ? seed : 0xACE1;
+}
 
 int
 port_getopt(int argc, char *const argv[], const char *optstring)
@@ -89,9 +138,6 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 
 	if (ch == '\0' || optchar == NULL) {
 		port_optopt = ch;
-		if (port_opterr != 0) {
-			fprintf(stderr, "%s: illegal option -- %c\n", argv[0], ch);
-		}
 		optpos = 1;
 		port_optind++;
 		return ('?');
@@ -105,9 +151,6 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 			port_optarg = argv[port_optind];
 		} else {
 			port_optopt = ch;
-			if (port_opterr != 0) {
-				fprintf(stderr, "%s: option requires an argument -- %c\n", argv[0], ch);
-			}
 			optpos = 1;
 			port_optind++;
 			return (optstring[0] == ':' ? ':' : '?');
@@ -182,6 +225,22 @@ port_sleep_ns(uint64_t ns)
 	nanosleep(&req, NULL);
 }
 
+#elif defined(__RTP__) || defined(_WRS_KERNEL)
+/* VxWorks */
+#  include <tickLib.h>
+#  include <sysLib.h>
+#  include <taskLib.h>
+uint64_t
+port_gettime_ns(void)
+{
+	return ((uint64_t)tickGet() * 1000000000ULL / sysClkRateGet());
+}
+
+void
+port_sleep_ns(uint64_t ns)
+{
+	taskDelay((int)(ns * sysClkRateGet() / 1000000000ULL) + 1);
+}
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
 #  ifndef _POSIX_C_SOURCE

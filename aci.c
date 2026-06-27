@@ -1,7 +1,8 @@
+#ifndef APPLE1_OMIT_ACI
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#include "bus.h"
 #include "aci.h"
 
 struct aci_card {
@@ -46,7 +47,7 @@ aci_record_toggle(struct aci_card *aci)
 				new_cap = aci->recorded_capacity == 0
 				    ? 4096
 				    : aci->recorded_capacity * 2;
-				buf = realloc(aci->recorded_durations,
+				buf = port_realloc(aci->recorded_durations,
 				    new_cap * sizeof(uint32_t));
 				if (buf != NULL) {
 					aci->recorded_durations = buf;
@@ -186,16 +187,16 @@ aci_create(struct bus *bus, const char *rom_path)
 		snprintf(msg, sizeof(msg),
 		    "Error: Failed to read ACI ROM '%s'", rom_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		free(aci);
+		port_free(aci);
 		fclose(f);
 		return (NULL);
 	}
 	fclose(f);
 
-	card = malloc(sizeof(struct expansion_card));
+	card = port_malloc(sizeof(struct expansion_card));
 	if (card == NULL) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI expansion card");
-		free(aci);
+		port_free(aci);
 		return (NULL);
 	}
 
@@ -254,7 +255,7 @@ pcm_to_durations(struct bus *bus,
 
 	cap = 4096;
 	count = 0;
-	durations = malloc(cap * sizeof(uint32_t));
+	durations = port_malloc(cap * sizeof(uint32_t));
 
 	if (durations == NULL) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate durations buffer");
@@ -286,17 +287,17 @@ pcm_to_durations(struct bus *bus,
 					BUS_LOG(bus, BUS_LOG_ERROR,
 					    "Error: Cassette signal durations "
 					    "array overflow");
-					free(durations);
+					port_free(durations);
 					return (false);
 				}
 				cap *= 2;
 				new_buf =
-				    realloc(durations, cap * sizeof(uint32_t));
+				    port_realloc(durations, cap * sizeof(uint32_t));
 
 				if (new_buf == NULL) {
 					BUS_LOG(bus, BUS_LOG_ERROR,
 					    "Failed to reallocate durations buffer");
-					free(durations);
+					port_free(durations);
 					return (false);
 				}
 				durations = new_buf;
@@ -308,7 +309,7 @@ pcm_to_durations(struct bus *bus,
 	}
 
 	if (count == 0) {
-		free(durations);
+		port_free(durations);
 		return (false);
 	}
 
@@ -396,7 +397,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			}
 		} else if (memcmp(chunk_header, "data", 4) == 0) {
 			data_size = chunk_size;
-			data_chunk = malloc(data_size);
+			data_chunk = port_malloc(data_size);
 			if (data_chunk == NULL) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate data chunk buffer");
 				fclose(f);
@@ -404,7 +405,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			}
 			if (fread(data_chunk, 1, data_size, f) != data_size) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated data chunk");
-				free(data_chunk);
+				port_free(data_chunk);
 				fclose(f);
 				return (false);
 			}
@@ -424,14 +425,14 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	}
 	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV format details");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 	if (audio_format != 1 && audio_format != 3) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR,
 		    "Error: Unsupported WAV format (only PCM and float32 "
 		    "are supported)");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 
@@ -439,7 +440,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	if (bytes_per_sample == 0 ||
 	    data_size < bytes_per_sample * channels) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Unsupported WAV sample format");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 
@@ -448,13 +449,13 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		BUS_LOG(aci->bus, BUS_LOG_ERROR,
 		    "Error: WAV file is too large (integer overflow "
 		    "prevention)");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
-	mono_samples = malloc(frame_count * sizeof(float));
+	mono_samples = port_malloc(frame_count * sizeof(float));
 	if (mono_samples == NULL) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate mixed mono samples buffer");
-		free(data_chunk);
+		port_free(data_chunk);
 		return (false);
 	}
 
@@ -505,7 +506,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		mono_samples[i] = mixed / (float)channels;
 	}
 
-	free(data_chunk);
+	port_free(data_chunk);
 
 	durations = NULL;
 	count = 0;
@@ -518,14 +519,14 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		&durations,
 		&count,
 		&initial_level) == 0) {
-		free(mono_samples);
+		port_free(mono_samples);
 		return (false);
 	}
 
-	free(mono_samples);
+	port_free(mono_samples);
 
 	if (aci->durations != NULL) {
-		free(aci->durations);
+		port_free(aci->durations);
 	}
 
 	aci->durations = durations;
@@ -737,14 +738,14 @@ aci_free(struct expansion_card *card)
 		if (card->ctx != NULL) {
 			aci = (struct aci_card *)card->ctx;
 			if (aci->durations != NULL) {
-				free(aci->durations);
+				port_free(aci->durations);
 			}
 			if (aci->recorded_durations != NULL) {
-				free(aci->recorded_durations);
+				port_free(aci->recorded_durations);
 			}
-			free(aci);
+			port_free(aci);
 		}
-		free(card);
+		port_free(card);
 	}
 }
 
@@ -759,3 +760,5 @@ aci_get_recorded_count(struct expansion_card *card)
 	aci = (struct aci_card *)card->ctx;
 	return (aci->recorded_count);
 }
+
+#endif /* APPLE1_OMIT_ACI */

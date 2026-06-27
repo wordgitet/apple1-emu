@@ -1,6 +1,10 @@
 #ifndef KRUSADER_H
 #define KRUSADER_H
 
+#include "apple1limit.h"
+
+#ifndef APPLE1_OMIT_KRUSADER
+
 #include <stdint.h>
 
 #include "bus.h"
@@ -27,5 +31,7 @@ krusader_create(struct bus *bus, const char *rom_path);
 /* Release the Krusader card (marks static slot as free). */
 void
 krusader_free(struct expansion_card *card);
+
+#endif /* APPLE1_OMIT_KRUSADER */
 
 #endif /* KRUSADER_H */

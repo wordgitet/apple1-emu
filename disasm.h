@@ -1,6 +1,10 @@
 #ifndef DISASM_H
 #define DISASM_H
 
+#include "apple1limit.h"
+
+#ifndef APPLE1_OMIT_DISASM
+
 #include <stdint.h>
 
 #include "bus.h"
@@ -10,5 +14,7 @@
  * Returns the number of bytes consumed by the instruction (1, 2, or 3). */
 int
 cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str);
+
+#endif /* APPLE1_OMIT_DISASM */
 
 #endif /* DISASM_H */

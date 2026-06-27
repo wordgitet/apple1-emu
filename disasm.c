@@ -1,3 +1,4 @@
+#ifndef APPLE1_OMIT_DISASM
 #include <stdint.h>
 #include <stdio.h>
 
@@ -405,3 +406,5 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 
 	return (bytes);
 }
+
+#endif /* APPLE1_OMIT_DISASM */

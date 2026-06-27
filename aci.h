@@ -1,9 +1,12 @@
 #ifndef ACI_H
 #define ACI_H
 
-#define ACI_CLOCK 1022727
-
+#include "apple1limit.h"
 #include "bus.h"
+
+#ifndef APPLE1_OMIT_ACI
+
+#define ACI_CLOCK 1022727
 
 /* Create and initialize the ACI cassette interface card */
 struct expansion_card *
@@ -24,5 +27,7 @@ aci_free(struct expansion_card *card);
 /* Get recorded pulse transition count */
 uint32_t
 aci_get_recorded_count(struct expansion_card *card);
+
+#endif /* APPLE1_OMIT_ACI */
 
 #endif /* ACI_H */

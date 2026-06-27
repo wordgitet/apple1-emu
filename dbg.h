@@ -1,12 +1,13 @@
 #ifndef DBG_H
 #define DBG_H
 
+#include "port.h"
+#include "apple1limit.h"
+
+#ifndef APPLE1_OMIT_DEBUGGER
+
 #include <stdbool.h>
-
 #include "cpu.h"
-
-#define MAX_BREAKPOINTS 32
-#define MAX_WATCHPOINTS 32
 
 typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
 
@@ -15,14 +16,18 @@ typedef struct {
 	wp_type_t type;
 } watchpoint_t;
 
+typedef void (*dbg_out_cb_t)(void *ctx, const char *msg);
+
 typedef struct {
 	struct cpu *cpu;
-	uint16_t breakpoints[MAX_BREAKPOINTS];
+	uint16_t breakpoints[APPLE1_MAX_BREAKPOINTS];
 	int num_breakpoints;
-	watchpoint_t watchpoints[MAX_WATCHPOINTS];
+	watchpoint_t watchpoints[APPLE1_MAX_WATCHPOINTS];
 	int num_watchpoints;
 	bool step_mode;
 	uint16_t current_instruction_pc;
+	dbg_out_cb_t out;
+	void *out_ctx;
 } debugger_t;
 
 void
@@ -45,5 +50,7 @@ void
 dbg_interactive_loop(debugger_t *dbg);
 void
 dbg_run_command(debugger_t *dbg, const char *cmd_line);
+
+#endif /* APPLE1_OMIT_DEBUGGER */
 
 #endif /* DBG_H */

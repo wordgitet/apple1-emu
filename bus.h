@@ -6,6 +6,7 @@
 #define RESET_VECTOR  0xFFFC
 
 #include "port.h"
+#include "apple1limit.h"
 #include <stddef.h>
 
 /* Log severity levels */
@@ -23,12 +24,14 @@
             (bus)->log((bus)->log_ctx, (lvl), (msg)); \
     } while (0)
 
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 /* Callback fired on every non-dummy bus read and write.
  * addr     - the final (post-alias-resolution) address accessed
  * is_write - true for writes, false for reads
  * val      - the byte written or read */
 typedef void (
     *bus_access_cb_t)(void *ctx, uint16_t addr, bool is_write, uint8_t val);
+#endif
 
 struct pia_6821 {
 	uint8_t kbd_data;    /* 0xD010: Keyboard Data */
@@ -68,14 +71,16 @@ struct bus {
 	struct pia_6821 pia;
 	struct emu_opts opts;
 	uint8_t last_bus_value;
-	struct expansion_card *cards[8];
+	struct expansion_card *cards[APPLE1_MAX_CARDS];
 	int num_cards;
 	uint32_t kbd_bounce_cycles; /* remaining bounce window (in calls) */
 
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 	/* Optional callback fired on every non-dummy bus access (read or write).
 	 * Set to NULL to disable.  Used by the debugger for watchpoints. */
 	bus_access_cb_t access_cb;
 	void *access_cb_ctx;
+#endif
 
 	/* Optional log callback.  If NULL, all messages are silently dropped.
 	 * Frontends set this to route errors to stderr, a GUI log, or a UART. */
@@ -91,6 +96,18 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size);
 void
 bus_free(struct bus *bus);
 
+/* Load binary from buffer into RAM at address */
+bool
+bus_load_bin_buf(struct bus *bus,
+    const uint8_t *data, size_t len, uint16_t address);
+
+/* Load Woz Monitor formatted text from a buffer. */
+bool
+bus_load_wozmon_txt_buf(struct bus *bus,
+    const char *text, size_t len,
+    uint16_t *run_address, bool *has_run_address);
+
+#ifndef APPLE1_OMIT_DISKIO
 /* Load exactly 256-byte ROM image (Woz Monitor) at 0xFF00-0xFFFF */
 bool
 bus_load_rom(struct bus *bus, const char *rom_path);
@@ -107,6 +124,7 @@ bus_load_wozmon_txt(struct bus *bus,
     const char *txt_path,
     uint16_t *run_address,
     bool *has_run_address);
+#endif
 
 /* Read a byte from the bus */
 uint8_t
