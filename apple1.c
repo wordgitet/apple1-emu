@@ -15,6 +15,13 @@
 #define PORT_H
 
 /*
+ * size_t is needed by the allocator shims regardless of which path is taken.
+ * <stddef.h> is the lightest standard header that defines it and is available
+ * in every C89 implementation, including freestanding environments.
+ */
+#include <stddef.h>
+
+/*
  * C89 / C99 Type Portability Shim
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -509,6 +516,7 @@ static const uint8_t embedded_2513_charmap[2048] = {
 /* ---- end embedded_roms.h ---- */
 
 /* amalgamation: omit #include "io.h" */
+/* amalgamation: omit #include "term_apple1.h" */
 
 static void
 delay_microseconds(long us)
@@ -535,6 +543,24 @@ bus_is_ram_address(struct bus *bus, uint16_t address)
 		return (false);
 	}
 	return ((uint32_t)address < bus->ram_size);
+}
+
+/*
+ * Translate a logical bus address to a physical index into bus->ram.
+ *
+ * In 8 KB split mode the Apple-1 maps 0x0000-0x0FFF to the first bank and
+ * 0xE000-0xEFFF to the second bank (offset 0x1000 in the 8 KB array).
+ * Without this translation any access to the upper window would index far
+ * beyond the end of the allocated buffer and corrupt host memory.
+ */
+static inline uint16_t
+bus_translate_ram_address(struct bus *bus, uint16_t address)
+{
+	if (bus->ram_size == 8192) {
+		if (address >= 0xE000 && address < 0xF000)
+			return (uint16_t)(address - 0xD000);
+	}
+	return (address);
 }
 
 bool
@@ -572,6 +598,7 @@ bus_load_bin_buf(struct bus *bus,
     const uint8_t *data, size_t len, uint16_t address)
 {
 	uint32_t addr;
+	uint32_t i;
 
 	if (len == 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Binary buffer is empty.");
@@ -591,7 +618,20 @@ bus_load_bin_buf(struct bus *bus,
 		}
 	}
 
-	memcpy(bus->ram + address, data, len);
+	/*
+	 * Copy byte-by-byte through the address translator so that split-RAM
+	 * configurations (e.g. 8 KB mode with 0xE000 window) are handled
+	 * correctly.  A plain memcpy would use the raw logical address as a
+	 * physical array index and overflow the backing buffer.
+	 */
+	for (i = 0; i < (uint32_t)len; i++) {
+		uint16_t la;
+		uint16_t pa;
+
+		la = (uint16_t)(address + i);
+		pa = bus_translate_ram_address(bus, la);
+		bus->ram[pa] = data[i];
+	}
 
 	{
 		char msg[256];
@@ -733,7 +773,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[current_addr] = val;
+						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -764,7 +804,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[current_addr] = val;
+						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -789,7 +829,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				    (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
 				if (bus_is_ram_address(bus, current_addr) != 0) {
-					bus->ram[current_addr] = val;
+					bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
 				}
 				current_addr++;
 				total_bytes++;
@@ -1015,8 +1055,21 @@ pia_read(struct bus *bus, uint16_t address)
 	case PIA_BASE + 2:
 		/* Always return 0x00 so that Wozmon doesn't hang in a busy loop */
 		return (0x00);
-	case PIA_BASE + 3:
-		return (bus->pia.dsp_control);
+	case PIA_BASE + 3: {
+		uint8_t ctrl = bus->pia.dsp_control;
+		/*
+		 * Bit 7 is the display-ready flag.  In baud-rate mode it is
+		 * cleared until term_dsp_ready() reports that the inter-
+		 * character window has expired.  This is non-blocking: the
+		 * CPU keeps running and polling, exactly as Wozmon does on
+		 * real hardware.
+		 */
+		if (term_dsp_ready() == 0)
+			ctrl &= ~0x80;
+		else
+			ctrl |= 0x80;
+		return (ctrl);
+	}
 	}
 	return (0x00);
 }
@@ -1070,7 +1123,7 @@ bus_read(struct bus *bus, uint16_t address)
 	result = bus->last_bus_value; /* default: open-bus float */
 
 	if (bus->opts.flat_bus != 0) {
-		result = bus->ram[address];
+		result = bus->ram[bus_translate_ram_address(bus, address)];
 		bus->last_bus_value = result;
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
@@ -1107,7 +1160,7 @@ bus_read(struct bus *bus, uint16_t address)
 			}
 			if (card_hit == 0) {
 				if (bus_is_ram_address(bus, address) != 0)
-					bus->last_bus_value = bus->ram[address];
+					bus->last_bus_value = bus->ram[bus_translate_ram_address(bus, address)];
 				result = bus->last_bus_value;
 			}
 		}
@@ -1138,7 +1191,7 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 	bus->last_bus_value = value;
 
 	if (bus->opts.flat_bus != 0) {
-		bus->ram[address] = value;
+		bus->ram[bus_translate_ram_address(bus, address)] = value;
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
 		if ((address & 0xF000) == 0xD000)
@@ -1172,7 +1225,7 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			}
 			if (card_hit == 0 &&
 			    bus_is_ram_address(bus, address) != 0)
-				bus->ram[address] = value;
+				bus->ram[bus_translate_ram_address(bus, address)] = value;
 		}
 	}
 
@@ -1637,7 +1690,17 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 
 	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	bin_result = cpu->a + m + carry;
-	set_flag(cpu, FLAG_ZERO, bin_result == 0);
+
+	/*
+	 * NMOS 6502 BCD quirk: N, V, and Z are set from the intermediate
+	 * binary result before decimal correction.  Only the CMOS 65C02
+	 * updates these flags from the final adjusted value.
+	 */
+	set_flag(cpu, FLAG_ZERO,     bin_result == 0);
+	set_flag(cpu, FLAG_NEGATIVE, (bin_result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW,
+	    (~(cpu->a ^ m) & (cpu->a ^ bin_result) & 0x80) != 0);
+
 	low = (cpu->a & 0x0F) + (m & 0x0F) + carry;
 	high = (cpu->a >> 4) + (m >> 4);
 	if (low > 9) {
@@ -1645,10 +1708,6 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 		high++;
 	}
 	result = (high << 4) | (low & 0x0F);
-	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu,
-	    FLAG_OVERFLOW,
-	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high > 9) {
 		result -= 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, true);
@@ -1666,7 +1725,17 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 
 	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	bin_result = cpu->a + (m ^ 0xFF) + carry;
-	set_flag(cpu, FLAG_ZERO, bin_result == 0);
+
+	/*
+	 * NMOS 6502 BCD quirk: N, V, and Z are set from the intermediate
+	 * binary result before decimal correction.  Only the CMOS 65C02
+	 * updates these flags from the final adjusted value.
+	 */
+	set_flag(cpu, FLAG_ZERO,     bin_result == 0);
+	set_flag(cpu, FLAG_NEGATIVE, (bin_result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW,
+	    ((cpu->a ^ m) & (cpu->a ^ bin_result) & 0x80) != 0);
+
 	carry_inv = (carry == 0) ? 1 : 0;
 	low = (int8_t)(cpu->a & 0x0F) - (int8_t)(m & 0x0F) - carry_inv;
 	high = (int8_t)(cpu->a >> 4) - (int8_t)(m >> 4);
@@ -1675,10 +1744,6 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 		high--;
 	}
 	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
-	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu,
-	    FLAG_OVERFLOW,
-	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high < 0) {
 		result += 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, false);
@@ -6370,6 +6435,14 @@ static bool reset_pending = false;
 /* Shared global authentic speed setting */
 uint32_t opt_baud = 0;
 
+/*
+ * Timestamp of the most recent character written to the display, in
+ * microseconds.  Used by term_dsp_ready() to implement a non-blocking
+ * baud-rate delay: the DSP "busy" window expires naturally as the CPU
+ * continues to execute, so the main loop never sleeps.
+ */
+static uint32_t last_write_us = 0;
+
 static void
 scroll_up(void)
 {
@@ -6520,9 +6593,28 @@ term_write(uint8_t val)
 	}
 
 	if (opt_baud > 0) {
-		/* 10 bits per char, sleep accordingly */
-		port_sleep_us(10000000UL / opt_baud);
+		/*
+		 * Record the time of this write.  The baud-rate delay is
+		 * enforced non-blocking via term_dsp_ready(): the PIA busy
+		 * bit stays clear until the window expires, letting the CPU
+		 * keep running and polling without freezing the main loop.
+		 */
+		last_write_us = port_gettime_us();
 	}
+}
+
+bool
+term_dsp_ready(void)
+{
+	uint32_t now;
+	uint32_t window_us;
+
+	if (opt_baud == 0)
+		return (true);
+
+	now = port_gettime_us();
+	window_us = 10000000UL / opt_baud; /* 10 bits per character */
+	return ((now - last_write_us) >= window_us);
 }
 
 void

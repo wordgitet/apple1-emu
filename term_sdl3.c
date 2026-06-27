@@ -1089,8 +1089,10 @@ load_wozmon_txt_gui(void)
 	if (g_bus &&
 	    bus_load_wozmon_txt(g_bus, picked, &run_addr, &has_run_addr)) {
 		if (has_run_addr) {
-			g_bus->ram[RESET_VECTOR] = run_addr & 0xFF;
-			g_bus->ram[RESET_VECTOR + 1] = run_addr >> 8;
+			if ((uint32_t)(RESET_VECTOR + 1) < g_bus->ram_size) {
+				g_bus->ram[RESET_VECTOR]     = run_addr & 0xFF;
+				g_bus->ram[RESET_VECTOR + 1] = run_addr >> 8;
+			}
 			reset_pending = true;
 			snprintf(status_text,
 			    sizeof(status_text),
@@ -3022,6 +3024,13 @@ term_reset_pending(void)
 	bool pending = reset_pending;
 	reset_pending = false;
 	return (pending);
+}
+
+bool
+term_dsp_ready(void)
+{
+	/* The SDL3 GUI manages baud-rate display independently; always ready. */
+	return (true);
 }
 
 bool

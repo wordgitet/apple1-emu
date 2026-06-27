@@ -2,6 +2,13 @@
 #define PORT_H
 
 /*
+ * size_t is needed by the allocator shims regardless of which path is taken.
+ * <stddef.h> is the lightest standard header that defines it and is available
+ * in every C89 implementation, including freestanding environments.
+ */
+#include <stddef.h>
+
+/*
  * C89 / C99 Type Portability Shim
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L

@@ -37,6 +37,14 @@ static bool reset_pending = false;
 /* Shared global authentic speed setting */
 uint32_t opt_baud = 0;
 
+/*
+ * Timestamp of the most recent character written to the display, in
+ * microseconds.  Used by term_dsp_ready() to implement a non-blocking
+ * baud-rate delay: the DSP "busy" window expires naturally as the CPU
+ * continues to execute, so the main loop never sleeps.
+ */
+static uint32_t last_write_us = 0;
+
 static void
 scroll_up(void)
 {
@@ -187,9 +195,28 @@ term_write(uint8_t val)
 	}
 
 	if (opt_baud > 0) {
-		/* 10 bits per char, sleep accordingly */
-		port_sleep_us(10000000UL / opt_baud);
+		/*
+		 * Record the time of this write.  The baud-rate delay is
+		 * enforced non-blocking via term_dsp_ready(): the PIA busy
+		 * bit stays clear until the window expires, letting the CPU
+		 * keep running and polling without freezing the main loop.
+		 */
+		last_write_us = port_gettime_us();
 	}
+}
+
+bool
+term_dsp_ready(void)
+{
+	uint32_t now;
+	uint32_t window_us;
+
+	if (opt_baud == 0)
+		return (true);
+
+	now = port_gettime_us();
+	window_us = 10000000UL / opt_baud; /* 10 bits per character */
+	return ((now - last_write_us) >= window_us);
 }
 
 void

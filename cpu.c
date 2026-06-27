@@ -363,7 +363,17 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 
 	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	bin_result = cpu->a + m + carry;
-	set_flag(cpu, FLAG_ZERO, bin_result == 0);
+
+	/*
+	 * NMOS 6502 BCD quirk: N, V, and Z are set from the intermediate
+	 * binary result before decimal correction.  Only the CMOS 65C02
+	 * updates these flags from the final adjusted value.
+	 */
+	set_flag(cpu, FLAG_ZERO,     bin_result == 0);
+	set_flag(cpu, FLAG_NEGATIVE, (bin_result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW,
+	    (~(cpu->a ^ m) & (cpu->a ^ bin_result) & 0x80) != 0);
+
 	low = (cpu->a & 0x0F) + (m & 0x0F) + carry;
 	high = (cpu->a >> 4) + (m >> 4);
 	if (low > 9) {
@@ -371,10 +381,6 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 		high++;
 	}
 	result = (high << 4) | (low & 0x0F);
-	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu,
-	    FLAG_OVERFLOW,
-	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high > 9) {
 		result -= 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, true);
@@ -392,7 +398,17 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 
 	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	bin_result = cpu->a + (m ^ 0xFF) + carry;
-	set_flag(cpu, FLAG_ZERO, bin_result == 0);
+
+	/*
+	 * NMOS 6502 BCD quirk: N, V, and Z are set from the intermediate
+	 * binary result before decimal correction.  Only the CMOS 65C02
+	 * updates these flags from the final adjusted value.
+	 */
+	set_flag(cpu, FLAG_ZERO,     bin_result == 0);
+	set_flag(cpu, FLAG_NEGATIVE, (bin_result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW,
+	    ((cpu->a ^ m) & (cpu->a ^ bin_result) & 0x80) != 0);
+
 	carry_inv = (carry == 0) ? 1 : 0;
 	low = (int8_t)(cpu->a & 0x0F) - (int8_t)(m & 0x0F) - carry_inv;
 	high = (int8_t)(cpu->a >> 4) - (int8_t)(m >> 4);
@@ -401,10 +417,6 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 		high--;
 	}
 	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
-	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu,
-	    FLAG_OVERFLOW,
-	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high < 0) {
 		result += 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, false);

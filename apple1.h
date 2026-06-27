@@ -17,6 +17,13 @@
 #define PORT_H
 
 /*
+ * size_t is needed by the allocator shims regardless of which path is taken.
+ * <stddef.h> is the lightest standard header that defines it and is available
+ * in every C89 implementation, including freestanding environments.
+ */
+#include <stddef.h>
+
+/*
  * C89 / C99 Type Portability Shim
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -779,6 +786,14 @@ void
 term_shutdown(void);
 void
 term_write(uint8_t val);
+/*
+ * Returns true when the display is ready to accept another character.
+ * In baud-rate mode this returns false until the inter-character delay
+ * has elapsed; the PIA dsp_control bit 7 is driven from this flag so
+ * that Wozmon's polling loop works correctly without blocking the CPU.
+ */
+bool
+term_dsp_ready(void);
 void
 term_update(void);
 uint8_t

@@ -7,6 +7,7 @@
 #include "bus.h"
 #include "embedded_roms.h"
 #include "io.h"
+#include "term_apple1.h"
 
 static void
 delay_microseconds(long us)
@@ -33,6 +34,24 @@ bus_is_ram_address(struct bus *bus, uint16_t address)
 		return (false);
 	}
 	return ((uint32_t)address < bus->ram_size);
+}
+
+/*
+ * Translate a logical bus address to a physical index into bus->ram.
+ *
+ * In 8 KB split mode the Apple-1 maps 0x0000-0x0FFF to the first bank and
+ * 0xE000-0xEFFF to the second bank (offset 0x1000 in the 8 KB array).
+ * Without this translation any access to the upper window would index far
+ * beyond the end of the allocated buffer and corrupt host memory.
+ */
+static inline uint16_t
+bus_translate_ram_address(struct bus *bus, uint16_t address)
+{
+	if (bus->ram_size == 8192) {
+		if (address >= 0xE000 && address < 0xF000)
+			return (uint16_t)(address - 0xD000);
+	}
+	return (address);
 }
 
 bool
@@ -70,6 +89,7 @@ bus_load_bin_buf(struct bus *bus,
     const uint8_t *data, size_t len, uint16_t address)
 {
 	uint32_t addr;
+	uint32_t i;
 
 	if (len == 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Binary buffer is empty.");
@@ -89,7 +109,20 @@ bus_load_bin_buf(struct bus *bus,
 		}
 	}
 
-	memcpy(bus->ram + address, data, len);
+	/*
+	 * Copy byte-by-byte through the address translator so that split-RAM
+	 * configurations (e.g. 8 KB mode with 0xE000 window) are handled
+	 * correctly.  A plain memcpy would use the raw logical address as a
+	 * physical array index and overflow the backing buffer.
+	 */
+	for (i = 0; i < (uint32_t)len; i++) {
+		uint16_t la;
+		uint16_t pa;
+
+		la = (uint16_t)(address + i);
+		pa = bus_translate_ram_address(bus, la);
+		bus->ram[pa] = data[i];
+	}
 
 	{
 		char msg[256];
@@ -231,7 +264,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[current_addr] = val;
+						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -262,7 +295,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[current_addr] = val;
+						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -287,7 +320,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				    (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
 				if (bus_is_ram_address(bus, current_addr) != 0) {
-					bus->ram[current_addr] = val;
+					bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
 				}
 				current_addr++;
 				total_bytes++;
@@ -513,8 +546,21 @@ pia_read(struct bus *bus, uint16_t address)
 	case PIA_BASE + 2:
 		/* Always return 0x00 so that Wozmon doesn't hang in a busy loop */
 		return (0x00);
-	case PIA_BASE + 3:
-		return (bus->pia.dsp_control);
+	case PIA_BASE + 3: {
+		uint8_t ctrl = bus->pia.dsp_control;
+		/*
+		 * Bit 7 is the display-ready flag.  In baud-rate mode it is
+		 * cleared until term_dsp_ready() reports that the inter-
+		 * character window has expired.  This is non-blocking: the
+		 * CPU keeps running and polling, exactly as Wozmon does on
+		 * real hardware.
+		 */
+		if (term_dsp_ready() == 0)
+			ctrl &= ~0x80;
+		else
+			ctrl |= 0x80;
+		return (ctrl);
+	}
 	}
 	return (0x00);
 }
@@ -568,7 +614,7 @@ bus_read(struct bus *bus, uint16_t address)
 	result = bus->last_bus_value; /* default: open-bus float */
 
 	if (bus->opts.flat_bus != 0) {
-		result = bus->ram[address];
+		result = bus->ram[bus_translate_ram_address(bus, address)];
 		bus->last_bus_value = result;
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
@@ -605,7 +651,7 @@ bus_read(struct bus *bus, uint16_t address)
 			}
 			if (card_hit == 0) {
 				if (bus_is_ram_address(bus, address) != 0)
-					bus->last_bus_value = bus->ram[address];
+					bus->last_bus_value = bus->ram[bus_translate_ram_address(bus, address)];
 				result = bus->last_bus_value;
 			}
 		}
@@ -636,7 +682,7 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 	bus->last_bus_value = value;
 
 	if (bus->opts.flat_bus != 0) {
-		bus->ram[address] = value;
+		bus->ram[bus_translate_ram_address(bus, address)] = value;
 	} else {
 		/* PIA 6821 alias: only A0-A1 reach the chip's RS pins. */
 		if ((address & 0xF000) == 0xD000)
@@ -670,7 +716,7 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			}
 			if (card_hit == 0 &&
 			    bus_is_ram_address(bus, address) != 0)
-				bus->ram[address] = value;
+				bus->ram[bus_translate_ram_address(bus, address)] = value;
 		}
 	}
 
