@@ -448,7 +448,7 @@ main(int argc, char *argv[])
 	opt_randomize_cold = true;
 	opt_throttle_pia   = true;
 	opt_trace          = false;
-	opt_uncapped       = true;
+	opt_uncapped       = false;
 
 	/*
 	 * First pass: pick up -f <config> so it is loaded before other
