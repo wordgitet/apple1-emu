@@ -370,6 +370,7 @@ main(int argc, char *argv[])
 	char     trace_line[160];
 	char     disasm_buf[64];
 	char     hex_bytes[16];
+	uint32_t last_render;
 	uint32_t last_time;
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
@@ -448,7 +449,7 @@ main(int argc, char *argv[])
 	opt_randomize_cold = true;
 	opt_throttle_pia   = true;
 	opt_trace          = false;
-	opt_uncapped       = false;
+	opt_uncapped       = true;
 
 	/*
 	 * First pass: pick up -f <config> so it is loaded before other
@@ -743,7 +744,8 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time  = port_gettime_us();
+	last_time   = port_gettime_us();
+	last_render = port_gettime_us();
 	prev_pc    = 0xFFFF;
 	loop_count = 0;
 
@@ -880,9 +882,13 @@ main(int argc, char *argv[])
 			cycle_accumulator = 0;
 		}
 
-		/* Render terminal */
-		if (opt_headless == false && opt_uncapped == false) {
-			term_update();
+		/* Render terminal at ~30 fps regardless of speed mode */
+		if (opt_headless == false) {
+			uint32_t now = port_gettime_us();
+			if (now - last_render >= 33333UL) {
+				term_update();
+				last_render = now;
+			}
 		}
 	}
 
