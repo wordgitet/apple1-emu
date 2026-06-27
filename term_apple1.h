@@ -1,8 +1,7 @@
 #ifndef TERM_APPLE1_H
 #define TERM_APPLE1_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "port.h"
 
 void
 term_init(void);

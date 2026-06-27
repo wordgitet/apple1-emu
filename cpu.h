@@ -1,8 +1,7 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "port.h"
 
 #include "bus.h"
 

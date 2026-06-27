@@ -4,8 +4,6 @@
 #include "port.h"
 #include "apple1limit.h"
 
-#include <stdbool.h>
-
 #include "cpu.h"
 
 typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
