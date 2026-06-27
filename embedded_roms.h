@@ -1,7 +1,7 @@
 #ifndef EMBEDDED_ROMS_H
 #define EMBEDDED_ROMS_H
 
-#include <stdint.h>
+#include "port.h"
 
 /* clang-format off */
 static const uint8_t embedded_wozmon[256] = {

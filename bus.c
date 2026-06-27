@@ -9,14 +9,14 @@
 #include "io.h"
 
 static void
-delay_nanoseconds(long ns)
+delay_microseconds(long us)
 {
-	uint64_t start, now;
+	uint32_t now, start;
 
-	start = port_gettime_ns();
+	start = port_gettime_us();
 	for (;;) {
-		now = port_gettime_ns();
-		if ((now - start) >= (uint64_t)ns)
+		now = port_gettime_us();
+		if ((now - start) >= (uint32_t)us)
 			break;
 	}
 }
@@ -119,10 +119,21 @@ bus_load_wozmon_txt_buf(struct bus *bus,
     uint16_t *run_address, bool *has_run_address)
 {
 	char *cleaned;
-	uint16_t current_addr;
+	size_t addr_digits;
+	size_t data_len;
+	size_t hex_len;
+	size_t hex_start;
+	size_t i;
+	size_t j;
+	size_t peek;
+	size_t w;
+	char addr_str[5];
+	bool first_addr;
+	bool in_comment;
 	int total_bytes;
-	bool first_addr, in_comment;
-	size_t i, w;
+	uint16_t current_addr;
+	uint16_t raddr;
+	uint8_t val;
 
 	if (len == 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Text buffer is empty.");
@@ -199,12 +210,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 		}
 
 		if (isxdigit((unsigned char)c)) {
-			size_t hex_start = i;
+			hex_start = i;
 			while (i < w && isxdigit((unsigned char)cleaned[i]))
 				i++;
-			size_t hex_len = i - hex_start;
+			hex_len = i - hex_start;
 
-			size_t peek = i;
+			peek = i;
 			while (
 			    peek < w && isspace((unsigned char)cleaned[peek]))
 				peek++;
@@ -212,9 +223,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			if (i < w &&
 			    toupper((unsigned char)cleaned[i]) == 'R') {
 				/* run command */
-				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
-				for (size_t j = 0; j + 1 < data_len; j += 2) {
-					uint8_t val =
+				data_len = hex_len > 4 ? hex_len - 4 : 0;
+				for (j = 0; j + 1 < data_len; j += 2) {
+					val =
 					    (hex_val(cleaned[hex_start + j])
 						<< 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
@@ -226,12 +237,11 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					total_bytes++;
 				}
 				if (hex_len >= 4) {
-					char addr_str[5];
 					strncpy(addr_str,
 					    &cleaned[hex_start + data_len],
 					    4);
 					addr_str[4] = '\0';
-					uint16_t raddr = (uint16_t)
+					raddr = (uint16_t)
 					    strtol(addr_str, NULL, 16);
 					if (run_address != NULL)
 						*run_address = raddr;
@@ -244,9 +254,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 			if (peek < w && cleaned[peek] == ':' && hex_len >= 3) {
 				/* Address change (and possibly some data bytes before it in merged strings) */
-				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
-				for (size_t j = 0; j + 1 < data_len; j += 2) {
-					uint8_t val =
+				data_len = hex_len > 4 ? hex_len - 4 : 0;
+				for (j = 0; j + 1 < data_len; j += 2) {
+					val =
 					    (hex_val(cleaned[hex_start + j])
 						<< 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
@@ -257,8 +267,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					current_addr++;
 					total_bytes++;
 				}
-				char addr_str[5] = { 0 };
-				size_t addr_digits = hex_len > 4 ? 4 : hex_len;
+				memset(addr_str, 0, sizeof(addr_str));
+				addr_digits = hex_len > 4 ? 4 : hex_len;
 				strncpy(addr_str,
 				    &cleaned[hex_start + hex_len - addr_digits],
 				    addr_digits);
@@ -272,8 +282,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			}
 
 			/* Data bytes */
-			for (size_t j = 0; j + 1 < hex_len; j += 2) {
-				uint8_t val =
+			for (j = 0; j + 1 < hex_len; j += 2) {
+				val =
 				    (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
 				if (bus_is_ram_address(bus, current_addr) != 0) {
@@ -550,7 +560,12 @@ pia_write(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 uint8_t
 bus_read(struct bus *bus, uint16_t address)
 {
-	uint8_t result = bus->last_bus_value; /* default: open-bus float */
+	struct expansion_card *card;
+	int i;
+	uint8_t result;
+	bool card_hit;
+
+	result = bus->last_bus_value; /* default: open-bus float */
 
 	if (bus->opts.flat_bus != 0) {
 		result = bus->ram[address];
@@ -563,7 +578,7 @@ bus_read(struct bus *bus, uint16_t address)
 		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
 		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
-			delay_nanoseconds(977);
+			delay_microseconds(1);
 
 		if (address >= ROM_BASE) {
 			if (bus->rom_loaded != 0)
@@ -574,9 +589,9 @@ bus_read(struct bus *bus, uint16_t address)
 			result = pia_read(bus, address);
 			bus->last_bus_value = result;
 		} else {
-			bool card_hit = false;
-			for (int i = 0; i < bus->num_cards; i++) {
-				struct expansion_card *card = bus->cards[i];
+			card_hit = false;
+			for (i = 0; i < bus->num_cards; i++) {
+				card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
 					if (card->read != NULL)
 						bus->last_bus_value =
@@ -614,6 +629,10 @@ bus_write(struct bus *bus, uint16_t address, uint8_t value)
 void
 bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 {
+	struct expansion_card *card;
+	int i;
+	bool card_hit;
+
 	bus->last_bus_value = value;
 
 	if (bus->opts.flat_bus != 0) {
@@ -627,7 +646,7 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
 		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
-			delay_nanoseconds(977);
+			delay_microseconds(1);
 #endif
 
 		if (address >= ROM_BASE) {
@@ -635,9 +654,9 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		} else if (address >= PIA_BASE && address <= (PIA_BASE + 3)) {
 			pia_write(bus, address, value, is_dummy);
 		} else {
-			bool card_hit = false;
-			for (int i = 0; i < bus->num_cards; i++) {
-				struct expansion_card *card = bus->cards[i];
+			card_hit = false;
+			for (i = 0; i < bus->num_cards; i++) {
+				card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
 					if (card->rom_only == 0 &&
 					    card->write != NULL)

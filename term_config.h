@@ -2,7 +2,7 @@
 #define TERM_CONFIG_H
 
 #include <SDL3/SDL.h>
-#include <stdbool.h>
+#include "port.h"
 
 void
 term_config_init(void);

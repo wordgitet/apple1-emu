@@ -30,9 +30,6 @@
 #  ifndef uint32_t
      typedef unsigned int uint32_t;
 #  endif
-#  ifndef uint64_t
-     typedef unsigned long long uint64_t;
-#  endif
 #  ifndef int8_t
      typedef signed char int8_t;
 #  endif
@@ -42,13 +39,20 @@
 #  ifndef int32_t
      typedef signed int int32_t;
 #  endif
-#  ifndef int64_t
-     typedef signed long long int64_t;
-#  endif
 #  ifndef bool
 #    define bool int
 #    define true 1
 #    define false 0
+#  endif
+#  ifndef UINT32_MAX
+#    define UINT32_MAX 4294967295UL
+#  endif
+#endif
+
+/* inline keyword fallback for C89 compilers */
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
+#  ifndef inline
+#    define inline
 #  endif
 #endif
 
@@ -77,7 +81,13 @@
 #  define port_free(ptr)        free(ptr)
 #  define port_realloc(ptr, sz) realloc(ptr, sz)
 
-static inline char *
+#  if defined(__GNUC__) || defined(__clang__)
+#    define PORT_UNUSED __attribute__((unused))
+#  else
+#    define PORT_UNUSED
+#  endif
+
+static inline PORT_UNUSED char *
 port_strdup(const char *str)
 {
 	size_t len;
@@ -114,8 +124,8 @@ int port_getopt(int argc, char *const argv[], const char *optstring);
 /*
  * High-resolution timer and sleep shims
  */
-uint64_t port_gettime_ns(void);
-void port_sleep_ns(uint64_t ns);
+uint32_t port_gettime_us(void);
+void port_sleep_us(uint32_t us);
 
 /*
  * Implementations
@@ -205,56 +215,53 @@ port_getopt(int argc, char *const argv[], const char *optstring)
  */
 #if defined(_WIN32) || defined(_WIN64)
 #  include <windows.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
 	LARGE_INTEGER freq;
 	LARGE_INTEGER counter;
 
 	QueryPerformanceFrequency(&freq);
 	QueryPerformanceCounter(&counter);
-	return ((uint64_t)(counter.QuadPart * 1000000000LL / freq.QuadPart));
+	return ((uint32_t)(counter.QuadPart * 1000000 / freq.QuadPart));
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
-	Sleep((DWORD)(ns / 1000000ULL));
+	Sleep((DWORD)(us / 1000));
 }
 
 #elif defined(__HAIKU__)
 #  include <kernel/OS.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	return ((uint64_t)system_time() * 1000ULL);
+	return ((uint32_t)system_time());
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
-	snooze((bigtime_t)(ns / 1000ULL));
+	snooze((bigtime_t)us);
 }
 
 #elif defined(__QNXNTO__)
 #  include <sys/neutrino.h>
 #  include <sys/syspage.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	uint64_t cycles;
-
-	cycles = ClockCycles();
-	return ((uint64_t)(cycles * 1000000000ULL / SYSPAGE_ENTRY(qtime)->cycles_per_sec));
+	return ((uint32_t)(ClockCycles() * 1000000 / SYSPAGE_ENTRY(qtime)->cycles_per_sec));
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
 	struct timespec req;
 
-	req.tv_sec = (time_t)(ns / 1000000000ULL);
-	req.tv_nsec = (long)(ns % 1000000000ULL);
+	req.tv_sec = (time_t)(us / 1000000);
+	req.tv_nsec = (long)((us % 1000000) * 1000);
 	nanosleep(&req, NULL);
 }
 
@@ -263,16 +270,16 @@ port_sleep_ns(uint64_t ns)
 #  include <tickLib.h>
 #  include <sysLib.h>
 #  include <taskLib.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	return ((uint64_t)tickGet() * 1000000000ULL / sysClkRateGet());
+	return ((uint32_t)tickGet() * 1000000 / sysClkRateGet());
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
-	taskDelay((int)(ns * sysClkRateGet() / 1000000000ULL) + 1);
+	taskDelay((int)(us * sysClkRateGet() / 1000000) + 1);
 }
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
@@ -280,42 +287,42 @@ port_sleep_ns(uint64_t ns)
 #    define _POSIX_C_SOURCE 199309L
 #  endif
 #  include <time.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-		return ((uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec);
+		return ((uint32_t)ts.tv_sec * 1000000 + (uint32_t)(ts.tv_nsec / 1000));
 	}
 	return (0);
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
 	struct timespec req;
 
-	req.tv_sec = (time_t)(ns / 1000000000ULL);
-	req.tv_nsec = (long)(ns % 1000000000ULL);
+	req.tv_sec = (time_t)(us / 1000000);
+	req.tv_nsec = (long)((us % 1000000) * 1000);
 	nanosleep(&req, NULL);
 }
 #else
 /* Bare-metal / custom RTOS mock fallback */
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	static uint64_t mock_ticks = 0;
+	static uint32_t mock_ticks = 0;
 	/* Pretend 1 millisecond passes each check */
-	return (mock_ticks += 1000000ULL);
+	return (mock_ticks += 1000);
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
 	/* Busy loop fallback */
-	volatile uint64_t count;
-	for (count = 0; count < ns / 10ULL; count++) {
+	volatile uint32_t count;
+	for (count = 0; count < us; count++) {
 		/* no-op */
 	}
 }
@@ -342,7 +349,7 @@ port_sleep_ns(uint64_t ns)
 #ifndef EMBEDDED_ROMS_H
 #define EMBEDDED_ROMS_H
 
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 
 /* clang-format off */
 static const uint8_t embedded_wozmon[256] = {
@@ -504,14 +511,14 @@ static const uint8_t embedded_2513_charmap[2048] = {
 /* amalgamation: omit #include "io.h" */
 
 static void
-delay_nanoseconds(long ns)
+delay_microseconds(long us)
 {
-	uint64_t start, now;
+	uint32_t now, start;
 
-	start = port_gettime_ns();
+	start = port_gettime_us();
 	for (;;) {
-		now = port_gettime_ns();
-		if ((now - start) >= (uint64_t)ns)
+		now = port_gettime_us();
+		if ((now - start) >= (uint32_t)us)
 			break;
 	}
 }
@@ -614,10 +621,21 @@ bus_load_wozmon_txt_buf(struct bus *bus,
     uint16_t *run_address, bool *has_run_address)
 {
 	char *cleaned;
-	uint16_t current_addr;
+	size_t addr_digits;
+	size_t data_len;
+	size_t hex_len;
+	size_t hex_start;
+	size_t i;
+	size_t j;
+	size_t peek;
+	size_t w;
+	char addr_str[5];
+	bool first_addr;
+	bool in_comment;
 	int total_bytes;
-	bool first_addr, in_comment;
-	size_t i, w;
+	uint16_t current_addr;
+	uint16_t raddr;
+	uint8_t val;
 
 	if (len == 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Text buffer is empty.");
@@ -694,12 +712,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 		}
 
 		if (isxdigit((unsigned char)c)) {
-			size_t hex_start = i;
+			hex_start = i;
 			while (i < w && isxdigit((unsigned char)cleaned[i]))
 				i++;
-			size_t hex_len = i - hex_start;
+			hex_len = i - hex_start;
 
-			size_t peek = i;
+			peek = i;
 			while (
 			    peek < w && isspace((unsigned char)cleaned[peek]))
 				peek++;
@@ -707,9 +725,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			if (i < w &&
 			    toupper((unsigned char)cleaned[i]) == 'R') {
 				/* run command */
-				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
-				for (size_t j = 0; j + 1 < data_len; j += 2) {
-					uint8_t val =
+				data_len = hex_len > 4 ? hex_len - 4 : 0;
+				for (j = 0; j + 1 < data_len; j += 2) {
+					val =
 					    (hex_val(cleaned[hex_start + j])
 						<< 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
@@ -721,12 +739,11 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					total_bytes++;
 				}
 				if (hex_len >= 4) {
-					char addr_str[5];
 					strncpy(addr_str,
 					    &cleaned[hex_start + data_len],
 					    4);
 					addr_str[4] = '\0';
-					uint16_t raddr = (uint16_t)
+					raddr = (uint16_t)
 					    strtol(addr_str, NULL, 16);
 					if (run_address != NULL)
 						*run_address = raddr;
@@ -739,9 +756,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 			if (peek < w && cleaned[peek] == ':' && hex_len >= 3) {
 				/* Address change (and possibly some data bytes before it in merged strings) */
-				size_t data_len = hex_len > 4 ? hex_len - 4 : 0;
-				for (size_t j = 0; j + 1 < data_len; j += 2) {
-					uint8_t val =
+				data_len = hex_len > 4 ? hex_len - 4 : 0;
+				for (j = 0; j + 1 < data_len; j += 2) {
+					val =
 					    (hex_val(cleaned[hex_start + j])
 						<< 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
@@ -752,8 +769,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					current_addr++;
 					total_bytes++;
 				}
-				char addr_str[5] = { 0 };
-				size_t addr_digits = hex_len > 4 ? 4 : hex_len;
+				memset(addr_str, 0, sizeof(addr_str));
+				addr_digits = hex_len > 4 ? 4 : hex_len;
 				strncpy(addr_str,
 				    &cleaned[hex_start + hex_len - addr_digits],
 				    addr_digits);
@@ -767,8 +784,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			}
 
 			/* Data bytes */
-			for (size_t j = 0; j + 1 < hex_len; j += 2) {
-				uint8_t val =
+			for (j = 0; j + 1 < hex_len; j += 2) {
+				val =
 				    (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
 				if (bus_is_ram_address(bus, current_addr) != 0) {
@@ -1045,7 +1062,12 @@ pia_write(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 uint8_t
 bus_read(struct bus *bus, uint16_t address)
 {
-	uint8_t result = bus->last_bus_value; /* default: open-bus float */
+	struct expansion_card *card;
+	int i;
+	uint8_t result;
+	bool card_hit;
+
+	result = bus->last_bus_value; /* default: open-bus float */
 
 	if (bus->opts.flat_bus != 0) {
 		result = bus->ram[address];
@@ -1058,7 +1080,7 @@ bus_read(struct bus *bus, uint16_t address)
 		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
 		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
-			delay_nanoseconds(977);
+			delay_microseconds(1);
 
 		if (address >= ROM_BASE) {
 			if (bus->rom_loaded != 0)
@@ -1069,9 +1091,9 @@ bus_read(struct bus *bus, uint16_t address)
 			result = pia_read(bus, address);
 			bus->last_bus_value = result;
 		} else {
-			bool card_hit = false;
-			for (int i = 0; i < bus->num_cards; i++) {
-				struct expansion_card *card = bus->cards[i];
+			card_hit = false;
+			for (i = 0; i < bus->num_cards; i++) {
+				card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
 					if (card->read != NULL)
 						bus->last_bus_value =
@@ -1109,6 +1131,10 @@ bus_write(struct bus *bus, uint16_t address, uint8_t value)
 void
 bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 {
+	struct expansion_card *card;
+	int i;
+	bool card_hit;
+
 	bus->last_bus_value = value;
 
 	if (bus->opts.flat_bus != 0) {
@@ -1122,7 +1148,7 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		if (bus->opts.uncapped != 0 && bus->opts.throttle_pia != 0 &&
 		    bus->opts.headless == 0 && address >= PIA_BASE &&
 		    address <= (PIA_BASE + 3))
-			delay_nanoseconds(977);
+			delay_microseconds(1);
 #endif
 
 		if (address >= ROM_BASE) {
@@ -1130,9 +1156,9 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 		} else if (address >= PIA_BASE && address <= (PIA_BASE + 3)) {
 			pia_write(bus, address, value, is_dummy);
 		} else {
-			bool card_hit = false;
-			for (int i = 0; i < bus->num_cards; i++) {
-				struct expansion_card *card = bus->cards[i];
+			card_hit = false;
+			for (i = 0; i < bus->num_cards; i++) {
+				card = bus->cards[i];
 				if ((address & card->mask) == card->base) {
 					if (card->rom_only == 0 &&
 					    card->write != NULL)
@@ -1246,7 +1272,7 @@ bus_add_card(struct bus *bus, struct expansion_card *card)
 /* ======== end bus.c ======== */
 
 /* ======== begin cpu.c ======== */
-#include <stdbool.h>
+/* amalgamation: omit #include "port.h" */
 #include <stdio.h>
 #include <string.h>
 
@@ -1523,11 +1549,16 @@ addr_ind(struct cpu *cpu)
 static uint16_t
 addr_izx(struct cpu *cpu)
 {
-	uint8_t zp_raw = read_byte(cpu, cpu->pc++);
+	uint8_t hi;
+	uint8_t lo;
+	uint8_t zp;
+	uint8_t zp_raw;
+
+	zp_raw = read_byte(cpu, cpu->pc++);
 	read_byte(cpu, zp_raw); /* cycle 3: dummy read before X is added */
-	uint8_t zp = (zp_raw + cpu->x) & 0xFF;
-	uint8_t lo = read_byte(cpu, zp);
-	uint8_t hi = read_byte(cpu, (zp + 1) & 0xFF);
+	zp = (zp_raw + cpu->x) & 0xFF;
+	lo = read_byte(cpu, zp);
+	hi = read_byte(cpu, (zp + 1) & 0xFF);
 
 	return ((hi << 8) | lo);
 }
@@ -2368,11 +2399,14 @@ op_jmp_ind(struct cpu *cpu)
 static void
 op_jsr(struct cpu *cpu)
 {
-	uint8_t lo = read_byte(cpu, cpu->pc++); /* cycle 2: addr low */
+	uint8_t hi;
+	uint8_t lo;
+
+	lo = read_byte(cpu, cpu->pc++); /* cycle 2: addr low */
 	read_byte(cpu, 0x0100 + cpu->s);	/* cycle 3: dummy stack read */
 	push_word(cpu,
 	    cpu->pc); /* cycles 4-5: push return addr (PC-1 already advanced) */
-	uint8_t hi = read_byte(cpu, cpu->pc); /* cycle 6: addr high */
+	hi = read_byte(cpu, cpu->pc); /* cycle 6: addr high */
 	cpu->pc = (hi << 8) | lo;
 	cpu->last_cycles = 6;
 }
@@ -3857,263 +3891,263 @@ op_usbc(struct cpu *cpu)
 /* ================================================================== */
 
 static const opcode_fn dispatch[256] = {
-	/* 0x00 */ [0x00] = op_brk,
-	/* 0x01 */ [0x01] = op_ora_izx,
-	/* 0x02 */ [0x02] = op_jam,
-	/* 0x03 */ [0x03] = op_slo_izx,
-	/* 0x04 */ [0x04] = op_nop_zp,
-	/* 0x05 */ [0x05] = op_ora_zp,
-	/* 0x06 */ [0x06] = op_asl_zp,
-	/* 0x07 */ [0x07] = op_slo_zp,
-	/* 0x08 */ [0x08] = op_php,
-	/* 0x09 */ [0x09] = op_ora_imm,
-	/* 0x0A */ [0x0A] = op_asl_acc,
-	/* 0x0B */ [0x0B] = op_anc,
-	/* 0x0C */ [0x0C] = op_nop_abs,
-	/* 0x0D */ [0x0D] = op_ora_abs,
-	/* 0x0E */ [0x0E] = op_asl_abs,
-	/* 0x0F */ [0x0F] = op_slo_abs,
-	/* 0x10 */ [0x10] = op_bpl,
-	/* 0x11 */ [0x11] = op_ora_izy,
-	/* 0x12 */ [0x12] = op_jam,
-	/* 0x13 */ [0x13] = op_slo_izy,
-	/* 0x14 */ [0x14] = op_nop_zpx,
-	/* 0x15 */ [0x15] = op_ora_zpx,
-	/* 0x16 */ [0x16] = op_asl_zpx,
-	/* 0x17 */ [0x17] = op_slo_zpx,
-	/* 0x18 */ [0x18] = op_clc,
-	/* 0x19 */ [0x19] = op_ora_absy,
-	/* 0x1A */ [0x1A] = op_nop_imp,
-	/* 0x1B */ [0x1B] = op_slo_absy,
-	/* 0x1C */ [0x1C] = op_nop_absx,
-	/* 0x1D */ [0x1D] = op_ora_absx,
-	/* 0x1E */ [0x1E] = op_asl_absx,
-	/* 0x1F */ [0x1F] = op_slo_absx,
-	/* 0x20 */ [0x20] = op_jsr,
-	/* 0x21 */ [0x21] = op_and_izx,
-	/* 0x22 */ [0x22] = op_jam,
-	/* 0x23 */ [0x23] = op_rla_izx,
-	/* 0x24 */ [0x24] = op_bit_zp,
-	/* 0x25 */ [0x25] = op_and_zp,
-	/* 0x26 */ [0x26] = op_rol_zp,
-	/* 0x27 */ [0x27] = op_rla_zp,
-	/* 0x28 */ [0x28] = op_plp,
-	/* 0x29 */ [0x29] = op_and_imm,
-	/* 0x2A */ [0x2A] = op_rol_acc,
-	/* 0x2B */ [0x2B] = op_anc,
-	/* 0x2C */ [0x2C] = op_bit_abs,
-	/* 0x2D */ [0x2D] = op_and_abs,
-	/* 0x2E */ [0x2E] = op_rol_abs,
-	/* 0x2F */ [0x2F] = op_rla_abs,
-	/* 0x30 */ [0x30] = op_bmi,
-	/* 0x31 */ [0x31] = op_and_izy,
-	/* 0x32 */ [0x32] = op_jam,
-	/* 0x33 */ [0x33] = op_rla_izy,
-	/* 0x34 */ [0x34] = op_nop_zpx,
-	/* 0x35 */ [0x35] = op_and_zpx,
-	/* 0x36 */ [0x36] = op_rol_zpx,
-	/* 0x37 */ [0x37] = op_rla_zpx,
-	/* 0x38 */ [0x38] = op_sec,
-	/* 0x39 */ [0x39] = op_and_absy,
-	/* 0x3A */ [0x3A] = op_nop_imp,
-	/* 0x3B */ [0x3B] = op_rla_absy,
-	/* 0x3C */ [0x3C] = op_nop_absx,
-	/* 0x3D */ [0x3D] = op_and_absx,
-	/* 0x3E */ [0x3E] = op_rol_absx,
-	/* 0x3F */ [0x3F] = op_rla_absx,
-	/* 0x40 */ [0x40] = op_rti,
-	/* 0x41 */ [0x41] = op_eor_izx,
-	/* 0x42 */ [0x42] = op_jam,
-	/* 0x43 */ [0x43] = op_sre_izx,
-	/* 0x44 */ [0x44] = op_nop_zp,
-	/* 0x45 */ [0x45] = op_eor_zp,
-	/* 0x46 */ [0x46] = op_lsr_zp,
-	/* 0x47 */ [0x47] = op_sre_zp,
-	/* 0x48 */ [0x48] = op_pha,
-	/* 0x49 */ [0x49] = op_eor_imm,
-	/* 0x4A */ [0x4A] = op_lsr_acc,
-	/* 0x4B */ [0x4B] = op_alr,
-	/* 0x4C */ [0x4C] = op_jmp_abs,
-	/* 0x4D */ [0x4D] = op_eor_abs,
-	/* 0x4E */ [0x4E] = op_lsr_abs,
-	/* 0x4F */ [0x4F] = op_sre_abs,
-	/* 0x50 */ [0x50] = op_bvc,
-	/* 0x51 */ [0x51] = op_eor_izy,
-	/* 0x52 */ [0x52] = op_jam,
-	/* 0x53 */ [0x53] = op_sre_izy,
-	/* 0x54 */ [0x54] = op_nop_zpx,
-	/* 0x55 */ [0x55] = op_eor_zpx,
-	/* 0x56 */ [0x56] = op_lsr_zpx,
-	/* 0x57 */ [0x57] = op_sre_zpx,
-	/* 0x58 */ [0x58] = op_cli,
-	/* 0x59 */ [0x59] = op_eor_absy,
-	/* 0x5A */ [0x5A] = op_nop_imp,
-	/* 0x5B */ [0x5B] = op_sre_absy,
-	/* 0x5C */ [0x5C] = op_nop_absx,
-	/* 0x5D */ [0x5D] = op_eor_absx,
-	/* 0x5E */ [0x5E] = op_lsr_absx,
-	/* 0x5F */ [0x5F] = op_sre_absx,
-	/* 0x60 */ [0x60] = op_rts,
-	/* 0x61 */ [0x61] = op_adc_izx,
-	/* 0x62 */ [0x62] = op_jam,
-	/* 0x63 */ [0x63] = op_rra_izx,
-	/* 0x64 */ [0x64] = op_nop_zp,
-	/* 0x65 */ [0x65] = op_adc_zp,
-	/* 0x66 */ [0x66] = op_ror_zp,
-	/* 0x67 */ [0x67] = op_rra_zp,
-	/* 0x68 */ [0x68] = op_pla,
-	/* 0x69 */ [0x69] = op_adc_imm,
-	/* 0x6A */ [0x6A] = op_ror_acc,
-	/* 0x6B */ [0x6B] = op_arr,
-	/* 0x6C */ [0x6C] = op_jmp_ind,
-	/* 0x6D */ [0x6D] = op_adc_abs,
-	/* 0x6E */ [0x6E] = op_ror_abs,
-	/* 0x6F */ [0x6F] = op_rra_abs,
-	/* 0x70 */ [0x70] = op_bvs,
-	/* 0x71 */ [0x71] = op_adc_izy,
-	/* 0x72 */ [0x72] = op_jam,
-	/* 0x73 */ [0x73] = op_rra_izy,
-	/* 0x74 */ [0x74] = op_nop_zpx,
-	/* 0x75 */ [0x75] = op_adc_zpx,
-	/* 0x76 */ [0x76] = op_ror_zpx,
-	/* 0x77 */ [0x77] = op_rra_zpx,
-	/* 0x78 */ [0x78] = op_sei,
-	/* 0x79 */ [0x79] = op_adc_absy,
-	/* 0x7A */ [0x7A] = op_nop_imp,
-	/* 0x7B */ [0x7B] = op_rra_absy,
-	/* 0x7C */ [0x7C] = op_nop_absx,
-	/* 0x7D */ [0x7D] = op_adc_absx,
-	/* 0x7E */ [0x7E] = op_ror_absx,
-	/* 0x7F */ [0x7F] = op_rra_absx,
-	/* 0x80 */ [0x80] = op_skb,
-	/* 0x81 */ [0x81] = op_sta_izx,
-	/* 0x82 */ [0x82] = op_skb,
-	/* 0x83 */ [0x83] = op_sax_izx,
-	/* 0x84 */ [0x84] = op_sty_zp,
-	/* 0x85 */ [0x85] = op_sta_zp,
-	/* 0x86 */ [0x86] = op_stx_zp,
-	/* 0x87 */ [0x87] = op_sax_zp,
-	/* 0x88 */ [0x88] = op_dey,
-	/* 0x89 */ [0x89] = op_skb,
-	/* 0x8A */ [0x8A] = op_txa,
-	/* 0x8B */ [0x8B] = op_xaa,
-	/* 0x8C */ [0x8C] = op_sty_abs,
-	/* 0x8D */ [0x8D] = op_sta_abs,
-	/* 0x8E */ [0x8E] = op_stx_abs,
-	/* 0x8F */ [0x8F] = op_sax_abs,
-	/* 0x90 */ [0x90] = op_bcc,
-	/* 0x91 */ [0x91] = op_sta_izy,
-	/* 0x92 */ [0x92] = op_jam,
-	/* 0x93 */ [0x93] = op_ahx_izy,
-	/* 0x94 */ [0x94] = op_sty_zpx,
-	/* 0x95 */ [0x95] = op_sta_zpx,
-	/* 0x96 */ [0x96] = op_stx_zpy,
-	/* 0x97 */ [0x97] = op_sax_zpy,
-	/* 0x98 */ [0x98] = op_tya,
-	/* 0x99 */ [0x99] = op_sta_absy,
-	/* 0x9A */ [0x9A] = op_txs,
-	/* 0x9B */ [0x9B] = op_tas,
-	/* 0x9C */ [0x9C] = op_shy,
-	/* 0x9D */ [0x9D] = op_sta_absx,
-	/* 0x9E */ [0x9E] = op_shx,
-	/* 0x9F */ [0x9F] = op_ahx_absy,
-	/* 0xA0 */ [0xA0] = op_ldy_imm,
-	/* 0xA1 */ [0xA1] = op_lda_izx,
-	/* 0xA2 */ [0xA2] = op_ldx_imm,
-	/* 0xA3 */ [0xA3] = op_lax_izx,
-	/* 0xA4 */ [0xA4] = op_ldy_zp,
-	/* 0xA5 */ [0xA5] = op_lda_zp,
-	/* 0xA6 */ [0xA6] = op_ldx_zp,
-	/* 0xA7 */ [0xA7] = op_lax_zp,
-	/* 0xA8 */ [0xA8] = op_tay,
-	/* 0xA9 */ [0xA9] = op_lda_imm,
-	/* 0xAA */ [0xAA] = op_tax,
-	/* 0xAB */ [0xAB] = op_lxa,
-	/* 0xAC */ [0xAC] = op_ldy_abs,
-	/* 0xAD */ [0xAD] = op_lda_abs,
-	/* 0xAE */ [0xAE] = op_ldx_abs,
-	/* 0xAF */ [0xAF] = op_lax_abs,
-	/* 0xB0 */ [0xB0] = op_bcs,
-	/* 0xB1 */ [0xB1] = op_lda_izy,
-	/* 0xB2 */ [0xB2] = op_jam,
-	/* 0xB3 */ [0xB3] = op_lax_izy,
-	/* 0xB4 */ [0xB4] = op_ldy_zpx,
-	/* 0xB5 */ [0xB5] = op_lda_zpx,
-	/* 0xB6 */ [0xB6] = op_ldx_zpy,
-	/* 0xB7 */ [0xB7] = op_lax_zpy,
-	/* 0xB8 */ [0xB8] = op_clv,
-	/* 0xB9 */ [0xB9] = op_lda_absy,
-	/* 0xBA */ [0xBA] = op_tsx,
-	/* 0xBB */ [0xBB] = op_las_unstable,
+	/* 0x00 */ op_brk,
+	/* 0x01 */ op_ora_izx,
+	/* 0x02 */ op_jam,
+	/* 0x03 */ op_slo_izx,
+	/* 0x04 */ op_nop_zp,
+	/* 0x05 */ op_ora_zp,
+	/* 0x06 */ op_asl_zp,
+	/* 0x07 */ op_slo_zp,
+	/* 0x08 */ op_php,
+	/* 0x09 */ op_ora_imm,
+	/* 0x0A */ op_asl_acc,
+	/* 0x0B */ op_anc,
+	/* 0x0C */ op_nop_abs,
+	/* 0x0D */ op_ora_abs,
+	/* 0x0E */ op_asl_abs,
+	/* 0x0F */ op_slo_abs,
+	/* 0x10 */ op_bpl,
+	/* 0x11 */ op_ora_izy,
+	/* 0x12 */ op_jam,
+	/* 0x13 */ op_slo_izy,
+	/* 0x14 */ op_nop_zpx,
+	/* 0x15 */ op_ora_zpx,
+	/* 0x16 */ op_asl_zpx,
+	/* 0x17 */ op_slo_zpx,
+	/* 0x18 */ op_clc,
+	/* 0x19 */ op_ora_absy,
+	/* 0x1A */ op_nop_imp,
+	/* 0x1B */ op_slo_absy,
+	/* 0x1C */ op_nop_absx,
+	/* 0x1D */ op_ora_absx,
+	/* 0x1E */ op_asl_absx,
+	/* 0x1F */ op_slo_absx,
+	/* 0x20 */ op_jsr,
+	/* 0x21 */ op_and_izx,
+	/* 0x22 */ op_jam,
+	/* 0x23 */ op_rla_izx,
+	/* 0x24 */ op_bit_zp,
+	/* 0x25 */ op_and_zp,
+	/* 0x26 */ op_rol_zp,
+	/* 0x27 */ op_rla_zp,
+	/* 0x28 */ op_plp,
+	/* 0x29 */ op_and_imm,
+	/* 0x2A */ op_rol_acc,
+	/* 0x2B */ op_anc,
+	/* 0x2C */ op_bit_abs,
+	/* 0x2D */ op_and_abs,
+	/* 0x2E */ op_rol_abs,
+	/* 0x2F */ op_rla_abs,
+	/* 0x30 */ op_bmi,
+	/* 0x31 */ op_and_izy,
+	/* 0x32 */ op_jam,
+	/* 0x33 */ op_rla_izy,
+	/* 0x34 */ op_nop_zpx,
+	/* 0x35 */ op_and_zpx,
+	/* 0x36 */ op_rol_zpx,
+	/* 0x37 */ op_rla_zpx,
+	/* 0x38 */ op_sec,
+	/* 0x39 */ op_and_absy,
+	/* 0x3A */ op_nop_imp,
+	/* 0x3B */ op_rla_absy,
+	/* 0x3C */ op_nop_absx,
+	/* 0x3D */ op_and_absx,
+	/* 0x3E */ op_rol_absx,
+	/* 0x3F */ op_rla_absx,
+	/* 0x40 */ op_rti,
+	/* 0x41 */ op_eor_izx,
+	/* 0x42 */ op_jam,
+	/* 0x43 */ op_sre_izx,
+	/* 0x44 */ op_nop_zp,
+	/* 0x45 */ op_eor_zp,
+	/* 0x46 */ op_lsr_zp,
+	/* 0x47 */ op_sre_zp,
+	/* 0x48 */ op_pha,
+	/* 0x49 */ op_eor_imm,
+	/* 0x4A */ op_lsr_acc,
+	/* 0x4B */ op_alr,
+	/* 0x4C */ op_jmp_abs,
+	/* 0x4D */ op_eor_abs,
+	/* 0x4E */ op_lsr_abs,
+	/* 0x4F */ op_sre_abs,
+	/* 0x50 */ op_bvc,
+	/* 0x51 */ op_eor_izy,
+	/* 0x52 */ op_jam,
+	/* 0x53 */ op_sre_izy,
+	/* 0x54 */ op_nop_zpx,
+	/* 0x55 */ op_eor_zpx,
+	/* 0x56 */ op_lsr_zpx,
+	/* 0x57 */ op_sre_zpx,
+	/* 0x58 */ op_cli,
+	/* 0x59 */ op_eor_absy,
+	/* 0x5A */ op_nop_imp,
+	/* 0x5B */ op_sre_absy,
+	/* 0x5C */ op_nop_absx,
+	/* 0x5D */ op_eor_absx,
+	/* 0x5E */ op_lsr_absx,
+	/* 0x5F */ op_sre_absx,
+	/* 0x60 */ op_rts,
+	/* 0x61 */ op_adc_izx,
+	/* 0x62 */ op_jam,
+	/* 0x63 */ op_rra_izx,
+	/* 0x64 */ op_nop_zp,
+	/* 0x65 */ op_adc_zp,
+	/* 0x66 */ op_ror_zp,
+	/* 0x67 */ op_rra_zp,
+	/* 0x68 */ op_pla,
+	/* 0x69 */ op_adc_imm,
+	/* 0x6A */ op_ror_acc,
+	/* 0x6B */ op_arr,
+	/* 0x6C */ op_jmp_ind,
+	/* 0x6D */ op_adc_abs,
+	/* 0x6E */ op_ror_abs,
+	/* 0x6F */ op_rra_abs,
+	/* 0x70 */ op_bvs,
+	/* 0x71 */ op_adc_izy,
+	/* 0x72 */ op_jam,
+	/* 0x73 */ op_rra_izy,
+	/* 0x74 */ op_nop_zpx,
+	/* 0x75 */ op_adc_zpx,
+	/* 0x76 */ op_ror_zpx,
+	/* 0x77 */ op_rra_zpx,
+	/* 0x78 */ op_sei,
+	/* 0x79 */ op_adc_absy,
+	/* 0x7A */ op_nop_imp,
+	/* 0x7B */ op_rra_absy,
+	/* 0x7C */ op_nop_absx,
+	/* 0x7D */ op_adc_absx,
+	/* 0x7E */ op_ror_absx,
+	/* 0x7F */ op_rra_absx,
+	/* 0x80 */ op_skb,
+	/* 0x81 */ op_sta_izx,
+	/* 0x82 */ op_skb,
+	/* 0x83 */ op_sax_izx,
+	/* 0x84 */ op_sty_zp,
+	/* 0x85 */ op_sta_zp,
+	/* 0x86 */ op_stx_zp,
+	/* 0x87 */ op_sax_zp,
+	/* 0x88 */ op_dey,
+	/* 0x89 */ op_skb,
+	/* 0x8A */ op_txa,
+	/* 0x8B */ op_xaa,
+	/* 0x8C */ op_sty_abs,
+	/* 0x8D */ op_sta_abs,
+	/* 0x8E */ op_stx_abs,
+	/* 0x8F */ op_sax_abs,
+	/* 0x90 */ op_bcc,
+	/* 0x91 */ op_sta_izy,
+	/* 0x92 */ op_jam,
+	/* 0x93 */ op_ahx_izy,
+	/* 0x94 */ op_sty_zpx,
+	/* 0x95 */ op_sta_zpx,
+	/* 0x96 */ op_stx_zpy,
+	/* 0x97 */ op_sax_zpy,
+	/* 0x98 */ op_tya,
+	/* 0x99 */ op_sta_absy,
+	/* 0x9A */ op_txs,
+	/* 0x9B */ op_tas,
+	/* 0x9C */ op_shy,
+	/* 0x9D */ op_sta_absx,
+	/* 0x9E */ op_shx,
+	/* 0x9F */ op_ahx_absy,
+	/* 0xA0 */ op_ldy_imm,
+	/* 0xA1 */ op_lda_izx,
+	/* 0xA2 */ op_ldx_imm,
+	/* 0xA3 */ op_lax_izx,
+	/* 0xA4 */ op_ldy_zp,
+	/* 0xA5 */ op_lda_zp,
+	/* 0xA6 */ op_ldx_zp,
+	/* 0xA7 */ op_lax_zp,
+	/* 0xA8 */ op_tay,
+	/* 0xA9 */ op_lda_imm,
+	/* 0xAA */ op_tax,
+	/* 0xAB */ op_lxa,
+	/* 0xAC */ op_ldy_abs,
+	/* 0xAD */ op_lda_abs,
+	/* 0xAE */ op_ldx_abs,
+	/* 0xAF */ op_lax_abs,
+	/* 0xB0 */ op_bcs,
+	/* 0xB1 */ op_lda_izy,
+	/* 0xB2 */ op_jam,
+	/* 0xB3 */ op_lax_izy,
+	/* 0xB4 */ op_ldy_zpx,
+	/* 0xB5 */ op_lda_zpx,
+	/* 0xB6 */ op_ldx_zpy,
+	/* 0xB7 */ op_lax_zpy,
+	/* 0xB8 */ op_clv,
+	/* 0xB9 */ op_lda_absy,
+	/* 0xBA */ op_tsx,
+	/* 0xBB */ op_las_unstable,
 
-	/* 0xBC */ [0xBC] = op_ldy_absx,
-	/* 0xBD */ [0xBD] = op_lda_absx,
-	/* 0xBE */ [0xBE] = op_ldx_absy,
-	/* 0xBF */ [0xBF] = op_lax_absy,
-	/* 0xC0 */ [0xC0] = op_cpy_imm,
-	/* 0xC1 */ [0xC1] = op_cmp_izx,
-	/* 0xC2 */ [0xC2] = op_skb,
-	/* 0xC3 */ [0xC3] = op_dcp_izx,
-	/* 0xC4 */ [0xC4] = op_cpy_zp,
-	/* 0xC5 */ [0xC5] = op_cmp_zp,
-	/* 0xC6 */ [0xC6] = op_dec_zp,
-	/* 0xC7 */ [0xC7] = op_dcp_zp,
-	/* 0xC8 */ [0xC8] = op_iny,
-	/* 0xC9 */ [0xC9] = op_cmp_imm,
-	/* 0xCA */ [0xCA] = op_dex,
-	/* 0xCB */ [0xCB] = op_sbx,
-	/* 0xCC */ [0xCC] = op_cpy_abs,
-	/* 0xCD */ [0xCD] = op_cmp_abs,
-	/* 0xCE */ [0xCE] = op_dec_abs,
-	/* 0xCF */ [0xCF] = op_dcp_abs,
-	/* 0xD0 */ [0xD0] = op_bne,
-	/* 0xD1 */ [0xD1] = op_cmp_izy,
-	/* 0xD2 */ [0xD2] = op_jam,
-	/* 0xD3 */ [0xD3] = op_dcp_izy,
-	/* 0xD4 */ [0xD4] = op_nop_zpx,
-	/* 0xD5 */ [0xD5] = op_cmp_zpx,
-	/* 0xD6 */ [0xD6] = op_dec_zpx,
-	/* 0xD7 */ [0xD7] = op_dcp_zpx,
-	/* 0xD8 */ [0xD8] = op_cld,
-	/* 0xD9 */ [0xD9] = op_cmp_absy,
-	/* 0xDA */ [0xDA] = op_nop_imp,
-	/* 0xDB */ [0xDB] = op_dcp_absy,
-	/* 0xDC */ [0xDC] = op_nop_absx,
-	/* 0xDD */ [0xDD] = op_cmp_absx,
-	/* 0xDE */ [0xDE] = op_dec_absx,
-	/* 0xDF */ [0xDF] = op_dcp_absx,
-	/* 0xE0 */ [0xE0] = op_cpx_imm,
-	/* 0xE1 */ [0xE1] = op_sbc_izx,
-	/* 0xE2 */ [0xE2] = op_skb,
-	/* 0xE3 */ [0xE3] = op_isc_izx,
-	/* 0xE4 */ [0xE4] = op_cpx_zp,
-	/* 0xE5 */ [0xE5] = op_sbc_zp,
-	/* 0xE6 */ [0xE6] = op_inc_zp,
-	/* 0xE7 */ [0xE7] = op_isc_zp,
-	/* 0xE8 */ [0xE8] = op_inx,
-	/* 0xE9 */ [0xE9] = op_sbc_imm,
-	/* 0xEA */ [0xEA] = op_nop,
-	/* 0xEB */ [0xEB] = op_usbc,
-	/* 0xEC */ [0xEC] = op_cpx_abs,
-	/* 0xED */ [0xED] = op_sbc_abs,
-	/* 0xEE */ [0xEE] = op_inc_abs,
-	/* 0xEF */ [0xEF] = op_isc_abs,
-	/* 0xF0 */ [0xF0] = op_beq,
-	/* 0xF1 */ [0xF1] = op_sbc_izy,
-	/* 0xF2 */ [0xF2] = op_jam,
-	/* 0xF3 */ [0xF3] = op_isc_izy,
-	/* 0xF4 */ [0xF4] = op_nop_zpx,
-	/* 0xF5 */ [0xF5] = op_sbc_zpx,
-	/* 0xF6 */ [0xF6] = op_inc_zpx,
-	/* 0xF7 */ [0xF7] = op_isc_zpx,
-	/* 0xF8 */ [0xF8] = op_sed,
-	/* 0xF9 */ [0xF9] = op_sbc_absy,
-	/* 0xFA */ [0xFA] = op_nop_imp,
-	/* 0xFB */ [0xFB] = op_isc_absy,
-	/* 0xFC */ [0xFC] = op_nop_absx,
-	/* 0xFD */ [0xFD] = op_sbc_absx,
-	/* 0xFE */ [0xFE] = op_inc_absx,
-	/* 0xFF */ [0xFF] = op_isc_absx,
+	/* 0xBC */ op_ldy_absx,
+	/* 0xBD */ op_lda_absx,
+	/* 0xBE */ op_ldx_absy,
+	/* 0xBF */ op_lax_absy,
+	/* 0xC0 */ op_cpy_imm,
+	/* 0xC1 */ op_cmp_izx,
+	/* 0xC2 */ op_skb,
+	/* 0xC3 */ op_dcp_izx,
+	/* 0xC4 */ op_cpy_zp,
+	/* 0xC5 */ op_cmp_zp,
+	/* 0xC6 */ op_dec_zp,
+	/* 0xC7 */ op_dcp_zp,
+	/* 0xC8 */ op_iny,
+	/* 0xC9 */ op_cmp_imm,
+	/* 0xCA */ op_dex,
+	/* 0xCB */ op_sbx,
+	/* 0xCC */ op_cpy_abs,
+	/* 0xCD */ op_cmp_abs,
+	/* 0xCE */ op_dec_abs,
+	/* 0xCF */ op_dcp_abs,
+	/* 0xD0 */ op_bne,
+	/* 0xD1 */ op_cmp_izy,
+	/* 0xD2 */ op_jam,
+	/* 0xD3 */ op_dcp_izy,
+	/* 0xD4 */ op_nop_zpx,
+	/* 0xD5 */ op_cmp_zpx,
+	/* 0xD6 */ op_dec_zpx,
+	/* 0xD7 */ op_dcp_zpx,
+	/* 0xD8 */ op_cld,
+	/* 0xD9 */ op_cmp_absy,
+	/* 0xDA */ op_nop_imp,
+	/* 0xDB */ op_dcp_absy,
+	/* 0xDC */ op_nop_absx,
+	/* 0xDD */ op_cmp_absx,
+	/* 0xDE */ op_dec_absx,
+	/* 0xDF */ op_dcp_absx,
+	/* 0xE0 */ op_cpx_imm,
+	/* 0xE1 */ op_sbc_izx,
+	/* 0xE2 */ op_skb,
+	/* 0xE3 */ op_isc_izx,
+	/* 0xE4 */ op_cpx_zp,
+	/* 0xE5 */ op_sbc_zp,
+	/* 0xE6 */ op_inc_zp,
+	/* 0xE7 */ op_isc_zp,
+	/* 0xE8 */ op_inx,
+	/* 0xE9 */ op_sbc_imm,
+	/* 0xEA */ op_nop,
+	/* 0xEB */ op_usbc,
+	/* 0xEC */ op_cpx_abs,
+	/* 0xED */ op_sbc_abs,
+	/* 0xEE */ op_inc_abs,
+	/* 0xEF */ op_isc_abs,
+	/* 0xF0 */ op_beq,
+	/* 0xF1 */ op_sbc_izy,
+	/* 0xF2 */ op_jam,
+	/* 0xF3 */ op_isc_izy,
+	/* 0xF4 */ op_nop_zpx,
+	/* 0xF5 */ op_sbc_zpx,
+	/* 0xF6 */ op_inc_zpx,
+	/* 0xF7 */ op_isc_zpx,
+	/* 0xF8 */ op_sed,
+	/* 0xF9 */ op_sbc_absy,
+	/* 0xFA */ op_nop_imp,
+	/* 0xFB */ op_isc_absy,
+	/* 0xFC */ op_nop_absx,
+	/* 0xFD */ op_sbc_absx,
+	/* 0xFE */ op_inc_absx,
+	/* 0xFF */ op_isc_absx,
 };
 
 /* ================================================================== */
@@ -4233,13 +4267,13 @@ cpu_nmi(struct cpu *cpu)
 
 /* ======== begin disasm.c ======== */
 #ifndef APPLE1_OMIT_DISASM
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 #include <stdio.h>
 
 /* amalgamation: omit #include "bus.h" */
 /* amalgamation: omit #include "disasm.h" */
 
-typedef enum {
+enum addr_mode {
 	ADDR_IMP, /* Implied (e.g. TAX) */
 	ADDR_ACC, /* Accumulator (e.g. LSR A) */
 	ADDR_IMM, /* Immediate (e.g. LDA #$12) */
@@ -4252,15 +4286,15 @@ typedef enum {
 	ADDR_IND, /* Indirect (e.g. JMP ($1234)) */
 	ADDR_IZX, /* Indirect, X (e.g. LDA ($12,X)) */
 	ADDR_IZY, /* Indirect, Y (e.g. LDA ($12),Y) */
-	ADDR_REL, /* Relative (e.g. BNE $1234) */
-} addr_mode_t;
+	ADDR_REL  /* Relative (e.g. BNE $1234) */
+};
 
-typedef struct {
+struct op_info {
 	const char *name;
-	addr_mode_t mode;
-} op_info_t;
+	enum addr_mode mode;
+};
 
-static const op_info_t op_table[256] = {
+static const struct op_info op_table[256] = {
 	/* 0x00 - 0x0F */
 	{ "BRK", ADDR_IMP },
 	{ "ORA", ADDR_IZX },
@@ -4539,7 +4573,7 @@ int
 cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 {
 	uint8_t op = bus_read(bus, pc);
-	op_info_t info = op_table[op];
+	struct op_info info = op_table[op];
 	int bytes = 1;
 
 	switch (info.mode) {
@@ -4658,9 +4692,9 @@ struct aci_card {
 	struct bus *bus;
 	uint32_t *durations;
 	uint32_t *recorded_durations;
-	uint64_t current_cycle;
-	uint64_t last_output_toggle_cycle;
-	uint64_t last_read_cycle;
+	uint32_t current_cycle;
+	uint32_t last_output_toggle_cycle;
+	uint32_t last_read_cycle;
 	int32_t cycles_until_toggle;
 	uint32_t num_durations;
 	uint32_t playback_index;
@@ -4680,7 +4714,7 @@ aci_record_toggle(struct aci_card *aci)
 {
 	uint32_t new_cap;
 	uint32_t *buf;
-	uint64_t delta;
+	uint32_t delta;
 
 	if (aci->recording_started == 0) {
 		/* First toggle: capture initial output level before toggling */
@@ -4717,7 +4751,7 @@ aci_read(void *ctx, uint16_t addr, bool is_dummy)
 {
 	struct aci_card *aci;
 	uint8_t result;
-	uint64_t gap;
+	uint32_t gap;
 
 	(void)is_dummy;
 	aci = (struct aci_card *)ctx;
@@ -4873,15 +4907,15 @@ pcm_to_durations(struct bus *bus,
     bool *out_initial_level)
 {
 	uint32_t *durations, *new_buf;
-	uint32_t cap, count, first_active, i;
+	uint32_t cap, count, first_active, i, last_transition;
+	float threshold;
 	bool current_level;
-	uint32_t last_transition;
 
 	if (num_samples == 0 || sample_rate == 0) {
 		return (false);
 	}
 
-	const float threshold = 0.02f;
+	threshold = 0.02f;
 	first_active = 0;
 
 	while (first_active < num_samples &&
@@ -5202,7 +5236,7 @@ static bool
 save_wav_tape(struct aci_card *aci, const char *tape_path)
 {
 	FILE *f;
-	uint64_t total_samples;
+	uint32_t total_samples;
 	uint32_t byte_rate;
 	uint32_t data_size;
 	uint32_t riff_size;
@@ -5547,53 +5581,53 @@ static debugger_t *s_active_dbg = NULL;
 
 int
 dbg_printf(const char *format, ...);
-#define printf(...) dbg_printf(__VA_ARGS__)
+
 
 static void
 print_help(void)
 {
-	printf("Debugger commands:\n");
-	printf("  s, <Enter>        Step one instruction\n");
-	printf("  c                 Continue execution\n");
-	printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
+	dbg_printf("Debugger commands:\n");
+	dbg_printf("  s, <Enter>        Step one instruction\n");
+	dbg_printf("  c                 Continue execution\n");
+	dbg_printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
 	       "flags)\n");
-	printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
-	printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
-	printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With no "
+	dbg_printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
+	dbg_printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
+	dbg_printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With no "
 	       "address, lists breakpoints\n");
-	printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). With no "
+	dbg_printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). With no "
 	       "address, clears all\n");
-	printf("  wp [addr] [type]  Add watchpoint (type: r/w/rw, e.g. 'wp "
+	dbg_printf("  wp [addr] [type]  Add watchpoint (type: r/w/rw, e.g. 'wp "
 	       "0200 w'). "
 	       "With no args, lists watchpoints\n");
-	printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). With "
+	dbg_printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). With "
 	       "no "
 	       "address, clears all\n");
-	printf("  t                 Show recent control flow jumps (PC "
+	dbg_printf("  t                 Show recent control flow jumps (PC "
 	       "trace)\n");
-	printf("  h, ?              Show this help menu\n");
-	printf("  q                 Quit emulator\n");
+	dbg_printf("  h, ?              Show this help menu\n");
+	dbg_printf("  q                 Quit emulator\n");
 }
 
 static void
 print_registers(struct cpu *cpu)
 {
-	printf("PC:%04X  A:%02X  X:%02X  Y:%02X  SP:%02X  P:%02X (",
+	dbg_printf("PC:%04X  A:%02X  X:%02X  Y:%02X  SP:%02X  P:%02X (",
 	    cpu->pc,
 	    cpu->a,
 	    cpu->x,
 	    cpu->y,
 	    cpu->s,
 	    cpu->p);
-	printf("%c", (cpu->p & FLAG_NEGATIVE) ? 'N' : '-');
-	printf("%c", (cpu->p & FLAG_OVERFLOW) ? 'V' : '-');
-	printf("-");
-	printf("%c", (cpu->p & FLAG_BREAK) ? 'B' : '-');
-	printf("%c", (cpu->p & FLAG_DECIMAL) ? 'D' : '-');
-	printf("%c", (cpu->p & FLAG_INTERRUPT) ? 'I' : '-');
-	printf("%c", (cpu->p & FLAG_ZERO) ? 'Z' : '-');
-	printf("%c", (cpu->p & FLAG_CARRY) ? 'C' : '-');
-	printf(")\n");
+	dbg_printf("%c", (cpu->p & FLAG_NEGATIVE) ? 'N' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_OVERFLOW) ? 'V' : '-');
+	dbg_printf("-");
+	dbg_printf("%c", (cpu->p & FLAG_BREAK) ? 'B' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_DECIMAL) ? 'D' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_INTERRUPT) ? 'I' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_ZERO) ? 'Z' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_CARRY) ? 'C' : '-');
+	dbg_printf(")\n");
 }
 
 static void
@@ -5604,25 +5638,25 @@ dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 
 	current = start;
 	while (current <= end) {
-		printf("$%04X: ", current);
+		dbg_printf("$%04X: ", current);
 		line_end = current + 15;
 		if (line_end > end) {
 			line_end = end;
 		}
 		for (i = current; i <= current + 15; i++) {
 			if (i <= line_end) {
-				printf("%02X ", bus_read(dbg->cpu->bus, i));
+				dbg_printf("%02X ", bus_read(dbg->cpu->bus, i));
 			} else {
-				printf("   ");
+				dbg_printf("   ");
 			}
 		}
-		printf(" |");
+		dbg_printf(" |");
 		for (i = current; i <= line_end; i++) {
 			val = bus_read(dbg->cpu->bus, i);
 			ch = val & 0x7F;
-			printf("%c", (ch >= 0x20 && ch <= 0x7E) ? ch : '.');
+			dbg_printf("%c", (ch >= 0x20 && ch <= 0x7E) ? ch : '.');
 		}
-		printf("|\n");
+		dbg_printf("|\n");
 		if (current >= 0xFFF0) {
 			break;
 		}
@@ -5646,10 +5680,12 @@ dbg_init(debugger_t *dbg, struct cpu *cpu)
 void
 dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 {
-	for (int i = 0; i < dbg->num_watchpoints; i++) {
+	int i;
+
+	for (i = 0; i < dbg->num_watchpoints; i++) {
 		if (dbg->watchpoints[i].addr == addr) {
 			dbg->watchpoints[i].type = type;
-			printf("Updated watchpoint at $%04X to type %s.\n",
+			dbg_printf("Updated watchpoint at $%04X to type %s.\n",
 			    addr,
 			    type == WP_READ ? "read"
 					    : (type == WP_WRITE ? "write"
@@ -5660,7 +5696,7 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 	}
 
 	if (dbg->num_watchpoints >= APPLE1_MAX_WATCHPOINTS) {
-		printf("Error: Maximum number of watchpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of watchpoints reached (%d).\n",
 		    APPLE1_MAX_WATCHPOINTS);
 		return;
 	}
@@ -5669,7 +5705,7 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 	dbg->watchpoints[dbg->num_watchpoints].type = type;
 	dbg->num_watchpoints++;
 
-	printf("Watchpoint added at $%04X (%s).\n",
+	dbg_printf("Watchpoint added at $%04X (%s).\n",
 	    addr,
 	    type == WP_READ ? "read"
 			    : (type == WP_WRITE ? "write" : "read/write"));
@@ -5678,8 +5714,11 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 void
 dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr)
 {
-	int idx = -1;
-	for (int i = 0; i < dbg->num_watchpoints; i++) {
+	int i;
+	int idx;
+
+	idx = -1;
+	for (i = 0; i < dbg->num_watchpoints; i++) {
 		if (dbg->watchpoints[i].addr == addr) {
 			idx = i;
 			break;
@@ -5687,15 +5726,15 @@ dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr)
 	}
 
 	if (idx == -1) {
-		printf("No watchpoint found at $%04X.\n", addr);
+		dbg_printf("No watchpoint found at $%04X.\n", addr);
 		return;
 	}
 
-	for (int i = idx; i < dbg->num_watchpoints - 1; i++) {
+	for (i = idx; i < dbg->num_watchpoints - 1; i++) {
 		dbg->watchpoints[i] = dbg->watchpoints[i + 1];
 	}
 	dbg->num_watchpoints--;
-	printf("Watchpoint removed at $%04X.\n", addr);
+	dbg_printf("Watchpoint removed at $%04X.\n", addr);
 }
 
 void
@@ -5724,15 +5763,15 @@ dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 				if (dbg->cpu->bus->opts.headless == 0) {
 					term_open_debugger();
 				}
-				printf("\n*** WATCHPOINT TRIGGERED ***\n");
+				dbg_printf("\n*** WATCHPOINT TRIGGERED ***\n");
 				if (is_write) {
-					printf("Write to $%04X with value "
+					dbg_printf("Write to $%04X with value "
 					       "$%02X at PC $%04X\n",
 					    addr,
 					    val,
 					    dbg->current_instruction_pc);
 				} else {
-					printf("Read from $%04X: value $%02X "
+					dbg_printf("Read from $%04X: value $%02X "
 					       "at PC $%04X\n",
 					    addr,
 					    val,
@@ -5748,44 +5787,48 @@ void
 dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
 {
 	if (dbg_has_breakpoint(dbg, addr)) {
-		printf("Breakpoint at $%04X already exists.\n", addr);
+		dbg_printf("Breakpoint at $%04X already exists.\n", addr);
 		return;
 	}
 	if (dbg->num_breakpoints >= APPLE1_MAX_BREAKPOINTS) {
-		printf("Error: Maximum number of breakpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of breakpoints reached (%d).\n",
 		    APPLE1_MAX_BREAKPOINTS);
 		return;
 	}
 	dbg->breakpoints[dbg->num_breakpoints++] = addr;
-	printf("Breakpoint added at $%04X.\n", addr);
+	dbg_printf("Breakpoint added at $%04X.\n", addr);
 }
 
 void
 dbg_remove_breakpoint(debugger_t *dbg, uint16_t addr)
 {
-	int idx = -1;
+	int i;
+	int idx;
 
-	for (int i = 0; i < dbg->num_breakpoints; i++) {
+	idx = -1;
+	for (i = 0; i < dbg->num_breakpoints; i++) {
 		if (dbg->breakpoints[i] == addr) {
 			idx = i;
 			break;
 		}
 	}
 	if (idx == -1) {
-		printf("No breakpoint found at $%04X.\n", addr);
+		dbg_printf("No breakpoint found at $%04X.\n", addr);
 		return;
 	}
-	for (int i = idx; i < dbg->num_breakpoints - 1; i++) {
+	for (i = idx; i < dbg->num_breakpoints - 1; i++) {
 		dbg->breakpoints[i] = dbg->breakpoints[i + 1];
 	}
 	dbg->num_breakpoints--;
-	printf("Breakpoint removed at $%04X.\n", addr);
+	dbg_printf("Breakpoint removed at $%04X.\n", addr);
 }
 
 bool
 dbg_has_breakpoint(debugger_t *dbg, uint16_t addr)
 {
-	for (int i = 0; i < dbg->num_breakpoints; i++) {
+	int i;
+
+	for (i = 0; i < dbg->num_breakpoints; i++) {
 		if (dbg->breakpoints[i] == addr) {
 			return (true);
 		}
@@ -5797,10 +5840,24 @@ void
 dbg_run_command(debugger_t *dbg, const char *cmd_line)
 {
 	char input[256];
+	char type_str[16];
+	pc_edge_t edge;
+	const char *t;
+	char *args;
+	char *cmd_str;
+	unsigned int addr;
+	unsigned int end_val;
+	unsigned int start_val;
+	unsigned int val;
+	int i;
+	int idx;
+	int parsed;
+	char cmd;
+
 	strncpy(input, cmd_line, sizeof(input) - 1);
 	input[sizeof(input) - 1] = '\0';
 
-	char *cmd_str = input;
+	cmd_str = input;
 
 	while (*cmd_str == ' ' || *cmd_str == '\t') {
 		cmd_str++;
@@ -5809,19 +5866,19 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		cmd_str = "s";
 	}
 
-	char *args = cmd_str;
+	args = cmd_str;
 	if (strncmp(cmd_str, "wp", 2) == 0 &&
 	    (cmd_str[2] == '\0' || cmd_str[2] == ' ' || cmd_str[2] == '\t')) {
 		args = cmd_str + 2;
 		while (*args == ' ' || *args == '\t') {
 			args++;
 		}
-		unsigned int addr = 0;
-		char type_str[16] = "";
-		int parsed = sscanf(args, "%x %15s", &addr, type_str);
+		addr = 0;
+		type_str[0] = '\0';
+		parsed = sscanf(args, "%x %15s", &addr, type_str);
 		if (parsed >= 1) {
 			if (addr > 0xFFFF) {
-				printf("Error: Address must be a 16-bit hex "
+				dbg_printf("Error: Address must be a 16-bit hex "
 				       "value.\n");
 			} else {
 				wp_type_t type = WP_WRITE;
@@ -5834,7 +5891,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					    0) {
 						type = WP_ACCESS;
 					} else {
-						printf("Warning: Unknown type "
+						dbg_printf("Warning: Unknown type "
 						       "'%s'. Defaulting to "
 						       "'w'.\n",
 						    type_str);
@@ -5844,11 +5901,11 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			}
 		} else {
 			if (dbg->num_watchpoints == 0) {
-				printf("No active watchpoints.\n");
+				dbg_printf("No active watchpoints.\n");
 			} else {
-				printf("Active watchpoints:\n");
-				for (int i = 0; i < dbg->num_watchpoints; i++) {
-					const char *t = "unknown";
+				dbg_printf("Active watchpoints:\n");
+				for (i = 0; i < dbg->num_watchpoints; i++) {
+					t = "unknown";
 					if (dbg->watchpoints[i].type == WP_READ)
 						t = "read";
 					else if (dbg->watchpoints[i].type ==
@@ -5857,7 +5914,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					else if (dbg->watchpoints[i].type ==
 					    WP_ACCESS)
 						t = "read/write";
-					printf("  Watchpoint %d at $%04X "
+					dbg_printf("  Watchpoint %d at $%04X "
 					       "(%s)\n",
 					    i + 1,
 					    dbg->watchpoints[i].addr,
@@ -5871,20 +5928,20 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		while (*args == ' ' || *args == '\t') {
 			args++;
 		}
-		unsigned int addr = 0;
+		addr = 0;
 		if (sscanf(args, "%x", &addr) == 1) {
 			if (addr > 0xFFFF) {
-				printf("Error: Address must be a 16-bit hex "
+				dbg_printf("Error: Address must be a 16-bit hex "
 				       "value.\n");
 			} else {
 				dbg_remove_watchpoint(dbg, (uint16_t)addr);
 			}
 		} else {
 			dbg->num_watchpoints = 0;
-			printf("All watchpoints cleared.\n");
+			dbg_printf("All watchpoints cleared.\n");
 		}
 	} else {
-		char cmd = cmd_str[0];
+		cmd = cmd_str[0];
 		args = cmd_str + 1;
 
 		while (*args == ' ' || *args == '\t') {
@@ -5892,7 +5949,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		}
 
 		if (cmd == 'q') {
-			printf("Exiting emulator...\n");
+			dbg_printf("Exiting emulator...\n");
 			exit(0);
 		} else if (cmd == 'h' || cmd == '?') {
 			print_help();
@@ -5902,14 +5959,13 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 'c') {
 			dbg->step_mode = false;
 			term_close_debugger();
-			printf("Continuing...\n");
+			dbg_printf("Continuing...\n");
 		} else if (cmd == 'r') {
 			print_registers(dbg->cpu);
 		} else if (cmd == 'm') {
-			unsigned int start_val = dbg->cpu->pc;
-			unsigned int end_val = 0;
-			int parsed =
-			    sscanf(args, "%x %x", &start_val, &end_val);
+			start_val = dbg->cpu->pc;
+			end_val = 0;
+			parsed = sscanf(args, "%x %x", &start_val, &end_val);
 			if (parsed == 1) {
 				end_val = start_val + 15;
 			} else if (parsed == 0 || parsed == EOF) {
@@ -5917,15 +5973,15 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				end_val = start_val + 15;
 			}
 			if (start_val > 0xFFFF || end_val > 0xFFFF) {
-				printf("Error: Addresses must be 16-bit hex "
+				dbg_printf("Error: Addresses must be 16-bit hex "
 				       "values.\n");
 			} else if (end_val < start_val) {
-				printf("Error: End address cannot be less than "
+				dbg_printf("Error: End address cannot be less than "
 				       "start address.\n");
 			} else {
 				if (end_val - start_val > 255) {
 					end_val = start_val + 255;
-					printf("Warning: Capping memory dump "
+					dbg_printf("Warning: Capping memory dump "
 					       "to 256 bytes.\n");
 				}
 				dump_memory(dbg,
@@ -5933,12 +5989,12 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				    (uint16_t)end_val);
 			}
 		} else if (cmd == 'w') {
-			unsigned int addr = 0;
-			unsigned int val = 0;
+			addr = 0;
+			val = 0;
 
 			if (sscanf(args, "%x %x", &addr, &val) == 2) {
 				if (addr > 0xFFFF || val > 0xFF) {
-					printf("Error: Invalid address ($%04X) "
+					dbg_printf("Error: Invalid address ($%04X) "
 					       "or value ($%02X).\n",
 					    addr,
 					    val);
@@ -5946,32 +6002,32 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					bus_write(dbg->cpu->bus,
 					    (uint16_t)addr,
 					    (uint8_t)val);
-					printf("Wrote $%02X to $%04X.\n",
+					dbg_printf("Wrote $%02X to $%04X.\n",
 					    val,
 					    addr);
 				}
 			} else {
-				printf("Usage: w [hex_addr] [hex_val]\n");
+				dbg_printf("Usage: w [hex_addr] [hex_val]\n");
 			}
 		} else if (cmd == 'b') {
-			unsigned int addr = 0;
+			addr = 0;
 
 			if (sscanf(args, "%x", &addr) == 1) {
 				if (addr > 0xFFFF) {
-					printf("Error: Address must be a "
+					dbg_printf("Error: Address must be a "
 					       "16-bit hex value.\n");
 				} else {
 					dbg_add_breakpoint(dbg, (uint16_t)addr);
 				}
 			} else {
 				if (dbg->num_breakpoints == 0) {
-					printf("No active breakpoints.\n");
+					dbg_printf("No active breakpoints.\n");
 				} else {
-					printf("Active breakpoints:\n");
-					for (int i = 0;
+					dbg_printf("Active breakpoints:\n");
+					for (i = 0;
 					    i < dbg->num_breakpoints;
 					    i++) {
-						printf("  Breakpoint %d at "
+						dbg_printf("  Breakpoint %d at "
 						       "$%04X\n",
 						    i + 1,
 						    dbg->breakpoints[i]);
@@ -5979,11 +6035,11 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				}
 			}
 		} else if (cmd == 'd') {
-			unsigned int addr = 0;
+			addr = 0;
 
 			if (sscanf(args, "%x", &addr) == 1) {
 				if (addr > 0xFFFF) {
-					printf("Error: Address must be a "
+					dbg_printf("Error: Address must be a "
 					       "16-bit hex value.\n");
 				} else {
 					dbg_remove_breakpoint(dbg,
@@ -5991,23 +6047,23 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				}
 			} else {
 				dbg->num_breakpoints = 0;
-				printf("All breakpoints cleared.\n");
+				dbg_printf("All breakpoints cleared.\n");
 			}
 		} else if (cmd == 't') {
-			printf("Control Flow Transitions (oldest to "
+			dbg_printf("Control Flow Transitions (oldest to "
 			       "newest):\n");
-			int idx = dbg->cpu->pc_trace_idx;
-			for (int i = 0; i < 24; i++) {
-				pc_edge_t edge = dbg->cpu->pc_trace[idx];
+			idx = dbg->cpu->pc_trace_idx;
+			for (i = 0; i < 24; i++) {
+				edge = dbg->cpu->pc_trace[idx];
 				if (edge.from != 0 || edge.to != 0) {
-					printf("  $%04X -> $%04X\n",
+					dbg_printf("  $%04X -> $%04X\n",
 					    edge.from,
 					    edge.to);
 				}
 				idx = (idx + 1) % 24;
 			}
 		} else {
-			printf("Unknown command: %c. Type 'h' or '?' for "
+			dbg_printf("Unknown command: %c. Type 'h' or '?' for "
 			       "help.\n",
 			    cmd);
 		}
@@ -6018,8 +6074,9 @@ void
 dbg_interactive_loop(debugger_t *dbg)
 {
 	bus_access_cb_t old_cb;
-	char disasm_buf[64];
-	uint8_t op;
+	char     disasm_buf[64];
+	int      i;
+	uint8_t  op;
 
 	if (dbg->cpu->bus->opts.headless == 0) {
 		io_cleanup();
@@ -6034,27 +6091,27 @@ dbg_interactive_loop(debugger_t *dbg)
 	/* Check if this is a BRK instruction (BRK opcode is 0x00) */
 	op = bus_read(dbg->cpu->bus, dbg->cpu->pc);
 	if (op == 0x00) {
-		printf("\n*** BRK INSTRUCTION DETECTED ***\n");
+		dbg_printf("\n*** BRK INSTRUCTION DETECTED ***\n");
 	}
 
-	printf("\n[DEBUG] ");
+	dbg_printf("\n[DEBUG] ");
 	print_registers(dbg->cpu);
-	printf("        $%04X: %s\n", dbg->cpu->pc, disasm_buf);
+	dbg_printf("        $%04X: %s\n", dbg->cpu->pc, disasm_buf);
 
 	/* Print stack dump (top 8 values) */
-	printf("        Stack: ");
+	dbg_printf("        Stack: ");
 	if (dbg->cpu->s == 0xFF) {
-		printf("[Empty]");
+		dbg_printf("[Empty]");
 	} else {
-		for (int i = 0x100 + dbg->cpu->s + 1; i <= 0x1FF; i++) {
-			printf("%02X ", bus_read(dbg->cpu->bus, i));
+		for (i = 0x100 + dbg->cpu->s + 1; i <= 0x1FF; i++) {
+			dbg_printf("%02X ", bus_read(dbg->cpu->bus, i));
 			if (i > 0x100 + dbg->cpu->s + 8) {
-				printf("... ");
+				dbg_printf("... ");
 				break;
 			}
 		}
 	}
-	printf("\n");
+	dbg_printf("\n");
 
 	for (;;) {
 		char input[256];
@@ -6062,7 +6119,7 @@ dbg_interactive_loop(debugger_t *dbg)
 		char cmd;
 		size_t len;
 
-		printf("dbg> ");
+		dbg_printf("dbg> ");
 		fflush(stdout);
 
 		if (fgets(input, sizeof(input), stdin) == NULL) {
@@ -6198,7 +6255,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 /* ======== end dbg.c ======== */
 
 /* ======== begin io.c ======== */
-#include <stdbool.h>
+/* amalgamation: omit #include "port.h" */
 
 /* amalgamation: omit #include "io.h" */
 /* amalgamation: omit #include "term_apple1.h" */
@@ -6356,14 +6413,18 @@ ansi_out_char(char c)
 void
 term_init(void)
 {
+#if defined(TERM_WINDOWS)
+	HANDLE h_out;
+	DWORD mode;
+#elif defined(TERM_POSIX)
+	struct termios raw;
+#endif
+
 	memset(vram, 0x20, sizeof(vram));
 	cursor_x = 0;
 	cursor_y = 0;
 
 #if defined(TERM_WINDOWS)
-	HANDLE h_out;
-	DWORD mode;
-
 	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (h_out != INVALID_HANDLE_VALUE) {
 		GetConsoleMode(h_out, &orig_console_mode);
@@ -6372,7 +6433,6 @@ term_init(void)
 	}
 	raw_mode_active = true;
 #elif defined(TERM_POSIX)
-	struct termios raw;
 
 	if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
 		raw = orig_termios;
@@ -6456,7 +6516,7 @@ term_write(uint8_t val)
 
 	if (opt_baud > 0) {
 		/* 10 bits per char, sleep accordingly */
-		port_sleep_ns(10000000000ULL / opt_baud);
+		port_sleep_us(10000000UL / opt_baud);
 	}
 }
 
@@ -6482,6 +6542,9 @@ term_update(void)
 uint8_t
 term_poll(void)
 {
+#if defined(TERM_POSIX)
+	char c;
+#endif
 	uint8_t ch;
 
 	ch = 0;
@@ -6490,7 +6553,6 @@ term_poll(void)
 		ch = (uint8_t)_getch();
 	}
 #elif defined(TERM_POSIX)
-	char c;
 	if (read(STDIN_FILENO, &c, 1) == 1) {
 		ch = (uint8_t)c;
 	}
@@ -6612,15 +6674,46 @@ term_open_debugger(void)
 /* amalgamation: omit #include "port.h" */
 /* amalgamation: omit #include "term_apple1.h" */
 
-#ifdef APPLE1_OMIT_STDIO
-#  define cli_error(...) ((void)0)
-#  define cli_warn(...)  ((void)0)
-#  define cli_printf(...) ((void)0)
+#include <stdarg.h>
+
+static void
+cli_error(const char *fmt, ...)
+{
+#ifndef APPLE1_OMIT_STDIO
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
 #else
-#  define cli_error(...)  (fprintf(stderr, __VA_ARGS__))
-#  define cli_warn(...)   (fprintf(stderr, __VA_ARGS__))
-#  define cli_printf(...) (printf(__VA_ARGS__))
+	(void)fmt;
 #endif
+}
+
+static void PORT_UNUSED
+cli_warn(const char *fmt, ...)
+{
+#ifndef APPLE1_OMIT_STDIO
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+#else
+	(void)fmt;
+#endif
+}
+
+static void
+cli_printf(const char *fmt, ...)
+{
+#ifndef APPLE1_OMIT_STDIO
+	va_list args;
+	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
+#else
+	(void)fmt;
+#endif
+}
 
 
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
@@ -6695,14 +6788,17 @@ print_usage(const char *prog)
 	    "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
 	    "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 	    "  -l <file>@<hex>      Load binary at hex address\n"
-	    "  -c                   Cap emulation speed to 1.023 MHz\n"
+	    "  -c                   Cap emulation speed to 1.023 MHz\n",
+	    prog);
+	cli_error(
 	    "  -p                   Disable PIA I/O throttling\n"
 	    "  -d                   Emulate DRAM refresh cycle stealing\n"
 	    "  -b                   Emulate keyboard bounce\n"
 	    "  -s                   Disable cold-boot RAM randomisation\n"
 	    "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
 	    "  -H                   Headless mode (no terminal rendering)\n"
-	    "  -g                   Enable debugger (pauses on start)\n"
+	    "  -g                   Enable debugger (pauses on start)\n");
+	cli_error(
 	    "  -t                   Enable CPU trace to stdout\n"
 	    "  -w <txt>             Load Woz Monitor text file\n"
 	    "  -a <rom>             Load ACI cassette card ROM\n"
@@ -6710,8 +6806,7 @@ print_usage(const char *prog)
 	    "  -E <wav>             Save recorded ACI tape to WAV on exit\n"
 	    "  -B <baud>            Emulate terminal baud rate (e.g. 1200)\n"
 	    "  -k <rom>             Load Krusader assembler ROM\n"
-	    "  -h                   Show this help\n",
-	    prog);
+	    "  -h                   Show this help\n");
 #else
 	(void)prog;
 #endif
@@ -6921,7 +7016,7 @@ main(int argc, char *argv[])
 	char     trace_line[160];
 	char     disasm_buf[64];
 	char     hex_bytes[16];
-	uint64_t last_time;
+	uint32_t last_time;
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
 	uint32_t k;
@@ -7180,7 +7275,7 @@ main(int argc, char *argv[])
 	/* Cold-boot RAM randomisation */
 	if (bus.opts.randomize_cold_boot != 0) {
 		for (k = 0; k < ram_size; k++) {
-			static_ram[k] = (uint8_t)(port_gettime_ns() & 0xFF);
+			static_ram[k] = (uint8_t)(port_gettime_us() & 0xFF);
 		}
 	} else {
 		memset(static_ram, 0, ram_size);
@@ -7294,7 +7389,7 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time  = port_gettime_ns();
+	last_time  = port_gettime_us();
 	prev_pc    = 0xFFFF;
 	loop_count = 0;
 
@@ -7303,7 +7398,7 @@ main(int argc, char *argv[])
 		/* When paused / powered off: just sleep */
 		if (opt_headless == false &&
 		    term_is_powered() == false) {
-			port_sleep_ns(10000000ULL); /* 10ms */
+			port_sleep_us(10000UL); /* 10ms */
 			continue;
 		}
 
@@ -7416,18 +7511,18 @@ main(int argc, char *argv[])
 		/* Speed throttle (capped mode) */
 		if (opt_uncapped == false && opt_headless == false &&
 		    cycle_accumulator >= CYCLES_PER_MS) {
-			uint64_t current_time;
-			uint64_t elapsed_ns;
-			uint64_t expected_ns;
+			uint32_t current_time;
+			uint32_t elapsed_us;
+			uint32_t expected_us;
 
-			current_time = port_gettime_ns();
-			elapsed_ns   = current_time - last_time;
-			expected_ns  = 1000000ULL; /* 1 ms */
+			current_time = port_gettime_us();
+			elapsed_us   = current_time - last_time;
+			expected_us  = 1000UL; /* 1 ms = 1000 us */
 
-			if (elapsed_ns < expected_ns) {
-				port_sleep_ns(expected_ns - elapsed_ns);
+			if (elapsed_us < expected_us) {
+				port_sleep_us(expected_us - elapsed_us);
 			}
-			last_time         = port_gettime_ns();
+			last_time         = port_gettime_us();
 			cycle_accumulator = 0;
 		}
 

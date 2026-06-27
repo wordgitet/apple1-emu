@@ -14,7 +14,7 @@ enum CPU_FLAGS {
 	FLAG_BREAK = 1 << 4,	  /* B (push status sets/clears this) */
 	FLAG_UNUSED = 1 << 5,	  /* U (always 1) */
 	FLAG_OVERFLOW = 1 << 6,	  /* V */
-	FLAG_NEGATIVE = 1 << 7,	  /* N */
+	FLAG_NEGATIVE = 1 << 7	  /* N */
 };
 
 typedef struct {

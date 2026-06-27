@@ -14,53 +14,53 @@ static debugger_t *s_active_dbg = NULL;
 
 int
 dbg_printf(const char *format, ...);
-#define printf(...) dbg_printf(__VA_ARGS__)
+
 
 static void
 print_help(void)
 {
-	printf("Debugger commands:\n");
-	printf("  s, <Enter>        Step one instruction\n");
-	printf("  c                 Continue execution\n");
-	printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
+	dbg_printf("Debugger commands:\n");
+	dbg_printf("  s, <Enter>        Step one instruction\n");
+	dbg_printf("  c                 Continue execution\n");
+	dbg_printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
 	       "flags)\n");
-	printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
-	printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
-	printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With no "
+	dbg_printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
+	dbg_printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
+	dbg_printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With no "
 	       "address, lists breakpoints\n");
-	printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). With no "
+	dbg_printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). With no "
 	       "address, clears all\n");
-	printf("  wp [addr] [type]  Add watchpoint (type: r/w/rw, e.g. 'wp "
+	dbg_printf("  wp [addr] [type]  Add watchpoint (type: r/w/rw, e.g. 'wp "
 	       "0200 w'). "
 	       "With no args, lists watchpoints\n");
-	printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). With "
+	dbg_printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). With "
 	       "no "
 	       "address, clears all\n");
-	printf("  t                 Show recent control flow jumps (PC "
+	dbg_printf("  t                 Show recent control flow jumps (PC "
 	       "trace)\n");
-	printf("  h, ?              Show this help menu\n");
-	printf("  q                 Quit emulator\n");
+	dbg_printf("  h, ?              Show this help menu\n");
+	dbg_printf("  q                 Quit emulator\n");
 }
 
 static void
 print_registers(struct cpu *cpu)
 {
-	printf("PC:%04X  A:%02X  X:%02X  Y:%02X  SP:%02X  P:%02X (",
+	dbg_printf("PC:%04X  A:%02X  X:%02X  Y:%02X  SP:%02X  P:%02X (",
 	    cpu->pc,
 	    cpu->a,
 	    cpu->x,
 	    cpu->y,
 	    cpu->s,
 	    cpu->p);
-	printf("%c", (cpu->p & FLAG_NEGATIVE) ? 'N' : '-');
-	printf("%c", (cpu->p & FLAG_OVERFLOW) ? 'V' : '-');
-	printf("-");
-	printf("%c", (cpu->p & FLAG_BREAK) ? 'B' : '-');
-	printf("%c", (cpu->p & FLAG_DECIMAL) ? 'D' : '-');
-	printf("%c", (cpu->p & FLAG_INTERRUPT) ? 'I' : '-');
-	printf("%c", (cpu->p & FLAG_ZERO) ? 'Z' : '-');
-	printf("%c", (cpu->p & FLAG_CARRY) ? 'C' : '-');
-	printf(")\n");
+	dbg_printf("%c", (cpu->p & FLAG_NEGATIVE) ? 'N' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_OVERFLOW) ? 'V' : '-');
+	dbg_printf("-");
+	dbg_printf("%c", (cpu->p & FLAG_BREAK) ? 'B' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_DECIMAL) ? 'D' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_INTERRUPT) ? 'I' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_ZERO) ? 'Z' : '-');
+	dbg_printf("%c", (cpu->p & FLAG_CARRY) ? 'C' : '-');
+	dbg_printf(")\n");
 }
 
 static void
@@ -71,25 +71,25 @@ dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 
 	current = start;
 	while (current <= end) {
-		printf("$%04X: ", current);
+		dbg_printf("$%04X: ", current);
 		line_end = current + 15;
 		if (line_end > end) {
 			line_end = end;
 		}
 		for (i = current; i <= current + 15; i++) {
 			if (i <= line_end) {
-				printf("%02X ", bus_read(dbg->cpu->bus, i));
+				dbg_printf("%02X ", bus_read(dbg->cpu->bus, i));
 			} else {
-				printf("   ");
+				dbg_printf("   ");
 			}
 		}
-		printf(" |");
+		dbg_printf(" |");
 		for (i = current; i <= line_end; i++) {
 			val = bus_read(dbg->cpu->bus, i);
 			ch = val & 0x7F;
-			printf("%c", (ch >= 0x20 && ch <= 0x7E) ? ch : '.');
+			dbg_printf("%c", (ch >= 0x20 && ch <= 0x7E) ? ch : '.');
 		}
-		printf("|\n");
+		dbg_printf("|\n");
 		if (current >= 0xFFF0) {
 			break;
 		}
@@ -113,10 +113,12 @@ dbg_init(debugger_t *dbg, struct cpu *cpu)
 void
 dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 {
-	for (int i = 0; i < dbg->num_watchpoints; i++) {
+	int i;
+
+	for (i = 0; i < dbg->num_watchpoints; i++) {
 		if (dbg->watchpoints[i].addr == addr) {
 			dbg->watchpoints[i].type = type;
-			printf("Updated watchpoint at $%04X to type %s.\n",
+			dbg_printf("Updated watchpoint at $%04X to type %s.\n",
 			    addr,
 			    type == WP_READ ? "read"
 					    : (type == WP_WRITE ? "write"
@@ -127,7 +129,7 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 	}
 
 	if (dbg->num_watchpoints >= APPLE1_MAX_WATCHPOINTS) {
-		printf("Error: Maximum number of watchpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of watchpoints reached (%d).\n",
 		    APPLE1_MAX_WATCHPOINTS);
 		return;
 	}
@@ -136,7 +138,7 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 	dbg->watchpoints[dbg->num_watchpoints].type = type;
 	dbg->num_watchpoints++;
 
-	printf("Watchpoint added at $%04X (%s).\n",
+	dbg_printf("Watchpoint added at $%04X (%s).\n",
 	    addr,
 	    type == WP_READ ? "read"
 			    : (type == WP_WRITE ? "write" : "read/write"));
@@ -145,8 +147,11 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 void
 dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr)
 {
-	int idx = -1;
-	for (int i = 0; i < dbg->num_watchpoints; i++) {
+	int i;
+	int idx;
+
+	idx = -1;
+	for (i = 0; i < dbg->num_watchpoints; i++) {
 		if (dbg->watchpoints[i].addr == addr) {
 			idx = i;
 			break;
@@ -154,15 +159,15 @@ dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr)
 	}
 
 	if (idx == -1) {
-		printf("No watchpoint found at $%04X.\n", addr);
+		dbg_printf("No watchpoint found at $%04X.\n", addr);
 		return;
 	}
 
-	for (int i = idx; i < dbg->num_watchpoints - 1; i++) {
+	for (i = idx; i < dbg->num_watchpoints - 1; i++) {
 		dbg->watchpoints[i] = dbg->watchpoints[i + 1];
 	}
 	dbg->num_watchpoints--;
-	printf("Watchpoint removed at $%04X.\n", addr);
+	dbg_printf("Watchpoint removed at $%04X.\n", addr);
 }
 
 void
@@ -191,15 +196,15 @@ dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 				if (dbg->cpu->bus->opts.headless == 0) {
 					term_open_debugger();
 				}
-				printf("\n*** WATCHPOINT TRIGGERED ***\n");
+				dbg_printf("\n*** WATCHPOINT TRIGGERED ***\n");
 				if (is_write) {
-					printf("Write to $%04X with value "
+					dbg_printf("Write to $%04X with value "
 					       "$%02X at PC $%04X\n",
 					    addr,
 					    val,
 					    dbg->current_instruction_pc);
 				} else {
-					printf("Read from $%04X: value $%02X "
+					dbg_printf("Read from $%04X: value $%02X "
 					       "at PC $%04X\n",
 					    addr,
 					    val,
@@ -215,44 +220,48 @@ void
 dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
 {
 	if (dbg_has_breakpoint(dbg, addr)) {
-		printf("Breakpoint at $%04X already exists.\n", addr);
+		dbg_printf("Breakpoint at $%04X already exists.\n", addr);
 		return;
 	}
 	if (dbg->num_breakpoints >= APPLE1_MAX_BREAKPOINTS) {
-		printf("Error: Maximum number of breakpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of breakpoints reached (%d).\n",
 		    APPLE1_MAX_BREAKPOINTS);
 		return;
 	}
 	dbg->breakpoints[dbg->num_breakpoints++] = addr;
-	printf("Breakpoint added at $%04X.\n", addr);
+	dbg_printf("Breakpoint added at $%04X.\n", addr);
 }
 
 void
 dbg_remove_breakpoint(debugger_t *dbg, uint16_t addr)
 {
-	int idx = -1;
+	int i;
+	int idx;
 
-	for (int i = 0; i < dbg->num_breakpoints; i++) {
+	idx = -1;
+	for (i = 0; i < dbg->num_breakpoints; i++) {
 		if (dbg->breakpoints[i] == addr) {
 			idx = i;
 			break;
 		}
 	}
 	if (idx == -1) {
-		printf("No breakpoint found at $%04X.\n", addr);
+		dbg_printf("No breakpoint found at $%04X.\n", addr);
 		return;
 	}
-	for (int i = idx; i < dbg->num_breakpoints - 1; i++) {
+	for (i = idx; i < dbg->num_breakpoints - 1; i++) {
 		dbg->breakpoints[i] = dbg->breakpoints[i + 1];
 	}
 	dbg->num_breakpoints--;
-	printf("Breakpoint removed at $%04X.\n", addr);
+	dbg_printf("Breakpoint removed at $%04X.\n", addr);
 }
 
 bool
 dbg_has_breakpoint(debugger_t *dbg, uint16_t addr)
 {
-	for (int i = 0; i < dbg->num_breakpoints; i++) {
+	int i;
+
+	for (i = 0; i < dbg->num_breakpoints; i++) {
 		if (dbg->breakpoints[i] == addr) {
 			return (true);
 		}
@@ -264,10 +273,24 @@ void
 dbg_run_command(debugger_t *dbg, const char *cmd_line)
 {
 	char input[256];
+	char type_str[16];
+	pc_edge_t edge;
+	const char *t;
+	char *args;
+	char *cmd_str;
+	unsigned int addr;
+	unsigned int end_val;
+	unsigned int start_val;
+	unsigned int val;
+	int i;
+	int idx;
+	int parsed;
+	char cmd;
+
 	strncpy(input, cmd_line, sizeof(input) - 1);
 	input[sizeof(input) - 1] = '\0';
 
-	char *cmd_str = input;
+	cmd_str = input;
 
 	while (*cmd_str == ' ' || *cmd_str == '\t') {
 		cmd_str++;
@@ -276,19 +299,19 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		cmd_str = "s";
 	}
 
-	char *args = cmd_str;
+	args = cmd_str;
 	if (strncmp(cmd_str, "wp", 2) == 0 &&
 	    (cmd_str[2] == '\0' || cmd_str[2] == ' ' || cmd_str[2] == '\t')) {
 		args = cmd_str + 2;
 		while (*args == ' ' || *args == '\t') {
 			args++;
 		}
-		unsigned int addr = 0;
-		char type_str[16] = "";
-		int parsed = sscanf(args, "%x %15s", &addr, type_str);
+		addr = 0;
+		type_str[0] = '\0';
+		parsed = sscanf(args, "%x %15s", &addr, type_str);
 		if (parsed >= 1) {
 			if (addr > 0xFFFF) {
-				printf("Error: Address must be a 16-bit hex "
+				dbg_printf("Error: Address must be a 16-bit hex "
 				       "value.\n");
 			} else {
 				wp_type_t type = WP_WRITE;
@@ -301,7 +324,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					    0) {
 						type = WP_ACCESS;
 					} else {
-						printf("Warning: Unknown type "
+						dbg_printf("Warning: Unknown type "
 						       "'%s'. Defaulting to "
 						       "'w'.\n",
 						    type_str);
@@ -311,11 +334,11 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			}
 		} else {
 			if (dbg->num_watchpoints == 0) {
-				printf("No active watchpoints.\n");
+				dbg_printf("No active watchpoints.\n");
 			} else {
-				printf("Active watchpoints:\n");
-				for (int i = 0; i < dbg->num_watchpoints; i++) {
-					const char *t = "unknown";
+				dbg_printf("Active watchpoints:\n");
+				for (i = 0; i < dbg->num_watchpoints; i++) {
+					t = "unknown";
 					if (dbg->watchpoints[i].type == WP_READ)
 						t = "read";
 					else if (dbg->watchpoints[i].type ==
@@ -324,7 +347,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					else if (dbg->watchpoints[i].type ==
 					    WP_ACCESS)
 						t = "read/write";
-					printf("  Watchpoint %d at $%04X "
+					dbg_printf("  Watchpoint %d at $%04X "
 					       "(%s)\n",
 					    i + 1,
 					    dbg->watchpoints[i].addr,
@@ -338,20 +361,20 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		while (*args == ' ' || *args == '\t') {
 			args++;
 		}
-		unsigned int addr = 0;
+		addr = 0;
 		if (sscanf(args, "%x", &addr) == 1) {
 			if (addr > 0xFFFF) {
-				printf("Error: Address must be a 16-bit hex "
+				dbg_printf("Error: Address must be a 16-bit hex "
 				       "value.\n");
 			} else {
 				dbg_remove_watchpoint(dbg, (uint16_t)addr);
 			}
 		} else {
 			dbg->num_watchpoints = 0;
-			printf("All watchpoints cleared.\n");
+			dbg_printf("All watchpoints cleared.\n");
 		}
 	} else {
-		char cmd = cmd_str[0];
+		cmd = cmd_str[0];
 		args = cmd_str + 1;
 
 		while (*args == ' ' || *args == '\t') {
@@ -359,7 +382,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		}
 
 		if (cmd == 'q') {
-			printf("Exiting emulator...\n");
+			dbg_printf("Exiting emulator...\n");
 			exit(0);
 		} else if (cmd == 'h' || cmd == '?') {
 			print_help();
@@ -369,14 +392,13 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 'c') {
 			dbg->step_mode = false;
 			term_close_debugger();
-			printf("Continuing...\n");
+			dbg_printf("Continuing...\n");
 		} else if (cmd == 'r') {
 			print_registers(dbg->cpu);
 		} else if (cmd == 'm') {
-			unsigned int start_val = dbg->cpu->pc;
-			unsigned int end_val = 0;
-			int parsed =
-			    sscanf(args, "%x %x", &start_val, &end_val);
+			start_val = dbg->cpu->pc;
+			end_val = 0;
+			parsed = sscanf(args, "%x %x", &start_val, &end_val);
 			if (parsed == 1) {
 				end_val = start_val + 15;
 			} else if (parsed == 0 || parsed == EOF) {
@@ -384,15 +406,15 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				end_val = start_val + 15;
 			}
 			if (start_val > 0xFFFF || end_val > 0xFFFF) {
-				printf("Error: Addresses must be 16-bit hex "
+				dbg_printf("Error: Addresses must be 16-bit hex "
 				       "values.\n");
 			} else if (end_val < start_val) {
-				printf("Error: End address cannot be less than "
+				dbg_printf("Error: End address cannot be less than "
 				       "start address.\n");
 			} else {
 				if (end_val - start_val > 255) {
 					end_val = start_val + 255;
-					printf("Warning: Capping memory dump "
+					dbg_printf("Warning: Capping memory dump "
 					       "to 256 bytes.\n");
 				}
 				dump_memory(dbg,
@@ -400,12 +422,12 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				    (uint16_t)end_val);
 			}
 		} else if (cmd == 'w') {
-			unsigned int addr = 0;
-			unsigned int val = 0;
+			addr = 0;
+			val = 0;
 
 			if (sscanf(args, "%x %x", &addr, &val) == 2) {
 				if (addr > 0xFFFF || val > 0xFF) {
-					printf("Error: Invalid address ($%04X) "
+					dbg_printf("Error: Invalid address ($%04X) "
 					       "or value ($%02X).\n",
 					    addr,
 					    val);
@@ -413,32 +435,32 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					bus_write(dbg->cpu->bus,
 					    (uint16_t)addr,
 					    (uint8_t)val);
-					printf("Wrote $%02X to $%04X.\n",
+					dbg_printf("Wrote $%02X to $%04X.\n",
 					    val,
 					    addr);
 				}
 			} else {
-				printf("Usage: w [hex_addr] [hex_val]\n");
+				dbg_printf("Usage: w [hex_addr] [hex_val]\n");
 			}
 		} else if (cmd == 'b') {
-			unsigned int addr = 0;
+			addr = 0;
 
 			if (sscanf(args, "%x", &addr) == 1) {
 				if (addr > 0xFFFF) {
-					printf("Error: Address must be a "
+					dbg_printf("Error: Address must be a "
 					       "16-bit hex value.\n");
 				} else {
 					dbg_add_breakpoint(dbg, (uint16_t)addr);
 				}
 			} else {
 				if (dbg->num_breakpoints == 0) {
-					printf("No active breakpoints.\n");
+					dbg_printf("No active breakpoints.\n");
 				} else {
-					printf("Active breakpoints:\n");
-					for (int i = 0;
+					dbg_printf("Active breakpoints:\n");
+					for (i = 0;
 					    i < dbg->num_breakpoints;
 					    i++) {
-						printf("  Breakpoint %d at "
+						dbg_printf("  Breakpoint %d at "
 						       "$%04X\n",
 						    i + 1,
 						    dbg->breakpoints[i]);
@@ -446,11 +468,11 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				}
 			}
 		} else if (cmd == 'd') {
-			unsigned int addr = 0;
+			addr = 0;
 
 			if (sscanf(args, "%x", &addr) == 1) {
 				if (addr > 0xFFFF) {
-					printf("Error: Address must be a "
+					dbg_printf("Error: Address must be a "
 					       "16-bit hex value.\n");
 				} else {
 					dbg_remove_breakpoint(dbg,
@@ -458,23 +480,23 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				}
 			} else {
 				dbg->num_breakpoints = 0;
-				printf("All breakpoints cleared.\n");
+				dbg_printf("All breakpoints cleared.\n");
 			}
 		} else if (cmd == 't') {
-			printf("Control Flow Transitions (oldest to "
+			dbg_printf("Control Flow Transitions (oldest to "
 			       "newest):\n");
-			int idx = dbg->cpu->pc_trace_idx;
-			for (int i = 0; i < 24; i++) {
-				pc_edge_t edge = dbg->cpu->pc_trace[idx];
+			idx = dbg->cpu->pc_trace_idx;
+			for (i = 0; i < 24; i++) {
+				edge = dbg->cpu->pc_trace[idx];
 				if (edge.from != 0 || edge.to != 0) {
-					printf("  $%04X -> $%04X\n",
+					dbg_printf("  $%04X -> $%04X\n",
 					    edge.from,
 					    edge.to);
 				}
 				idx = (idx + 1) % 24;
 			}
 		} else {
-			printf("Unknown command: %c. Type 'h' or '?' for "
+			dbg_printf("Unknown command: %c. Type 'h' or '?' for "
 			       "help.\n",
 			    cmd);
 		}
@@ -485,8 +507,9 @@ void
 dbg_interactive_loop(debugger_t *dbg)
 {
 	bus_access_cb_t old_cb;
-	char disasm_buf[64];
-	uint8_t op;
+	char     disasm_buf[64];
+	int      i;
+	uint8_t  op;
 
 	if (dbg->cpu->bus->opts.headless == 0) {
 		io_cleanup();
@@ -501,27 +524,27 @@ dbg_interactive_loop(debugger_t *dbg)
 	/* Check if this is a BRK instruction (BRK opcode is 0x00) */
 	op = bus_read(dbg->cpu->bus, dbg->cpu->pc);
 	if (op == 0x00) {
-		printf("\n*** BRK INSTRUCTION DETECTED ***\n");
+		dbg_printf("\n*** BRK INSTRUCTION DETECTED ***\n");
 	}
 
-	printf("\n[DEBUG] ");
+	dbg_printf("\n[DEBUG] ");
 	print_registers(dbg->cpu);
-	printf("        $%04X: %s\n", dbg->cpu->pc, disasm_buf);
+	dbg_printf("        $%04X: %s\n", dbg->cpu->pc, disasm_buf);
 
 	/* Print stack dump (top 8 values) */
-	printf("        Stack: ");
+	dbg_printf("        Stack: ");
 	if (dbg->cpu->s == 0xFF) {
-		printf("[Empty]");
+		dbg_printf("[Empty]");
 	} else {
-		for (int i = 0x100 + dbg->cpu->s + 1; i <= 0x1FF; i++) {
-			printf("%02X ", bus_read(dbg->cpu->bus, i));
+		for (i = 0x100 + dbg->cpu->s + 1; i <= 0x1FF; i++) {
+			dbg_printf("%02X ", bus_read(dbg->cpu->bus, i));
 			if (i > 0x100 + dbg->cpu->s + 8) {
-				printf("... ");
+				dbg_printf("... ");
 				break;
 			}
 		}
 	}
-	printf("\n");
+	dbg_printf("\n");
 
 	for (;;) {
 		char input[256];
@@ -529,7 +552,7 @@ dbg_interactive_loop(debugger_t *dbg)
 		char cmd;
 		size_t len;
 
-		printf("dbg> ");
+		dbg_printf("dbg> ");
 		fflush(stdout);
 
 		if (fgets(input, sizeof(input), stdin) == NULL) {

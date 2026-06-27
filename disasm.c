@@ -1,11 +1,11 @@
 #ifndef APPLE1_OMIT_DISASM
-#include <stdint.h>
+#include "port.h"
 #include <stdio.h>
 
 #include "bus.h"
 #include "disasm.h"
 
-typedef enum {
+enum addr_mode {
 	ADDR_IMP, /* Implied (e.g. TAX) */
 	ADDR_ACC, /* Accumulator (e.g. LSR A) */
 	ADDR_IMM, /* Immediate (e.g. LDA #$12) */
@@ -18,15 +18,15 @@ typedef enum {
 	ADDR_IND, /* Indirect (e.g. JMP ($1234)) */
 	ADDR_IZX, /* Indirect, X (e.g. LDA ($12,X)) */
 	ADDR_IZY, /* Indirect, Y (e.g. LDA ($12),Y) */
-	ADDR_REL, /* Relative (e.g. BNE $1234) */
-} addr_mode_t;
+	ADDR_REL  /* Relative (e.g. BNE $1234) */
+};
 
-typedef struct {
+struct op_info {
 	const char *name;
-	addr_mode_t mode;
-} op_info_t;
+	enum addr_mode mode;
+};
 
-static const op_info_t op_table[256] = {
+static const struct op_info op_table[256] = {
 	/* 0x00 - 0x0F */
 	{ "BRK", ADDR_IMP },
 	{ "ORA", ADDR_IZX },
@@ -305,7 +305,7 @@ int
 cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 {
 	uint8_t op = bus_read(bus, pc);
-	op_info_t info = op_table[op];
+	struct op_info info = op_table[op];
 	int bytes = 1;
 
 	switch (info.mode) {

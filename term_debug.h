@@ -2,7 +2,7 @@
 #define TERM_DEBUG_H
 
 #include <SDL3/SDL.h>
-#include <stdbool.h>
+#include "port.h"
 
 void
 term_debug_init(void);

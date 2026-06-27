@@ -80,14 +80,18 @@ ansi_out_char(char c)
 void
 term_init(void)
 {
+#if defined(TERM_WINDOWS)
+	HANDLE h_out;
+	DWORD mode;
+#elif defined(TERM_POSIX)
+	struct termios raw;
+#endif
+
 	memset(vram, 0x20, sizeof(vram));
 	cursor_x = 0;
 	cursor_y = 0;
 
 #if defined(TERM_WINDOWS)
-	HANDLE h_out;
-	DWORD mode;
-
 	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (h_out != INVALID_HANDLE_VALUE) {
 		GetConsoleMode(h_out, &orig_console_mode);
@@ -96,7 +100,6 @@ term_init(void)
 	}
 	raw_mode_active = true;
 #elif defined(TERM_POSIX)
-	struct termios raw;
 
 	if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
 		raw = orig_termios;
@@ -180,7 +183,7 @@ term_write(uint8_t val)
 
 	if (opt_baud > 0) {
 		/* 10 bits per char, sleep accordingly */
-		port_sleep_ns(10000000000ULL / opt_baud);
+		port_sleep_us(10000000UL / opt_baud);
 	}
 }
 
@@ -206,6 +209,9 @@ term_update(void)
 uint8_t
 term_poll(void)
 {
+#if defined(TERM_POSIX)
+	char c;
+#endif
 	uint8_t ch;
 
 	ch = 0;
@@ -214,7 +220,6 @@ term_poll(void)
 		ch = (uint8_t)_getch();
 	}
 #elif defined(TERM_POSIX)
-	char c;
 	if (read(STDIN_FILENO, &c, 1) == 1) {
 		ch = (uint8_t)c;
 	}

@@ -2,8 +2,7 @@
 #define TERM_INTERNAL_H
 
 #include <SDL3/SDL.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "port.h"
 
 #include "bus.h"
 #include "cpu.h"

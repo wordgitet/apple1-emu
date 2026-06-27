@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
 #include <signal.h>
-#include <stdbool.h>
+#include "port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include "port.h"
 
 #include "io.h"
 #include "term_apple1.h"

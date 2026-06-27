@@ -32,9 +32,6 @@
 #  ifndef uint32_t
      typedef unsigned int uint32_t;
 #  endif
-#  ifndef uint64_t
-     typedef unsigned long long uint64_t;
-#  endif
 #  ifndef int8_t
      typedef signed char int8_t;
 #  endif
@@ -44,13 +41,20 @@
 #  ifndef int32_t
      typedef signed int int32_t;
 #  endif
-#  ifndef int64_t
-     typedef signed long long int64_t;
-#  endif
 #  ifndef bool
 #    define bool int
 #    define true 1
 #    define false 0
+#  endif
+#  ifndef UINT32_MAX
+#    define UINT32_MAX 4294967295UL
+#  endif
+#endif
+
+/* inline keyword fallback for C89 compilers */
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
+#  ifndef inline
+#    define inline
 #  endif
 #endif
 
@@ -79,7 +83,13 @@
 #  define port_free(ptr)        free(ptr)
 #  define port_realloc(ptr, sz) realloc(ptr, sz)
 
-static inline char *
+#  if defined(__GNUC__) || defined(__clang__)
+#    define PORT_UNUSED __attribute__((unused))
+#  else
+#    define PORT_UNUSED
+#  endif
+
+static inline PORT_UNUSED char *
 port_strdup(const char *str)
 {
 	size_t len;
@@ -116,8 +126,8 @@ int port_getopt(int argc, char *const argv[], const char *optstring);
 /*
  * High-resolution timer and sleep shims
  */
-uint64_t port_gettime_ns(void);
-void port_sleep_ns(uint64_t ns);
+uint32_t port_gettime_us(void);
+void port_sleep_us(uint32_t us);
 
 /*
  * Implementations
@@ -207,56 +217,53 @@ port_getopt(int argc, char *const argv[], const char *optstring)
  */
 #if defined(_WIN32) || defined(_WIN64)
 #  include <windows.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
 	LARGE_INTEGER freq;
 	LARGE_INTEGER counter;
 
 	QueryPerformanceFrequency(&freq);
 	QueryPerformanceCounter(&counter);
-	return ((uint64_t)(counter.QuadPart * 1000000000LL / freq.QuadPart));
+	return ((uint32_t)(counter.QuadPart * 1000000 / freq.QuadPart));
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
-	Sleep((DWORD)(ns / 1000000ULL));
+	Sleep((DWORD)(us / 1000));
 }
 
 #elif defined(__HAIKU__)
 #  include <kernel/OS.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	return ((uint64_t)system_time() * 1000ULL);
+	return ((uint32_t)system_time());
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
-	snooze((bigtime_t)(ns / 1000ULL));
+	snooze((bigtime_t)us);
 }
 
 #elif defined(__QNXNTO__)
 #  include <sys/neutrino.h>
 #  include <sys/syspage.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	uint64_t cycles;
-
-	cycles = ClockCycles();
-	return ((uint64_t)(cycles * 1000000000ULL / SYSPAGE_ENTRY(qtime)->cycles_per_sec));
+	return ((uint32_t)(ClockCycles() * 1000000 / SYSPAGE_ENTRY(qtime)->cycles_per_sec));
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
 	struct timespec req;
 
-	req.tv_sec = (time_t)(ns / 1000000000ULL);
-	req.tv_nsec = (long)(ns % 1000000000ULL);
+	req.tv_sec = (time_t)(us / 1000000);
+	req.tv_nsec = (long)((us % 1000000) * 1000);
 	nanosleep(&req, NULL);
 }
 
@@ -265,16 +272,16 @@ port_sleep_ns(uint64_t ns)
 #  include <tickLib.h>
 #  include <sysLib.h>
 #  include <taskLib.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	return ((uint64_t)tickGet() * 1000000000ULL / sysClkRateGet());
+	return ((uint32_t)tickGet() * 1000000 / sysClkRateGet());
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
-	taskDelay((int)(ns * sysClkRateGet() / 1000000000ULL) + 1);
+	taskDelay((int)(us * sysClkRateGet() / 1000000) + 1);
 }
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__sun) || defined(__rtems__)
 /* Standard POSIX default */
@@ -282,42 +289,42 @@ port_sleep_ns(uint64_t ns)
 #    define _POSIX_C_SOURCE 199309L
 #  endif
 #  include <time.h>
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-		return ((uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec);
+		return ((uint32_t)ts.tv_sec * 1000000 + (uint32_t)(ts.tv_nsec / 1000));
 	}
 	return (0);
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
 	struct timespec req;
 
-	req.tv_sec = (time_t)(ns / 1000000000ULL);
-	req.tv_nsec = (long)(ns % 1000000000ULL);
+	req.tv_sec = (time_t)(us / 1000000);
+	req.tv_nsec = (long)((us % 1000000) * 1000);
 	nanosleep(&req, NULL);
 }
 #else
 /* Bare-metal / custom RTOS mock fallback */
-uint64_t
-port_gettime_ns(void)
+uint32_t
+port_gettime_us(void)
 {
-	static uint64_t mock_ticks = 0;
+	static uint32_t mock_ticks = 0;
 	/* Pretend 1 millisecond passes each check */
-	return (mock_ticks += 1000000ULL);
+	return (mock_ticks += 1000);
 }
 
 void
-port_sleep_ns(uint64_t ns)
+port_sleep_us(uint32_t us)
 {
 	/* Busy loop fallback */
-	volatile uint64_t count;
-	for (count = 0; count < ns / 10ULL; count++) {
+	volatile uint32_t count;
+	for (count = 0; count < us; count++) {
 		/* no-op */
 	}
 }
@@ -505,7 +512,7 @@ enum CPU_FLAGS {
 	FLAG_BREAK = 1 << 4,	  /* B (push status sets/clears this) */
 	FLAG_UNUSED = 1 << 5,	  /* U (always 1) */
 	FLAG_OVERFLOW = 1 << 6,	  /* V */
-	FLAG_NEGATIVE = 1 << 7,	  /* N */
+	FLAG_NEGATIVE = 1 << 7	  /* N */
 };
 
 typedef struct {
@@ -623,7 +630,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line);
 
 #ifndef APPLE1_OMIT_DISASM
 
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 
 /* amalgamation: omit #include "bus.h" */
 
@@ -682,7 +689,7 @@ aci_get_recorded_count(struct expansion_card *card);
 
 #ifndef APPLE1_OMIT_KRUSADER
 
-#include <stdint.h>
+/* amalgamation: omit #include "port.h" */
 
 /* amalgamation: omit #include "bus.h" */
 
@@ -818,7 +825,7 @@ term_close_debugger(void);
 void
 term_open_debugger(void);
 
-#endif // TERM_APPLE1_H
+#endif /* TERM_APPLE1_H */
 /* ======== end term_apple1.h ======== */
 
 #endif /* APPLE1_H */

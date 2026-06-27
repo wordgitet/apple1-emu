@@ -28,15 +28,46 @@
 #include "port.h"
 #include "term_apple1.h"
 
-#ifdef APPLE1_OMIT_STDIO
-#  define cli_error(...) ((void)0)
-#  define cli_warn(...)  ((void)0)
-#  define cli_printf(...) ((void)0)
+#include <stdarg.h>
+
+static void
+cli_error(const char *fmt, ...)
+{
+#ifndef APPLE1_OMIT_STDIO
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
 #else
-#  define cli_error(...)  (fprintf(stderr, __VA_ARGS__))
-#  define cli_warn(...)   (fprintf(stderr, __VA_ARGS__))
-#  define cli_printf(...) (printf(__VA_ARGS__))
+	(void)fmt;
 #endif
+}
+
+static void PORT_UNUSED
+cli_warn(const char *fmt, ...)
+{
+#ifndef APPLE1_OMIT_STDIO
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
+#else
+	(void)fmt;
+#endif
+}
+
+static void
+cli_printf(const char *fmt, ...)
+{
+#ifndef APPLE1_OMIT_STDIO
+	va_list args;
+	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
+#else
+	(void)fmt;
+#endif
+}
 
 
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
@@ -111,14 +142,17 @@ print_usage(const char *prog)
 	    "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
 	    "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 	    "  -l <file>@<hex>      Load binary at hex address\n"
-	    "  -c                   Cap emulation speed to 1.023 MHz\n"
+	    "  -c                   Cap emulation speed to 1.023 MHz\n",
+	    prog);
+	cli_error(
 	    "  -p                   Disable PIA I/O throttling\n"
 	    "  -d                   Emulate DRAM refresh cycle stealing\n"
 	    "  -b                   Emulate keyboard bounce\n"
 	    "  -s                   Disable cold-boot RAM randomisation\n"
 	    "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
 	    "  -H                   Headless mode (no terminal rendering)\n"
-	    "  -g                   Enable debugger (pauses on start)\n"
+	    "  -g                   Enable debugger (pauses on start)\n");
+	cli_error(
 	    "  -t                   Enable CPU trace to stdout\n"
 	    "  -w <txt>             Load Woz Monitor text file\n"
 	    "  -a <rom>             Load ACI cassette card ROM\n"
@@ -126,8 +160,7 @@ print_usage(const char *prog)
 	    "  -E <wav>             Save recorded ACI tape to WAV on exit\n"
 	    "  -B <baud>            Emulate terminal baud rate (e.g. 1200)\n"
 	    "  -k <rom>             Load Krusader assembler ROM\n"
-	    "  -h                   Show this help\n",
-	    prog);
+	    "  -h                   Show this help\n");
 #else
 	(void)prog;
 #endif
@@ -337,7 +370,7 @@ main(int argc, char *argv[])
 	char     trace_line[160];
 	char     disasm_buf[64];
 	char     hex_bytes[16];
-	uint64_t last_time;
+	uint32_t last_time;
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
 	uint32_t k;
@@ -596,7 +629,7 @@ main(int argc, char *argv[])
 	/* Cold-boot RAM randomisation */
 	if (bus.opts.randomize_cold_boot != 0) {
 		for (k = 0; k < ram_size; k++) {
-			static_ram[k] = (uint8_t)(port_gettime_ns() & 0xFF);
+			static_ram[k] = (uint8_t)(port_gettime_us() & 0xFF);
 		}
 	} else {
 		memset(static_ram, 0, ram_size);
@@ -710,7 +743,7 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time  = port_gettime_ns();
+	last_time  = port_gettime_us();
 	prev_pc    = 0xFFFF;
 	loop_count = 0;
 
@@ -719,7 +752,7 @@ main(int argc, char *argv[])
 		/* When paused / powered off: just sleep */
 		if (opt_headless == false &&
 		    term_is_powered() == false) {
-			port_sleep_ns(10000000ULL); /* 10ms */
+			port_sleep_us(10000UL); /* 10ms */
 			continue;
 		}
 
@@ -832,18 +865,18 @@ main(int argc, char *argv[])
 		/* Speed throttle (capped mode) */
 		if (opt_uncapped == false && opt_headless == false &&
 		    cycle_accumulator >= CYCLES_PER_MS) {
-			uint64_t current_time;
-			uint64_t elapsed_ns;
-			uint64_t expected_ns;
+			uint32_t current_time;
+			uint32_t elapsed_us;
+			uint32_t expected_us;
 
-			current_time = port_gettime_ns();
-			elapsed_ns   = current_time - last_time;
-			expected_ns  = 1000000ULL; /* 1 ms */
+			current_time = port_gettime_us();
+			elapsed_us   = current_time - last_time;
+			expected_us  = 1000UL; /* 1 ms = 1000 us */
 
-			if (elapsed_ns < expected_ns) {
-				port_sleep_ns(expected_ns - elapsed_ns);
+			if (elapsed_us < expected_us) {
+				port_sleep_us(expected_us - elapsed_us);
 			}
-			last_time         = port_gettime_ns();
+			last_time         = port_gettime_us();
 			cycle_accumulator = 0;
 		}
 

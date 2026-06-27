@@ -1,6 +1,5 @@
-#include <stdbool.h>
+#include "../port.h"
 #include <stddef.h>
-#include <stdint.h>
 
 #include "../bus.h"
 #include "../term_apple1.h"

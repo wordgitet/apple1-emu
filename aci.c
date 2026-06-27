@@ -10,9 +10,9 @@ struct aci_card {
 	struct bus *bus;
 	uint32_t *durations;
 	uint32_t *recorded_durations;
-	uint64_t current_cycle;
-	uint64_t last_output_toggle_cycle;
-	uint64_t last_read_cycle;
+	uint32_t current_cycle;
+	uint32_t last_output_toggle_cycle;
+	uint32_t last_read_cycle;
 	int32_t cycles_until_toggle;
 	uint32_t num_durations;
 	uint32_t playback_index;
@@ -32,7 +32,7 @@ aci_record_toggle(struct aci_card *aci)
 {
 	uint32_t new_cap;
 	uint32_t *buf;
-	uint64_t delta;
+	uint32_t delta;
 
 	if (aci->recording_started == 0) {
 		/* First toggle: capture initial output level before toggling */
@@ -69,7 +69,7 @@ aci_read(void *ctx, uint16_t addr, bool is_dummy)
 {
 	struct aci_card *aci;
 	uint8_t result;
-	uint64_t gap;
+	uint32_t gap;
 
 	(void)is_dummy;
 	aci = (struct aci_card *)ctx;
@@ -225,15 +225,15 @@ pcm_to_durations(struct bus *bus,
     bool *out_initial_level)
 {
 	uint32_t *durations, *new_buf;
-	uint32_t cap, count, first_active, i;
+	uint32_t cap, count, first_active, i, last_transition;
+	float threshold;
 	bool current_level;
-	uint32_t last_transition;
 
 	if (num_samples == 0 || sample_rate == 0) {
 		return (false);
 	}
 
-	const float threshold = 0.02f;
+	threshold = 0.02f;
 	first_active = 0;
 
 	while (first_active < num_samples &&
@@ -554,7 +554,7 @@ static bool
 save_wav_tape(struct aci_card *aci, const char *tape_path)
 {
 	FILE *f;
-	uint64_t total_samples;
+	uint32_t total_samples;
 	uint32_t byte_rate;
 	uint32_t data_size;
 	uint32_t riff_size;

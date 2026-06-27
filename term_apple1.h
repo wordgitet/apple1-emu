@@ -55,4 +55,4 @@ term_close_debugger(void);
 void
 term_open_debugger(void);
 
-#endif // TERM_APPLE1_H
+#endif /* TERM_APPLE1_H */

@@ -5,7 +5,7 @@
 
 #ifndef APPLE1_OMIT_KRUSADER
 
-#include <stdint.h>
+#include "port.h"
 
 #include "bus.h"
 
