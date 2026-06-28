@@ -16,19 +16,20 @@ expect_writable(struct bus *bus, uint16_t address, uint8_t value)
 static void
 expect_unmapped(struct bus *bus, uint16_t address, uint8_t value)
 {
-	/* Before write, the underlying RAM cell must be 0x00 */
-	assert(bus->ram[address] == 0x00);
+	uint8_t hi_bank_probe;
 
-	/* Write to the unmapped address */
+	/*
+	 * In 8 KB split mode, logical $E000 maps to physical ram[0x1000].
+	 * Gap addresses ($1000-$DFFF) must not touch that cell — verify
+	 * using the byte left by expect_writable(..., 0xE000, 0x13).
+	 */
+	hi_bank_probe = bus->ram[0x1000];
+
 	bus_write(bus, address, value);
 
-	/* The underlying RAM must STILL be 0x00 */
-	assert(bus->ram[address] == 0x00);
+	assert(bus->ram[0x1000] == hi_bank_probe);
 
-	/* Change last_bus_value by writing to a mapped RAM address */
 	bus_write(bus, 0x0000, 0xAA);
-
-	/* Reading from the unmapped address should return the last bus value (0xAA), not value */
 	assert(bus_read(bus, address) == 0xAA);
 }
 

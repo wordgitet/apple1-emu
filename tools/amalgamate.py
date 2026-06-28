@@ -30,11 +30,15 @@ import sys
 # ---------------------------------------------------------------------------
 # Rules:
 #   * List files in dependency order (depended-upon first).
-#   * main_cli.c must be last (it defines main()).
+#   * Port shims (port_string.c + one port_*.c) come before core sources.
+#   * main.c must be last (it defines main()).
 #   * SDL3 / GUI files are excluded.
-#   * PORT_IMPLEMENT_SHIMS is emitted once, before the first file that
-#     needs it (bus.c), so every other TU just sees the extern decls.
 # ---------------------------------------------------------------------------
+PORT_SOURCES = [
+    "port_string.c",
+    "port_posix.c",
+]
+
 C_SOURCES = [
     "bus.c",
     "cpu.c",
@@ -90,26 +94,20 @@ BANNER = """\
 # Matches lines like:  #include "foo.h"
 LOCAL_INCLUDE_RE = re.compile(r'^\s*#\s*include\s+"([^"]+)"')
 
-# Matches:  #define PORT_IMPLEMENT_SHIMS
-PORT_SHIM_DEFINE_RE = re.compile(r'^\s*#\s*define\s+PORT_IMPLEMENT_SHIMS\s*$')
-
 
 def read(path):
     with open(path, encoding="utf-8") as f:
         return f.read()
 
 
-def embed_file(srcdir, filename, already_included, public_header_set,
-               port_shim_emitted):
+def embed_file(srcdir, filename, already_included, public_header_set):
     """
     Return the processed text for *filename*.
 
     Processing rules:
       1. Strip local #include directives for headers that have already been
          inlined (public headers) or are excluded (internal).
-      2. Strip #define PORT_IMPLEMENT_SHIMS — the amalgamation emits exactly
-         one such define, before bus.c.
-      3. Keep all other lines verbatim.
+      2. Keep all other lines verbatim.
     """
     path = os.path.join(srcdir, filename)
     lines = read(path).splitlines(keepends=True)
@@ -134,7 +132,7 @@ def embed_file(srcdir, filename, already_included, public_header_set,
                             "\n/* ---- begin {f} ---- */\n".format(f=inc_base))
                         sub_text, _ = embed_file(
                             srcdir, inc_base, already_included,
-                            public_header_set, port_shim_emitted)
+                            public_header_set)
                         out.append(sub_text)
                         out.append(
                             "/* ---- end {f} ---- */\n\n".format(f=inc_base))
@@ -145,10 +143,6 @@ def embed_file(srcdir, filename, already_included, public_header_set,
                     out.append("/* amalgamation: omit #include \"{inc}\" */\n"
                                .format(inc=inc))
                 continue
-        # Strip PORT_IMPLEMENT_SHIMS defines from individual TUs
-        if PORT_SHIM_DEFINE_RE.match(line):
-            out.append("/* amalgamation: PORT_IMPLEMENT_SHIMS hoisted */\n")
-            continue
         out.append(line)
     return "".join(out), already_included
 
@@ -157,7 +151,7 @@ def embed_file(srcdir, filename, already_included, public_header_set,
 # Main
 # ---------------------------------------------------------------------------
 
-def build(srcdir, outdir):
+def build(srcdir, outdir, port_sources, term_src):
     public_header_set = set(PUBLIC_HEADERS)
 
     # ---- apple1.h -----------------------------------------------------------
@@ -195,23 +189,6 @@ def build(srcdir, outdir):
 
     # ---- apple1.c -----------------------------------------------------------
     c_parts = [BANNER.format(name="apple1.c")]
-
-    # PORT_IMPLEMENT_SHIMS must be defined BEFORE port.h is first seen,
-    # otherwise the include-guard blocks the shim bodies from re-emission.
-    # Strategy: inline port.h here with the define active, then include the
-    # rest of apple1.h (which will see PORT_H already defined and skip it).
-    c_parts.append("/* Shim implementations — must precede apple1.h */\n")
-    c_parts.append("#define PORT_IMPLEMENT_SHIMS\n")
-    port_path = os.path.join(srcdir, "port.h")
-    if os.path.exists(port_path):
-        c_parts.append("/* ---- begin port.h (with shims) ---- */\n")
-        c_parts.append(read(port_path))
-        c_parts.append("/* ---- end port.h ---- */\n\n")
-    else:
-        print("WARNING: port.h not found", file=sys.stderr)
-
-    # Now include the rest of apple1.h — port.h's guard means only the
-    # non-port.h sections will be emitted.
     c_parts.append('#include "apple1.h"\n\n')
 
     # Mark port.h and all public headers as already inlined so embed_file
@@ -220,7 +197,19 @@ def build(srcdir, outdir):
     already_included.add("apple1.h")
     already_included.add("port.h")
 
-    for src in C_SOURCES:
+    c_sources = port_sources + [
+        "bus.c",
+        "cpu.c",
+        "disasm.c",
+        "aci.c",
+        "krusader.c",
+        "dbg.c",
+        "io.c",
+        term_src,
+        "main.c",
+    ]
+
+    for src in c_sources:
         path = os.path.join(srcdir, src)
         if not os.path.exists(path):
             print("WARNING: source not found: {}".format(path), file=sys.stderr)
@@ -228,8 +217,7 @@ def build(srcdir, outdir):
         c_parts.append(
             "\n/* ======== begin {f} ======== */\n".format(f=src))
         text, already_included = embed_file(
-            srcdir, src, already_included, public_header_set,
-            port_shim_emitted=True)
+            srcdir, src, already_included, public_header_set)
         c_parts.append(text)
         c_parts.append(
             "/* ======== end {f} ======== */\n".format(f=src))
@@ -250,13 +238,18 @@ def main():
                     help="Repository root (default: parent of tools/)")
     ap.add_argument("--outdir", default=default_src,
                     help="Output directory (default: same as srcdir)")
+    ap.add_argument("--port", default="port_posix.c",
+                    help="Platform port file to inline (default: port_posix.c)")
+    ap.add_argument("--term", default="term_ansi.c",
+                    help="Terminal backend to inline (default: term_ansi.c; use term_dos.c for MS-DOS)")
     args = ap.parse_args()
 
     srcdir = os.path.abspath(args.srcdir)
     outdir = os.path.abspath(args.outdir)
     os.makedirs(outdir, exist_ok=True)
 
-    build(srcdir, outdir)
+    port_sources = ["port_string.c", args.port]
+    build(srcdir, outdir, port_sources, args.term)
 
 
 if __name__ == "__main__":

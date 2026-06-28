@@ -14,10 +14,7 @@
  *      term_ansi.c main_cli.c -o apple1
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
+#include "port.h"
 
 #include "aci.h"
 #include "bus.h"
@@ -26,48 +23,39 @@
 #include "disasm.h"
 #include "io.h"
 #include "krusader.h"
-#include "port.h"
 #include "term_apple1.h"
-
-#include <stdarg.h>
 
 static void
 cli_error(const char *fmt, ...)
 {
-#ifndef APPLE1_OMIT_STDIO
+	char buf[512];
 	va_list args;
 	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
+	port_vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
-#else
-	(void)fmt;
-#endif
+	port_term_write_buf(buf, port_strlen(buf));
 }
 
 static void PORT_UNUSED
 cli_warn(const char *fmt, ...)
 {
-#ifndef APPLE1_OMIT_STDIO
+	char buf[512];
 	va_list args;
 	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
+	port_vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
-#else
-	(void)fmt;
-#endif
+	port_term_write_buf(buf, port_strlen(buf));
 }
 
-static void
+static void PORT_UNUSED
 cli_printf(const char *fmt, ...)
 {
-#ifndef APPLE1_OMIT_STDIO
+	char buf[512];
 	va_list args;
 	va_start(args, fmt);
-	vprintf(fmt, args);
+	port_vsnprintf(buf, sizeof(buf), fmt, args);
 	va_end(args);
-#else
-	(void)fmt;
-#endif
+	port_term_write_buf(buf, port_strlen(buf));
 }
 
 
@@ -83,7 +71,7 @@ debugger_t  *g_dbg  = NULL;
 char        *g_argv0 = NULL;
 bool         g_debug_enabled = false;
 
-static volatile sig_atomic_t g_debug_break = 0;
+static port_sig_flag g_debug_break = 0;
 
 /* Referenced by term_ansi.c for baud-rate throttle */
 extern uint32_t opt_baud;
@@ -93,17 +81,7 @@ extern uint32_t opt_baud;
 /*  Signal handler                                                      */
 /* ------------------------------------------------------------------ */
 
-static void
-handle_signal(int sig)
-{
-	(void)sig;
-	if (g_debug_enabled != 0) {
-		g_debug_break = 1;
-	} else {
-		/* exit() triggers atexit handlers (terminal restore) */
-		exit(0);
-	}
-}
+static port_sig_flag g_quit_flag = 0;
 
 /* ------------------------------------------------------------------ */
 /*  stderr log callback                                                 */
@@ -191,23 +169,23 @@ load_config_file(const char *path,
     char **save_tape_path,
     char **krusader_path)
 {
-	FILE *fp;
+	port_file_t fp;
 	char line[1024];
 
-	fp = fopen(path, "r");
-	if (fp == NULL) {
+	fp = port_vfs_default.open(path, PORT_VFS_READ);
+	if (fp == PORT_FILE_INVALID) {
 		cli_error( "Warning: cannot open config '%s'\n", path);
 		return;
 	}
 
-	while (fgets(line, sizeof(line), fp) != NULL) {
+	while (port_vfs_default.read_line(fp, line, sizeof(line)) != 0) {
 		char *ptr;
 		char *val;
 		bool has_val;
 		size_t len;
 		char flag;
 
-		len = strlen(line);
+		len = port_strlen(line);
 		while (len > 0 &&
 		    (line[len - 1] == '\r' || line[len - 1] == '\n' ||
 			line[len - 1] == ' '  || line[len - 1] == '\t')) {
@@ -240,7 +218,7 @@ load_config_file(const char *path,
 			break;
 		case 'm':
 			if (has_val != 0) {
-				int kb = atoi(val);
+				int kb = (int)port_strtoul(val, (void *)0, 10);
 				if (kb >= 4 && kb <= 64)
 					*ram_size = (uint32_t)(kb * 1024);
 			}
@@ -248,13 +226,13 @@ load_config_file(const char *path,
 		case 'l':
 			if (has_val != 0) {
 				char *dup = port_strdup(val);
-				char *at  = strchr(dup, '@');
+				char *at  = port_strchr(dup, '@');
 				if (at != NULL) {
 					*at = '\0';
 					if (*bin_path != NULL)
 						port_free(*bin_path);
 					*bin_path    = port_strdup(dup);
-					*bin_address = (uint16_t)strtol(at + 1,
+					*bin_address = (uint16_t)port_strtol(at + 1,
 					    NULL, 16);
 				}
 				port_free(dup);
@@ -319,7 +297,7 @@ load_config_file(const char *path,
 			break;
 		}
 	}
-	fclose(fp);
+	port_vfs_default.close(fp);
 }
 
 /* ------------------------------------------------------------------ */
@@ -337,15 +315,17 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 
 	for (i = 0; i < bus->num_cards; i++) {
 #ifndef APPLE1_OMIT_ACI
-		if (strcmp(bus->cards[i]->name, "ACI") == 0) {
+		if (port_strcmp(bus->cards[i]->name, "ACI") == 0) {
 			if (save_tape_path != NULL) {
 				aci_save_tape(bus->cards[i], save_tape_path);
 			}
 			aci_free(bus->cards[i]);
-		} else
+		}
 #endif
+	}
+	for (i = 0; i < bus->num_cards; i++) {
 #ifndef APPLE1_OMIT_KRUSADER
-		if (strcmp(bus->cards[i]->name, "Krusader") == 0) {
+		if (port_strcmp(bus->cards[i]->name, "Krusader") == 0) {
 			krusader_free(bus->cards[i]);
 		}
 #else
@@ -459,7 +439,7 @@ main(int argc, char *argv[])
 	{
 		int ai;
 		for (ai = 1; ai < argc - 1; ai++) {
-			if (strcmp(argv[ai], "-f") == 0) {
+			if (port_strcmp(argv[ai], "-f") == 0) {
 				config_path = argv[ai + 1];
 				break;
 			}
@@ -490,20 +470,20 @@ main(int argc, char *argv[])
 			rom_path = port_strdup(port_optarg);
 			break;
 		case 'm': {
-			int kb = atoi(port_optarg);
+			int kb = (int)port_strtoul(port_optarg, (void *)0, 10);
 			if (kb >= 4 && kb <= 64)
 				ram_size = (uint32_t)(kb * 1024);
 			break;
 		}
 		case 'l': {
 			char *dup = port_strdup(port_optarg);
-			char *at  = strchr(dup, '@');
+			char *at  = port_strchr(dup, '@');
 			if (at != NULL) {
 				*at = '\0';
 				if (bin_path != NULL)
 					port_free(bin_path);
 				bin_path    = port_strdup(dup);
-				bin_address = (uint16_t)strtol(at + 1,
+				bin_address = (uint16_t)port_strtol(at + 1,
 				    NULL, 16);
 			}
 			port_free(dup);
@@ -528,7 +508,7 @@ main(int argc, char *argv[])
 			save_tape_path = port_strdup(port_optarg);
 			break;
 		case 'B': {
-			int baud = atoi(port_optarg);
+			int baud = (int)port_strtoul(port_optarg, (void *)0, 10);
 			if (baud > 0)
 				opt_baud = (uint32_t)baud;
 			break;
@@ -602,12 +582,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Install signal handler */
-#ifdef SIGINT
-	signal(SIGINT,  handle_signal);
-#endif
-#ifdef SIGTERM
-	signal(SIGTERM, handle_signal);
-#endif
+	port_signal_setup(&g_quit_flag);
 
 	/* Initialise bus with static buffer — no malloc required */
 	if (bus_init(&bus, static_ram, ram_size) == false) {
@@ -634,7 +609,7 @@ main(int argc, char *argv[])
 			static_ram[k] = (uint8_t)(port_gettime_us() & 0xFF);
 		}
 	} else {
-		memset(static_ram, 0, ram_size);
+		port_memset(static_ram, 0, ram_size);
 	}
 
 	/* Load ROM */
@@ -754,6 +729,16 @@ main(int argc, char *argv[])
 
 	for (;;) {
 
+		/* Quit signal received (Ctrl-C) */
+		if (g_quit_flag != 0) {
+			if (g_debug_enabled != 0) {
+				g_debug_break = 1;
+				g_quit_flag = 0;
+			} else {
+				break;
+			}
+		}
+
 		/* When paused / powered off: just sleep */
 		if (opt_headless == false &&
 		    term_is_powered() == false) {
@@ -792,19 +777,19 @@ main(int argc, char *argv[])
 			len = cpu_disassemble(&bus, cpu.pc, disasm_buf);
 
 			if (len == 1) {
-				snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes, sizeof(hex_bytes),
 				    "%02X      ", op);
 			} else if (len == 2) {
-				snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes, sizeof(hex_bytes),
 				    "%02X %02X   ",
 				    op, bus_read(&bus, cpu.pc + 1));
 			} else {
-				snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes, sizeof(hex_bytes),
 				    "%02X %02X %02X",
 				    op, bus_read(&bus, cpu.pc + 1),
 				    bus_read(&bus, cpu.pc + 2));
 			}
-			snprintf(trace_line, sizeof(trace_line),
+			port_snprintf(trace_line, sizeof(trace_line),
 			    "$%04X  %s  %-20s A:%02X X:%02X Y:%02X "
 			    "SP:%02X P:%02X",
 			    cpu.pc, hex_bytes, disasm_buf,

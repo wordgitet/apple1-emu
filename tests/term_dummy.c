@@ -101,3 +101,9 @@ void
 term_open_debugger(void)
 {
 }
+
+bool
+term_dsp_ready(void)
+{
+	return (true);
+}

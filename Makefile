@@ -22,18 +22,37 @@ DEFS    = -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
 # Combined flags used for every translation unit
 BASE_CFLAGS = $(CFLAGS) $(WFLAGS) $(STDFLAG) $(DEFS) $(EXTRA_CFLAGS)
 
+# Platform port selection (one port_*.c + shared port_string.c)
+ifeq ($(OS),Windows_NT)
+    PORT_SRC = port_win.c
+else
+    UNAME := $(shell uname -s)
+    ifeq ($(UNAME),Haiku)
+        PORT_SRC = port_posix.c
+    else ifeq ($(UNAME),OS/2)
+        PORT_SRC = port_os2.c
+    else
+        PORT_SRC = port_posix.c
+    endif
+endif
+
+PORT_STRING = port_string.c
+PORT_OBJ    = port_string.o $(PORT_SRC:.c=.o)
+
 # Sources
 CORE_SRC       = cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
 CORE_NO_IO_SRC = cpu.c bus.c aci.c krusader.c disasm.c dbg.c
 SRC            = main.c $(CORE_SRC) term_ansi.c
 
 # Object files
-OBJ = main.o cpu.o bus.o io.o aci.o krusader.o disasm.o dbg.o term_ansi.o
+OBJ = main.o cpu.o bus.o io.o aci.o krusader.o disasm.o dbg.o term_ansi.o $(PORT_OBJ)
 
 all: apple1
 
 apple1: $(OBJ)
 	$(CC) $(BASE_CFLAGS) -o apple1 $(OBJ)
+
+port_string.o port_posix.o port_win.o port_os2.o port_bare.o: port.h
 
 .c.o:
 	$(CC) $(BASE_CFLAGS) -DAPPLE1_OMIT_CHARMAP -c -o $@ $<
@@ -55,30 +74,40 @@ check: $(TESTS)
 	echo "Results: $$passed passed, $$failed failed"; \
 	if [ $$failed -ne 0 ]; then exit 1; fi
 
-test_cpu: tests/test_cpu.c tests/term_dummy.c $(CORE_SRC)
-	$(CC) $(BASE_CFLAGS) -o test_cpu tests/test_cpu.c tests/term_dummy.c $(CORE_SRC)
+test_cpu: tests/test_cpu.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
+	$(CC) $(BASE_CFLAGS) -o test_cpu tests/test_cpu.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
 
-test_aci: tests/test_aci.c tests/term_dummy.c $(CORE_NO_IO_SRC)
-	$(CC) $(BASE_CFLAGS) -o test_aci tests/test_aci.c tests/term_dummy.c $(CORE_NO_IO_SRC)
+test_aci: tests/test_aci.c tests/term_dummy.c $(CORE_NO_IO_SRC) $(PORT_STRING) $(PORT_SRC)
+	$(CC) $(BASE_CFLAGS) -o test_aci tests/test_aci.c tests/term_dummy.c $(CORE_NO_IO_SRC) $(PORT_STRING) $(PORT_SRC)
 
-test_dualram: tests/test_dualram.c tests/term_dummy.c bus.c io.c
-	$(CC) $(BASE_CFLAGS) -o test_dualram tests/test_dualram.c tests/term_dummy.c bus.c io.c
+test_dualram: tests/test_dualram.c tests/term_dummy.c bus.c io.c $(PORT_STRING) $(PORT_SRC)
+	$(CC) $(BASE_CFLAGS) -o test_dualram tests/test_dualram.c tests/term_dummy.c bus.c io.c $(PORT_STRING) $(PORT_SRC)
 
-test_bus: tests/test_bus.c tests/term_dummy.c $(CORE_SRC)
-	$(CC) $(BASE_CFLAGS) -o test_bus tests/test_bus.c tests/term_dummy.c $(CORE_SRC)
+test_bus: tests/test_bus.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
+	$(CC) $(BASE_CFLAGS) -o test_bus tests/test_bus.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
 
-test_tomharte: tests/test_tomharte.c tests/term_dummy.c $(CORE_SRC)
-	$(CC) $(BASE_CFLAGS) -o test_tomharte tests/test_tomharte.c tests/term_dummy.c $(CORE_SRC)
+test_tomharte: tests/test_tomharte.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
+	$(CC) $(BASE_CFLAGS) -o test_tomharte tests/test_tomharte.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
 
-test_interrupts: tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC)
-	$(CC) $(BASE_CFLAGS) -o test_interrupts tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC)
+test_interrupts: tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
+	$(CC) $(BASE_CFLAGS) -o test_interrupts tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC) $(PORT_STRING) $(PORT_SRC)
 
 6502_functional_test.bin:
 	curl -L -o 6502_functional_test.bin https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master/bin_files/6502_functional_test.bin
+
+# MS-DOS cross-build (requires i586-pc-msdosdjgpp-gcc on PATH)
+DOS_CC ?= i586-pc-msdosdjgpp-gcc
+DOS_CFLAGS = -O2 -Wall -std=gnu99 -D__MSDOS__ -DAPPLE1_OMIT_CHARMAP
+
+dos:
+	python3 tools/amalgamate.py --port port_msdos.c --term term_dos.c
+	$(DOS_CC) $(DOS_CFLAGS) -o apple1.exe apple1.c
+
+apple1.exe: dos
 
 test-official: apple1 6502_functional_test.bin
 	./apple1 -H -F 6502_functional_test.bin
 
 clean:
 	rm -f apple1 $(TESTS)
-	rm -f *.o tests/*.o 6502_functional_test.bin
+	rm -f *.o port_*.o tests/*.o 6502_functional_test.bin

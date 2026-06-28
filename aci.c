@@ -1,6 +1,5 @@
 #ifndef APPLE1_OMIT_ACI
-#include <stdio.h>
-#include <string.h>
+#include "port.h"
 
 #include "bus.h"
 #include "aci.h"
@@ -150,50 +149,54 @@ aci_create(struct bus *bus, const char *rom_path)
 {
 	struct aci_card *aci;
 	struct expansion_card *card;
-	FILE *f;
+	void *f;
 	long size;
 
 	if (rom_path == NULL)
 		return (NULL);
 
-	f = fopen(rom_path, "rb");
+	f = port_vfs_default.open(rom_path, PORT_VFS_READ);
 	if (f == NULL)
 		return (NULL);
 
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
+	size = port_vfs_default.size(f);
 
 	if (size != 256) {
 		char msg[128];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: ACI ROM '%s' is %ld bytes, must be exactly 256.",
 		    rom_path, size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
+		port_vfs_default.close(f);
 		return (NULL);
 	}
 
-	aci = calloc(1, sizeof(struct aci_card));
+	aci = (struct aci_card *)port_malloc(sizeof(struct aci_card));
 	if (aci == NULL) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI card context");
-		fclose(f);
+		port_vfs_default.close(f);
 		return (NULL);
 	}
+	port_memset(aci, 0, sizeof(struct aci_card));
 	aci->bus = bus;
 
-	if (fread(aci->rom, 1, 256, f) != 256) {
-		char msg[128];
-		snprintf(msg, sizeof(msg),
-		    "Error: Failed to read ACI ROM '%s'", rom_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		port_free(aci);
-		fclose(f);
-		return (NULL);
+	{
+		port_size_t read_bytes;
+		read_bytes = 0;
+		if (port_vfs_default.read(f, aci->rom, 256, &read_bytes) != 0 ||
+		    read_bytes != 256) {
+			char msg[128];
+			port_snprintf(msg, sizeof(msg),
+			    "Error: Failed to read ACI ROM '%s'", rom_path);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			port_free(aci);
+			port_vfs_default.close(f);
+			return (NULL);
+		}
 	}
-	fclose(f);
+	port_vfs_default.close(f);
 
-	card = port_malloc(sizeof(struct expansion_card));
+	card = (struct expansion_card *)port_malloc(sizeof(struct expansion_card));
 	if (card == NULL) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI expansion card");
 		port_free(aci);
@@ -321,7 +324,7 @@ pcm_to_durations(struct bus *bus,
 static bool
 load_wav_tape(struct aci_card *aci, const char *tape_path)
 {
-	FILE *f;
+	void *f;
 	uint8_t riff_header[12];
 	uint16_t audio_format, bits_per_sample, channels;
 	uint32_t data_size, sample_rate;
@@ -331,27 +334,30 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	uint32_t *durations;
 	uint32_t count;
 	bool initial_level;
+	port_size_t read_bytes;
 
-	f = fopen(tape_path, "rb");
+	f = port_vfs_default.open(tape_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Could not open WAV file '%s'",
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
-	if (fread(riff_header, 1, 12, f) != 12) {
+	read_bytes = 0;
+	if (port_vfs_default.read(f, riff_header, 12, &read_bytes) != 0 ||
+	    read_bytes != 12) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated WAV header");
-		fclose(f);
+		port_vfs_default.close(f);
 		return (false);
 	}
 
-	if (memcmp(riff_header, "RIFF", 4) != 0 ||
-	    memcmp(riff_header + 8, "WAVE", 4) != 0) {
+	if (port_memcmp(riff_header, "RIFF", 4) != 0 ||
+	    port_memcmp(riff_header + 8, "WAVE", 4) != 0) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Invalid WAV format");
-		fclose(f);
+		port_vfs_default.close(f);
 		return (false);
 	}
 
@@ -366,24 +372,28 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		uint8_t chunk_header[8];
 		uint32_t chunk_size;
 
-		if (fread(chunk_header, 1, 8, f) != 8) {
+		read_bytes = 0;
+		if (port_vfs_default.read(f, chunk_header, 8, &read_bytes) != 0 ||
+		    read_bytes != 8) {
 			break;
 		}
 
 		chunk_size = chunk_header[4] | (chunk_header[5] << 8) |
 		    (chunk_header[6] << 16) | (chunk_header[7] << 24);
 
-		if (memcmp(chunk_header, "fmt ", 4) == 0) {
+		if (port_memcmp(chunk_header, "fmt ", 4) == 0) {
 			uint8_t fmt_data[16];
 
 			if (chunk_size < 16) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Invalid fmt chunk size");
-				fclose(f);
+				port_vfs_default.close(f);
 				return (false);
 			}
-			if (fread(fmt_data, 1, 16, f) != 16) {
+			read_bytes = 0;
+			if (port_vfs_default.read(f, fmt_data, 16, &read_bytes) != 0 ||
+			    read_bytes != 16) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated fmt chunk");
-				fclose(f);
+				port_vfs_default.close(f);
 				return (false);
 			}
 			audio_format = fmt_data[0] | (fmt_data[1] << 8);
@@ -393,31 +403,33 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			bits_per_sample = fmt_data[14] | (fmt_data[15] << 8);
 
 			if (chunk_size > 16) {
-				fseek(f, chunk_size - 16, SEEK_CUR);
+				port_vfs_default.seek(f, chunk_size - 16, PORT_VFS_SEEK_CUR);
 			}
-		} else if (memcmp(chunk_header, "data", 4) == 0) {
+		} else if (port_memcmp(chunk_header, "data", 4) == 0) {
 			data_size = chunk_size;
 			data_chunk = port_malloc(data_size);
 			if (data_chunk == NULL) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate data chunk buffer");
-				fclose(f);
+				port_vfs_default.close(f);
 				return (false);
 			}
-			if (fread(data_chunk, 1, data_size, f) != data_size) {
+			read_bytes = 0;
+			if (port_vfs_default.read(f, data_chunk, data_size, &read_bytes) != 0 ||
+			    read_bytes != data_size) {
 				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated data chunk");
 				port_free(data_chunk);
-				fclose(f);
+				port_vfs_default.close(f);
 				return (false);
 			}
 			break;
 		} else {
 			uint32_t aligned_size = chunk_size + (chunk_size & 1);
 
-			fseek(f, aligned_size, SEEK_CUR);
+			port_vfs_default.seek(f, aligned_size, PORT_VFS_SEEK_CUR);
 		}
 	}
 
-	fclose(f);
+	port_vfs_default.close(f);
 
 	if (data_chunk == NULL) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV data chunk");
@@ -498,7 +510,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			} else if (audio_format == 3 && bits_per_sample == 32) {
 				float f_val;
 
-				memcpy(&f_val, sample_ptr, sizeof(float));
+				port_memcpy(&f_val, sample_ptr, sizeof(float));
 				value = f_val;
 			}
 			mixed += value;
@@ -542,7 +554,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 
 	{
 		char msg[256];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Loaded WAV tape '%s' (%u pulses, sample rate %u Hz)",
 		    tape_path, count, sample_rate);
 		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
@@ -553,7 +565,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 static bool
 save_wav_tape(struct aci_card *aci, const char *tape_path)
 {
-	FILE *f;
+	port_file_t f;
 	uint32_t total_samples;
 	uint32_t byte_rate;
 	uint32_t data_size;
@@ -599,70 +611,70 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	data_size = (uint32_t)(total_samples * sizeof(int16_t));
 	riff_size = 36 + data_size;
 
-	f = fopen(tape_path, "wb");
-	if (f == NULL) {
+	f = port_vfs_default.open(tape_path, PORT_VFS_WRITE);
+	if (f == PORT_FILE_INVALID) {
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Could not open '%s' for writing",
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
-	fwrite("RIFF", 1, 4, f);
+	port_vfs_default.write(f, "RIFF", 4);
 
 	bytes[0] = riff_size & 0xFF;
 	bytes[1] = (riff_size >> 8) & 0xFF;
 	bytes[2] = (riff_size >> 16) & 0xFF;
 	bytes[3] = (riff_size >> 24) & 0xFF;
-	fwrite(bytes, 1, 4, f);
+	port_vfs_default.write(f, bytes, 4);
 
-	fwrite("WAVE", 1, 4, f);
-	fwrite("fmt ", 1, 4, f);
+	port_vfs_default.write(f, "WAVE", 4);
+	port_vfs_default.write(f, "fmt ", 4);
 
 	bytes[0] = 16;
 	bytes[1] = 0;
 	bytes[2] = 0;
 	bytes[3] = 0;
-	fwrite(bytes, 1, 4, f);
+	port_vfs_default.write(f, bytes, 4);
 
 	word[0] = 1;
 	word[1] = 0;
-	fwrite(word, 1, 2, f);
+	port_vfs_default.write(f, word, 2);
 
 	word[0] = 1;
 	word[1] = 0;
-	fwrite(word, 1, 2, f);
+	port_vfs_default.write(f, word, 2);
 
 	bytes[0] = wav_sample_rate & 0xFF;
 	bytes[1] = (wav_sample_rate >> 8) & 0xFF;
 	bytes[2] = (wav_sample_rate >> 16) & 0xFF;
 	bytes[3] = (wav_sample_rate >> 24) & 0xFF;
-	fwrite(bytes, 1, 4, f);
+	port_vfs_default.write(f, bytes, 4);
 
-	byte_rate = wav_sample_rate * sizeof(int16_t);
+	byte_rate = wav_sample_rate * (uint32_t)sizeof(int16_t);
 
 	bytes[0] = byte_rate & 0xFF;
 	bytes[1] = (byte_rate >> 8) & 0xFF;
 	bytes[2] = (byte_rate >> 16) & 0xFF;
 	bytes[3] = (byte_rate >> 24) & 0xFF;
-	fwrite(bytes, 1, 4, f);
+	port_vfs_default.write(f, bytes, 4);
 
 	word[0] = sizeof(int16_t);
 	word[1] = 0;
-	fwrite(word, 1, 2, f);
+	port_vfs_default.write(f, word, 2);
 
 	word[0] = 16;
 	word[1] = 0;
-	fwrite(word, 1, 2, f);
+	port_vfs_default.write(f, word, 2);
 
-	fwrite("data", 1, 4, f);
+	port_vfs_default.write(f, "data", 4);
 
 	bytes[0] = data_size & 0xFF;
 	bytes[1] = (data_size >> 8) & 0xFF;
 	bytes[2] = (data_size >> 16) & 0xFF;
 	bytes[3] = (data_size >> 24) & 0xFF;
-	fwrite(bytes, 1, 4, f);
+	port_vfs_default.write(f, bytes, 4);
 
 	level = aci->output_initial_level;
 
@@ -679,9 +691,9 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 		sample = level ? 14000 : -14000;
 
 		for (s = 0; s < sample_count; s++) {
-			word[0] = sample & 0xFF;
-			word[1] = (sample >> 8) & 0xFF;
-			fwrite(word, 1, 2, f);
+			word[0] = (uint8_t)(sample & 0xFF);
+			word[1] = (uint8_t)((sample >> 8) & 0xFF);
+			port_vfs_default.write(f, word, 2);
 		}
 		level = !level;
 	}
@@ -690,15 +702,15 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	trailing_count = wav_sample_rate / 10;
 
 	for (s = 0; s < trailing_count; s++) {
-		word[0] = sample & 0xFF;
-		word[1] = (sample >> 8) & 0xFF;
-		fwrite(word, 1, 2, f);
+		word[0] = (uint8_t)(sample & 0xFF);
+		word[1] = (uint8_t)((sample >> 8) & 0xFF);
+		port_vfs_default.write(f, word, 2);
 	}
 
-	fclose(f);
+	port_vfs_default.close(f);
 	{
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Saved ACI tape '%s' as WAV format", tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
 	}
@@ -710,7 +722,7 @@ aci_load_tape(struct expansion_card *card, const char *tape_path)
 {
 	struct aci_card *aci;
 
-	if (card == NULL || strcmp(card->name, "ACI") != 0) {
+	if (card == NULL || port_strcmp(card->name, "ACI") != 0) {
 		return (false);
 	}
 	aci = (struct aci_card *)card->ctx;
@@ -722,7 +734,7 @@ aci_save_tape(struct expansion_card *card, const char *tape_path)
 {
 	struct aci_card *aci;
 
-	if (card == NULL || strcmp(card->name, "ACI") != 0) {
+	if (card == NULL || port_strcmp(card->name, "ACI") != 0) {
 		return (false);
 	}
 	aci = (struct aci_card *)card->ctx;
@@ -754,7 +766,7 @@ aci_get_recorded_count(struct expansion_card *card)
 {
 	struct aci_card *aci;
 
-	if (card == NULL || strcmp(card->name, "ACI") != 0) {
+	if (card == NULL || port_strcmp(card->name, "ACI") != 0) {
 		return (0);
 	}
 	aci = (struct aci_card *)card->ctx;

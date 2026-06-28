@@ -1,9 +1,4 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define PORT_IMPLEMENT_SHIMS
+#include "port.h"
 #include "bus.h"
 #include "embedded_roms.h"
 #include "io.h"
@@ -57,7 +52,7 @@ bus_translate_ram_address(struct bus *bus, uint16_t address)
 bool
 bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 {
-	memset(bus, 0, sizeof(struct bus));
+	port_memset(bus, 0, sizeof(struct bus));
 	bus->ram_size = ram_size;
 	bus->ram = ram_buf;
 	/* Set default options */
@@ -69,7 +64,7 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 	bus->opts.flat_bus = false;
 	bus->opts.headless = false;
 
-	memset(bus->ram, 0, ram_size);
+	port_memset(bus->ram, 0, ram_size);
 	/* Default display control (bit 7 set = ready) */
 	bus->pia.dsp_control = 0x80;
 
@@ -100,7 +95,7 @@ bus_load_bin_buf(struct bus *bus,
 		if (addr > 0xFFFF ||
 		    bus_is_ram_address(bus, (uint16_t)addr) == 0) {
 			char msg[256];
-			snprintf(msg, sizeof(msg),
+			port_snprintf(msg, sizeof(msg),
 			    "Error: Binary buffer (%lu bytes) at 0x%04X "
 			    "exceeds RAM size (%u KB).",
 			    (unsigned long)len, address, bus->ram_size / 1024);
@@ -126,7 +121,7 @@ bus_load_bin_buf(struct bus *bus,
 
 	{
 		char msg[256];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Loaded buffer (%lu bytes) into RAM at 0x%04X-0x%04X",
 		    (unsigned long)len, address, (uint16_t)(address + len - 1));
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
@@ -216,23 +211,23 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 	while (i < w) {
 		char c = cleaned[i];
 
-		if (isspace((unsigned char)c)) {
+		if (port_isspace((unsigned char)c)) {
 			i++;
 			continue;
 		}
 
 		/* 'T' prefix (turbo) - skip */
-		if (toupper((unsigned char)c) == 'T' && i + 1 < w &&
-		    isxdigit((unsigned char)cleaned[i + 1])) {
+		if (port_toupper((unsigned char)c) == 'T' && i + 1 < w &&
+		    port_isxdigit((unsigned char)cleaned[i + 1])) {
 			i++;
 			continue;
 		}
 
 		/* 'X' marker - skip X + hex addr */
-		if (toupper((unsigned char)c) == 'X' && i + 1 < w &&
-		    isxdigit((unsigned char)cleaned[i + 1])) {
+		if (port_toupper((unsigned char)c) == 'X' && i + 1 < w &&
+		    port_isxdigit((unsigned char)cleaned[i + 1])) {
 			i++;
-			while (i < w && isxdigit((unsigned char)cleaned[i]))
+			while (i < w && port_isxdigit((unsigned char)cleaned[i]))
 				i++;
 			continue;
 		}
@@ -242,19 +237,19 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			continue;
 		}
 
-		if (isxdigit((unsigned char)c)) {
+		if (port_isxdigit((unsigned char)c)) {
 			hex_start = i;
-			while (i < w && isxdigit((unsigned char)cleaned[i]))
+			while (i < w && port_isxdigit((unsigned char)cleaned[i]))
 				i++;
 			hex_len = i - hex_start;
 
 			peek = i;
 			while (
-			    peek < w && isspace((unsigned char)cleaned[peek]))
+			    peek < w && port_isspace((unsigned char)cleaned[peek]))
 				peek++;
 
 			if (i < w &&
-			    toupper((unsigned char)cleaned[i]) == 'R') {
+			    port_toupper((unsigned char)cleaned[i]) == 'R') {
 				/* run command */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
@@ -270,12 +265,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					total_bytes++;
 				}
 				if (hex_len >= 4) {
-					strncpy(addr_str,
+					port_strncpy(addr_str,
 					    &cleaned[hex_start + data_len],
 					    4);
 					addr_str[4] = '\0';
 					raddr = (uint16_t)
-					    strtol(addr_str, NULL, 16);
+					    port_strtol(addr_str, NULL, 16);
 					if (run_address != NULL)
 						*run_address = raddr;
 					if (has_run_address != NULL)
@@ -300,13 +295,13 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					current_addr++;
 					total_bytes++;
 				}
-				memset(addr_str, 0, sizeof(addr_str));
+				port_memset(addr_str, 0, sizeof(addr_str));
 				addr_digits = hex_len > 4 ? 4 : hex_len;
-				strncpy(addr_str,
+				port_strncpy(addr_str,
 				    &cleaned[hex_start + hex_len - addr_digits],
 				    addr_digits);
 				current_addr =
-				    (uint16_t)strtol(addr_str, NULL, 16);
+				    (uint16_t)port_strtol(addr_str, NULL, 16);
 				if (first_addr != 0) {
 					first_addr = false;
 				}
@@ -340,7 +335,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 	{
 		char msg[256];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Loaded %d bytes via Woz Monitor text format",
 		    total_bytes);
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
@@ -353,7 +348,7 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 {
 	if (rom_path == NULL) {
 #ifndef APPLE1_OMIT_WOZMON
-		memcpy(bus->rom, embedded_wozmon, 256);
+		port_memcpy(bus->rom, embedded_wozmon, 256);
 		bus->rom_loaded = true;
 		return (true);
 #else
@@ -364,19 +359,19 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 
 #ifndef APPLE1_OMIT_DISKIO
 	{
-		FILE *f;
-		size_t read_bytes;
+		void *f;
+		port_size_t read_bytes;
 		long size;
 
-		f = fopen(rom_path, "rb");
+		f = port_vfs_default.open(rom_path, PORT_VFS_READ);
 		if (f == NULL) {
 			char msg[512];
-			snprintf(msg, sizeof(msg),
+			port_snprintf(msg, sizeof(msg),
 			    "Warning: '%s' not found, using embedded Wozmon ROM.",
 			    rom_path);
 			BUS_LOG(bus, BUS_LOG_WARN, msg);
 #ifndef APPLE1_OMIT_WOZMON
-			memcpy(bus->rom, embedded_wozmon, 256);
+			port_memcpy(bus->rom, embedded_wozmon, 256);
 			bus->rom_loaded = true;
 			return (true);
 #else
@@ -385,31 +380,30 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 #endif
 		}
 
-		fseek(f, 0, SEEK_END);
-		size = ftell(f);
-		fseek(f, 0, SEEK_SET);
+		size = port_vfs_default.size(f);
 
 		if (size != 256) {
 			char msg[512];
-			snprintf(msg, sizeof(msg),
+			port_snprintf(msg, sizeof(msg),
 			    "Error: ROM file '%s' is %ld bytes. "
 			    "Apple 1 Monitor ROM must be exactly 256 bytes.",
 			    rom_path, size);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
-			fclose(f);
+			port_vfs_default.close(f);
 			return (false);
 		}
 
-		read_bytes = fread(bus->rom, 1, 256, f);
-		fclose(f);
-
-		if (read_bytes != 256) {
+		read_bytes = 0;
+		if (port_vfs_default.read(f, bus->rom, 256, &read_bytes) != 0 ||
+		    read_bytes != 256) {
 			char msg[512];
-			snprintf(msg, sizeof(msg),
+			port_snprintf(msg, sizeof(msg),
 			    "Error: Failed to read 256 bytes from '%s'", rom_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			port_vfs_default.close(f);
 			return (false);
 		}
+		port_vfs_default.close(f);
 
 		bus->rom_loaded = true;
 		return (true);
@@ -425,49 +419,52 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 bool
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 {
-	FILE *f;
+	void *f;
 	uint8_t *buf;
 	long size;
 	bool ret;
 
-	f = fopen(bin_path, "rb");
+	f = port_vfs_default.open(bin_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Could not open binary file '%s'", bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
+	size = port_vfs_default.size(f);
 
 	if (size <= 0) {
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Binary file '%s' is empty.", bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
+		port_vfs_default.close(f);
 		return (false);
 	}
 
-	buf = port_malloc(size);
+	buf = (uint8_t *)port_malloc(size);
 	if (buf == NULL) {
-		fclose(f);
+		port_vfs_default.close(f);
 		return (false);
 	}
 
-	if (fread(buf, 1, size, f) != (size_t)size) {
-		char msg[512];
-		snprintf(msg, sizeof(msg),
-		    "Error: Failed to read entire binary file '%s'", bin_path);
-		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		port_free(buf);
-		fclose(f);
-		return (false);
+	{
+		port_size_t read_bytes;
+		read_bytes = 0;
+		if (port_vfs_default.read(f, buf, size, &read_bytes) != 0 ||
+		    read_bytes != (port_size_t)size) {
+			char msg[512];
+			port_snprintf(msg, sizeof(msg),
+			    "Error: Failed to read entire binary file '%s'", bin_path);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			port_free(buf);
+			port_vfs_default.close(f);
+			return (false);
+		}
 	}
-	fclose(f);
+	port_vfs_default.close(f);
 
 	ret = bus_load_bin_buf(bus, buf, size, address);
 	port_free(buf);
@@ -481,42 +478,45 @@ bus_load_wozmon_txt(struct bus *bus,
     bool *has_run_address)
 {
 	char *content;
-	size_t read_bytes;
+	port_size_t read_bytes;
 	long size;
-	FILE *f;
+	void *f;
 	bool ret;
 
-	f = fopen(txt_path, "r");
+	f = port_vfs_default.open(txt_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Could not open text file '%s'", txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
 
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
+	size = port_vfs_default.size(f);
 
 	if (size <= 0) {
 		char msg[512];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Text file '%s' is empty.", txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
+		port_vfs_default.close(f);
 		return (false);
 	}
 
-	content = port_malloc(size + 1);
+	content = (char *)port_malloc(size + 1);
 	if (content == NULL) {
-		fclose(f);
+		port_vfs_default.close(f);
 		return (false);
 	}
 
-	read_bytes = fread(content, 1, size, f);
+	read_bytes = 0;
+	if (port_vfs_default.read(f, content, size, &read_bytes) != 0) {
+		port_free(content);
+		port_vfs_default.close(f);
+		return (false);
+	}
 	content[read_bytes] = '\0';
-	fclose(f);
+	port_vfs_default.close(f);
 
 	ret = bus_load_wozmon_txt_buf(bus, content, read_bytes,
 	    run_address, has_run_address);
@@ -807,7 +807,7 @@ bus_add_card(struct bus *bus, struct expansion_card *card)
 		bus->cards[bus->num_cards++] = card;
 	} else {
 		char msg[128];
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Error: Maximum number of expansion cards (%d) exceeded.",
 		    APPLE1_MAX_CARDS);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);

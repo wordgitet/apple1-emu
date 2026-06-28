@@ -1,6 +1,5 @@
 #ifndef APPLE1_OMIT_DISASM
 #include "port.h"
-#include <stdio.h>
 
 #include "bus.h"
 #include "disasm.h"
@@ -310,38 +309,38 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 
 	switch (info.mode) {
 	case ADDR_IMP:
-		sprintf(out_str, "%s", info.name);
+		port_snprintf(out_str, 64, "%s", info.name);
 		bytes = 1;
 		break;
 	case ADDR_ACC:
-		sprintf(out_str, "%s A", info.name);
+		port_snprintf(out_str, 64, "%s A", info.name);
 		bytes = 1;
 		break;
 	case ADDR_IMM: {
 		uint8_t val = bus_read(bus, pc + 1);
 
-		sprintf(out_str, "%s #$%02X", info.name, val);
+		port_snprintf(out_str, 64, "%s #$%02X", info.name, val);
 		bytes = 2;
 		break;
 	}
 	case ADDR_ZP: {
 		uint8_t val = bus_read(bus, pc + 1);
 
-		sprintf(out_str, "%s $%02X", info.name, val);
+		port_snprintf(out_str, 64, "%s $%02X", info.name, val);
 		bytes = 2;
 		break;
 	}
 	case ADDR_ZPX: {
 		uint8_t val = bus_read(bus, pc + 1);
 
-		sprintf(out_str, "%s $%02X,X", info.name, val);
+		port_snprintf(out_str, 64, "%s $%02X,X", info.name, val);
 		bytes = 2;
 		break;
 	}
 	case ADDR_ZPY: {
 		uint8_t val = bus_read(bus, pc + 1);
 
-		sprintf(out_str, "%s $%02X,Y", info.name, val);
+		port_snprintf(out_str, 64, "%s $%02X,Y", info.name, val);
 		bytes = 2;
 		break;
 	}
@@ -350,7 +349,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 		uint8_t hi = bus_read(bus, pc + 2);
 		uint16_t val = (hi << 8) | lo;
 
-		sprintf(out_str, "%s $%04X", info.name, val);
+		port_snprintf(out_str, 64, "%s $%04X", info.name, val);
 		bytes = 3;
 		break;
 	}
@@ -359,7 +358,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 		uint8_t hi = bus_read(bus, pc + 2);
 		uint16_t val = (hi << 8) | lo;
 
-		sprintf(out_str, "%s $%04X,X", info.name, val);
+		port_snprintf(out_str, 64, "%s $%04X,X", info.name, val);
 		bytes = 3;
 		break;
 	}
@@ -368,7 +367,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 		uint8_t hi = bus_read(bus, pc + 2);
 		uint16_t val = (hi << 8) | lo;
 
-		sprintf(out_str, "%s $%04X,Y", info.name, val);
+		port_snprintf(out_str, 64, "%s $%04X,Y", info.name, val);
 		bytes = 3;
 		break;
 	}
@@ -377,21 +376,21 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 		uint8_t hi = bus_read(bus, pc + 2);
 		uint16_t val = (hi << 8) | lo;
 
-		sprintf(out_str, "%s ($%04X)", info.name, val);
+		port_snprintf(out_str, 64, "%s ($%04X)", info.name, val);
 		bytes = 3;
 		break;
 	}
 	case ADDR_IZX: {
 		uint8_t val = bus_read(bus, pc + 1);
 
-		sprintf(out_str, "%s ($%02X,X)", info.name, val);
+		port_snprintf(out_str, 64, "%s ($%02X,X)", info.name, val);
 		bytes = 2;
 		break;
 	}
 	case ADDR_IZY: {
 		uint8_t val = bus_read(bus, pc + 1);
 
-		sprintf(out_str, "%s ($%02X),Y", info.name, val);
+		port_snprintf(out_str, 64, "%s ($%02X),Y", info.name, val);
 		bytes = 2;
 		break;
 	}
@@ -399,7 +398,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 		int8_t offset = (int8_t)bus_read(bus, pc + 1);
 		uint16_t dest = (pc + 2) + offset;
 
-		sprintf(out_str, "%s $%04X", info.name, dest);
+		port_snprintf(out_str, 64, "%s $%04X", info.name, dest);
 		bytes = 2;
 		break;
 	}

@@ -6,8 +6,7 @@
  * is all the real hardware ever allowed.
  */
 #ifndef APPLE1_OMIT_KRUSADER
-#include <stdio.h>
-#include <string.h>
+#include "port.h"
 
 #include "bus.h"
 #include "krusader.h"
@@ -35,10 +34,10 @@ krusader_read(void *ctx, uint16_t addr, bool is_dummy)
 struct expansion_card *
 krusader_create(struct bus *bus, const char *rom_path)
 {
-	FILE *f;
+	void *f;
 	char msg[128];
 	long size;
-	size_t nread;
+	port_size_t nread;
 
 	if (s_in_use != 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR,
@@ -46,38 +45,37 @@ krusader_create(struct bus *bus, const char *rom_path)
 		return (NULL);
 	}
 
-	f = fopen(rom_path, "rb");
+	f = port_vfs_default.open(rom_path, PORT_VFS_READ);
 	if (f == NULL) {
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Krusader: cannot open ROM '%s'", rom_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (NULL);
 	}
 
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
+	size = port_vfs_default.size(f);
 
 	if (size <= 0 || size > 4096) {
-		snprintf(msg, sizeof(msg),
+		port_snprintf(msg, sizeof(msg),
 		    "Krusader: ROM '%s' is %ld bytes; must be 1-4096",
 		    rom_path, size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		fclose(f);
+		port_vfs_default.close(f);
 		return (NULL);
 	}
 
-	memset(s_kru.rom, 0xFF, 4096);
-	nread = fread(s_kru.rom, 1, (size_t)size, f);
-	fclose(f);
-
-	if (nread != (size_t)size) {
-		snprintf(msg, sizeof(msg),
+	port_memset(s_kru.rom, 0xFF, 4096);
+	nread = 0;
+	if (port_vfs_default.read(f, s_kru.rom, (port_size_t)size, &nread) != 0 ||
+	    nread != (port_size_t)size) {
+		port_snprintf(msg, sizeof(msg),
 		    "Krusader: short read on '%s' (%lu of %ld bytes)",
 		    rom_path, (unsigned long)nread, size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		port_vfs_default.close(f);
 		return (NULL);
 	}
+	port_vfs_default.close(f);
 
 	s_kru.size = (uint32_t)size;
 
@@ -92,7 +90,7 @@ krusader_create(struct bus *bus, const char *rom_path)
 
 	s_in_use = true;
 
-	snprintf(msg, sizeof(msg),
+	port_snprintf(msg, sizeof(msg),
 	    "Registered Krusader card: ROM at 0xE000-0x%04X",
 	    (uint16_t)(0xE000 + size - 1));
 	BUS_LOG(bus, BUS_LOG_INFO, msg);
@@ -108,8 +106,8 @@ krusader_free(struct expansion_card *card)
 	}
 	/* Static storage — nothing to free; just mark slot available. */
 	s_in_use = false;
-	memset(&s_kru,  0, sizeof(s_kru));
-	memset(&s_card, 0, sizeof(s_card));
+	port_memset(&s_kru,  0, sizeof(s_kru));
+	port_memset(&s_card, 0, sizeof(s_card));
 }
 
 #endif /* APPLE1_OMIT_KRUSADER */

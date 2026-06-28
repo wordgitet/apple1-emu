@@ -1,23 +1,21 @@
+/*
+ * term_dos.c - MS-DOS / DJGPP terminal backend (conio, no ANSI escapes).
+ *
+ * Renders the 40x24 Apple-1 screen with BIOS/conio calls so plain DOS
+ * consoles and DOSBox work without ANSI.SYS.
+ */
 #include "port.h"
 #include "term_apple1.h"
 
-#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#include <conio.h>
 
 static uint8_t vram[24][40];
 static int cursor_x = 0;
 static int cursor_y = 0;
-static bool raw_mode_active = false;
 static bool reset_pending = false;
 
-/* Shared global authentic speed setting */
 uint32_t opt_baud = 0;
 
-/*
- * Timestamp of the most recent character written to the display, in
- * microseconds.  Used by term_dsp_ready() to implement a non-blocking
- * baud-rate delay: the DSP "busy" window expires naturally as the CPU
- * continues to execute, so the main loop never sleeps.
- */
 static uint32_t last_write_us = 0;
 
 static void
@@ -32,15 +30,15 @@ scroll_up(void)
 }
 
 static void
-ansi_out(const char *buf, port_size_t len)
+dos_goto(int x, int y)
 {
-	port_term_write_buf(buf, len);
+	gotoxy(x + 1, y + 1);
 }
 
 static void
-ansi_out_char(char c)
+dos_out_char(char c)
 {
-	ansi_out(&c, 1);
+	putch(c);
 }
 
 void
@@ -57,22 +55,16 @@ term_init(void)
 	cursor_y = 0;
 
 	port_term_raw_enable();
-	raw_mode_active = true;
-
-	/* Hide cursor and clear physical screen */
-	ansi_out("\x1b[?25l\x1b[2J\x1b[H", 12);
+	clrscr();
+	_setcursortype(_NOCURSOR);
 }
 
 void
 term_shutdown(void)
 {
-	/* Show cursor, clear screen, reset attributes */
-	ansi_out("\x1b[?25h\x1b[0m\x1b[2J\x1b[H", 16);
-
-	if (raw_mode_active == true) {
-		port_term_raw_disable();
-		raw_mode_active = false;
-	}
+	_setcursortype(_NORMALCURSOR);
+	clrscr();
+	port_term_raw_disable();
 }
 
 void
@@ -92,7 +84,6 @@ term_write(uint8_t val)
 			vram[cursor_y][cursor_x] = 0x00;
 		}
 	} else if (val == 0x08 || val == 0x7F || val == 0x5F) {
-		/* Backspace */
 		if (cursor_x > 0) {
 			vram[cursor_y][cursor_x] = 0x20;
 			cursor_x--;
@@ -100,6 +91,7 @@ term_write(uint8_t val)
 		}
 	} else if (val >= 0x20 && val <= 0x7E) {
 		uint8_t glyph = val;
+
 		if (glyph >= 'a' && glyph <= 'z') {
 			glyph -= 32;
 		}
@@ -117,12 +109,6 @@ term_write(uint8_t val)
 	}
 
 	if (opt_baud > 0) {
-		/*
-		 * Record the time of this write.  The baud-rate delay is
-		 * enforced non-blocking via term_dsp_ready(): the PIA busy
-		 * bit stays clear until the window expires, letting the CPU
-		 * keep running and polling without freezing the main loop.
-		 */
 		last_write_us = port_gettime_us();
 	}
 }
@@ -133,11 +119,11 @@ term_dsp_ready(void)
 	uint32_t now;
 	uint32_t window_us;
 
-	if (opt_baud == 0)
+	if (opt_baud == 0) {
 		return (true);
-
+	}
 	now = port_gettime_us();
-	window_us = 10000000UL / opt_baud; /* 10 bits per character */
+	window_us = 10000000UL / opt_baud;
 	return ((now - last_write_us) >= window_us);
 }
 
@@ -151,21 +137,21 @@ term_update(void)
 	now = port_gettime_us();
 	blink_on = ((now / 250000UL) & 1) != 0;
 
-	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
+		dos_goto(0, y);
 		for (x = 0; x < 40; x++) {
 			uint8_t c = vram[y][x];
+
 			if (c == 0x00) {
 				if (blink_on != 0) {
-					ansi_out_char('@');
+					dos_out_char('@');
 				} else {
-					ansi_out_char(' ');
+					dos_out_char(' ');
 				}
 			} else {
-				ansi_out_char((char)c);
+				dos_out_char((char)c);
 			}
 		}
-		ansi_out_char('\n');
 	}
 }
 
@@ -183,13 +169,11 @@ term_poll(void)
 
 	if (ch != 0) {
 		if (ch == 0x03) {
-			/* Ctrl-C: request quit (debug mode breaks in main loop) */
 			port_signal_quit();
 			term_shutdown();
 			return (0);
 		}
 		if (ch == 0x0C) {
-			/* Ctrl-L (clear screen) */
 			port_memset(vram, 0x20, sizeof(vram));
 			cursor_x = 0;
 			cursor_y = 0;
@@ -197,7 +181,6 @@ term_poll(void)
 			return (0);
 		}
 		if (ch == 0x12) {
-			/* Ctrl-R (Reset) */
 			reset_pending = true;
 			return (0);
 		}

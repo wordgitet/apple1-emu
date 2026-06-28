@@ -1,7 +1,4 @@
 #include "port.h"
-#include <stdio.h>
-#include <string.h>
-
 #include "cpu.h"
 
 /* ------------------------------------------------------------------ */
@@ -116,7 +113,7 @@ cpu_init(struct cpu *cpu, struct bus *bus)
 	cpu->pc_trace_idx = 0;
 	cpu->prev_pc = 0;
 	cpu->prev_pc_valid = false;
-	memset(cpu->pc_trace, 0, sizeof(cpu->pc_trace));
+	port_memset(cpu->pc_trace, 0, sizeof(cpu->pc_trace));
 }
 
 void
@@ -142,7 +139,7 @@ cpu_reset(struct cpu *cpu)
 	cpu->pc_trace_idx = 0;
 	cpu->prev_pc = 0;
 	cpu->prev_pc_valid = false;
-	memset(cpu->pc_trace, 0, sizeof(cpu->pc_trace));
+	port_memset(cpu->pc_trace, 0, sizeof(cpu->pc_trace));
 }
 
 /* ------------------------------------------------------------------ */
@@ -363,17 +360,7 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 
 	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	bin_result = cpu->a + m + carry;
-
-	/*
-	 * NMOS 6502 BCD quirk: N, V, and Z are set from the intermediate
-	 * binary result before decimal correction.  Only the CMOS 65C02
-	 * updates these flags from the final adjusted value.
-	 */
-	set_flag(cpu, FLAG_ZERO,     bin_result == 0);
-	set_flag(cpu, FLAG_NEGATIVE, (bin_result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW,
-	    (~(cpu->a ^ m) & (cpu->a ^ bin_result) & 0x80) != 0);
-
+	set_flag(cpu, FLAG_ZERO, bin_result == 0);
 	low = (cpu->a & 0x0F) + (m & 0x0F) + carry;
 	high = (cpu->a >> 4) + (m >> 4);
 	if (low > 9) {
@@ -381,6 +368,9 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 		high++;
 	}
 	result = (high << 4) | (low & 0x0F);
+	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW,
+	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high > 9) {
 		result -= 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, true);
@@ -398,17 +388,7 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 
 	carry = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	bin_result = cpu->a + (m ^ 0xFF) + carry;
-
-	/*
-	 * NMOS 6502 BCD quirk: N, V, and Z are set from the intermediate
-	 * binary result before decimal correction.  Only the CMOS 65C02
-	 * updates these flags from the final adjusted value.
-	 */
-	set_flag(cpu, FLAG_ZERO,     bin_result == 0);
-	set_flag(cpu, FLAG_NEGATIVE, (bin_result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW,
-	    ((cpu->a ^ m) & (cpu->a ^ bin_result) & 0x80) != 0);
-
+	set_flag(cpu, FLAG_ZERO, bin_result == 0);
 	carry_inv = (carry == 0) ? 1 : 0;
 	low = (int8_t)(cpu->a & 0x0F) - (int8_t)(m & 0x0F) - carry_inv;
 	high = (int8_t)(cpu->a >> 4) - (int8_t)(m >> 4);
@@ -417,6 +397,9 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 		high--;
 	}
 	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
+	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
+	set_flag(cpu, FLAG_OVERFLOW,
+	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high < 0) {
 		result += 0xA0; /* 10 * 16 */
 		set_flag(cpu, FLAG_CARRY, false);
@@ -2380,11 +2363,15 @@ op_jam(struct cpu *cpu)
 	uint8_t opcode = read_byte(cpu, cpu->pc - 1); /* already fetched */
 	cpu->pc--; /* PC stays on the JAM opcode */
 	cpu->halted = true;
-	fprintf(stderr,
-	    "\nJAM: struct cpu halted by opcode 0x%02X at PC=0x%04X. "
-	    "RESET required.\n",
-	    opcode,
-	    (uint16_t)cpu->pc);
+	{
+		char msg[128];
+		port_snprintf(msg, sizeof(msg),
+		    "\nJAM: struct cpu halted by opcode 0x%02X at PC=0x%04X. "
+		    "RESET required.\n",
+		    opcode,
+		    (uint16_t)cpu->pc);
+		port_term_write_buf(msg, port_strlen(msg));
+	}
 	cpu->last_cycles = 1;
 }
 
@@ -2964,11 +2951,15 @@ cpu_step(struct cpu *cpu)
 		/* Unimplemented slot -- treat as JAM */
 		cpu->pc--;
 		cpu->halted = true;
-		fprintf(stderr,
-		    "\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
-		    "RESET required.\n",
-		    opcode,
-		    (uint16_t)cpu->pc);
+		{
+			char msg[128];
+			port_snprintf(msg, sizeof(msg),
+			    "\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
+			    "RESET required.\n",
+			    opcode,
+			    (uint16_t)cpu->pc);
+			port_term_write_buf(msg, port_strlen(msg));
+		}
 		cpu->last_cycles = 1;
 	}
 

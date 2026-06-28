@@ -1,8 +1,5 @@
 #ifndef APPLE1_OMIT_DEBUGGER
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "port.h"
 
 #include "bus.h"
 #include "dbg.h"
@@ -40,6 +37,109 @@ print_help(void)
 	       "trace)\n");
 	dbg_printf("  h, ?              Show this help menu\n");
 	dbg_printf("  q                 Quit emulator\n");
+}
+
+static int
+dbg_parse_hex(const char *s, unsigned int *out)
+{
+	const char *p;
+	char *end;
+	unsigned long val;
+
+	if (s == NULL || out == NULL) {
+		return (0);
+	}
+	p = s;
+	while (port_isspace((unsigned char)*p)) {
+		p++;
+	}
+	if (*p == '\0') {
+		return (0);
+	}
+	val = port_strtoul(p, &end, 16);
+	if (end == p) {
+		return (0);
+	}
+	*out = (unsigned int)val;
+	return (1);
+}
+
+static int
+dbg_parse_hex_pair(const char *s, unsigned int *a, unsigned int *b)
+{
+	const char *p;
+	char *end;
+	unsigned long v1;
+	unsigned long v2;
+
+	if (s == NULL || a == NULL || b == NULL) {
+		return (0);
+	}
+	p = s;
+	while (port_isspace((unsigned char)*p)) {
+		p++;
+	}
+	if (*p == '\0') {
+		return (0);
+	}
+	v1 = port_strtoul(p, &end, 16);
+	if (end == p) {
+		return (0);
+	}
+	*a = (unsigned int)v1;
+	p = end;
+	while (port_isspace((unsigned char)*p)) {
+		p++;
+	}
+	if (*p == '\0') {
+		return (1);
+	}
+	v2 = port_strtoul(p, &end, 16);
+	if (end == p) {
+		return (1);
+	}
+	*b = (unsigned int)v2;
+	return (2);
+}
+
+static int
+dbg_parse_hex_and_word(const char *s, unsigned int *addr,
+    char *word, port_size_t word_sz)
+{
+	const char *p;
+	char *end;
+	unsigned long val;
+	port_size_t i;
+
+	if (s == NULL || addr == NULL || word == NULL || word_sz == 0) {
+		return (0);
+	}
+	p = s;
+	while (port_isspace((unsigned char)*p)) {
+		p++;
+	}
+	if (*p == '\0') {
+		return (0);
+	}
+	val = port_strtoul(p, &end, 16);
+	if (end == p) {
+		return (0);
+	}
+	*addr = (unsigned int)val;
+	p = end;
+	while (port_isspace((unsigned char)*p)) {
+		p++;
+	}
+	if (*p == '\0') {
+		return (1);
+	}
+	i = 0;
+	while (*p != '\0' && !port_isspace((unsigned char)*p) &&
+	    i + 1 < word_sz) {
+		word[i++] = *p++;
+	}
+	word[i] = '\0';
+	return (word[0] != '\0' ? 2 : 1);
 }
 
 static void
@@ -287,7 +387,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 	int parsed;
 	char cmd;
 
-	strncpy(input, cmd_line, sizeof(input) - 1);
+	port_strncpy(input, cmd_line, sizeof(input) - 1);
 	input[sizeof(input) - 1] = '\0';
 
 	cmd_str = input;
@@ -300,7 +400,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 	}
 
 	args = cmd_str;
-	if (strncmp(cmd_str, "wp", 2) == 0 &&
+	if (port_strncmp(cmd_str, "wp", 2) == 0 &&
 	    (cmd_str[2] == '\0' || cmd_str[2] == ' ' || cmd_str[2] == '\t')) {
 		args = cmd_str + 2;
 		while (*args == ' ' || *args == '\t') {
@@ -308,7 +408,8 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		}
 		addr = 0;
 		type_str[0] = '\0';
-		parsed = sscanf(args, "%x %15s", &addr, type_str);
+		parsed = dbg_parse_hex_and_word(args, &addr, type_str,
+		    sizeof(type_str));
 		if (parsed >= 1) {
 			if (addr > 0xFFFF) {
 				dbg_printf("Error: Address must be a 16-bit hex "
@@ -316,11 +417,11 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			} else {
 				wp_type_t type = WP_WRITE;
 				if (parsed == 2) {
-					if (strcmp(type_str, "r") == 0) {
+					if (port_strcmp(type_str, "r") == 0) {
 						type = WP_READ;
-					} else if (strcmp(type_str, "w") == 0) {
+					} else if (port_strcmp(type_str, "w") == 0) {
 						type = WP_WRITE;
-					} else if (strcmp(type_str, "rw") ==
+					} else if (port_strcmp(type_str, "rw") ==
 					    0) {
 						type = WP_ACCESS;
 					} else {
@@ -355,14 +456,14 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				}
 			}
 		}
-	} else if (strncmp(cmd_str, "wd", 2) == 0 &&
+	} else if (port_strncmp(cmd_str, "wd", 2) == 0 &&
 	    (cmd_str[2] == '\0' || cmd_str[2] == ' ' || cmd_str[2] == '\t')) {
 		args = cmd_str + 2;
 		while (*args == ' ' || *args == '\t') {
 			args++;
 		}
 		addr = 0;
-		if (sscanf(args, "%x", &addr) == 1) {
+		if (dbg_parse_hex(args, &addr) == 1) {
 			if (addr > 0xFFFF) {
 				dbg_printf("Error: Address must be a 16-bit hex "
 				       "value.\n");
@@ -383,7 +484,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 
 		if (cmd == 'q') {
 			dbg_printf("Exiting emulator...\n");
-			exit(0);
+			port_exit(0);
 		} else if (cmd == 'h' || cmd == '?') {
 			print_help();
 		} else if (cmd == 's') {
@@ -398,10 +499,10 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 'm') {
 			start_val = dbg->cpu->pc;
 			end_val = 0;
-			parsed = sscanf(args, "%x %x", &start_val, &end_val);
+			parsed = dbg_parse_hex_pair(args, &start_val, &end_val);
 			if (parsed == 1) {
 				end_val = start_val + 15;
-			} else if (parsed == 0 || parsed == EOF) {
+			} else if (parsed == 0) {
 				start_val = dbg->cpu->pc;
 				end_val = start_val + 15;
 			}
@@ -425,7 +526,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			addr = 0;
 			val = 0;
 
-			if (sscanf(args, "%x %x", &addr, &val) == 2) {
+			if (dbg_parse_hex_pair(args, &addr, &val) == 2) {
 				if (addr > 0xFFFF || val > 0xFF) {
 					dbg_printf("Error: Invalid address ($%04X) "
 					       "or value ($%02X).\n",
@@ -445,7 +546,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 'b') {
 			addr = 0;
 
-			if (sscanf(args, "%x", &addr) == 1) {
+			if (dbg_parse_hex(args, &addr) == 1) {
 				if (addr > 0xFFFF) {
 					dbg_printf("Error: Address must be a "
 					       "16-bit hex value.\n");
@@ -470,7 +571,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 'd') {
 			addr = 0;
 
-			if (sscanf(args, "%x", &addr) == 1) {
+			if (dbg_parse_hex(args, &addr) == 1) {
 				if (addr > 0xFFFF) {
 					dbg_printf("Error: Address must be a "
 					       "16-bit hex value.\n");
@@ -550,16 +651,15 @@ dbg_interactive_loop(debugger_t *dbg)
 		char input[256];
 		char *cmd_str;
 		char cmd;
-		size_t len;
+		port_size_t len;
 
 		dbg_printf("dbg> ");
-		fflush(stdout);
 
-		if (fgets(input, sizeof(input), stdin) == NULL) {
+		if (port_term_read_line(input, sizeof(input)) == (void *)0) {
 			break;
 		}
 
-		len = strlen(input);
+		len = port_strlen(input);
 
 		if (len > 0 && input[len - 1] == '\n') {
 			input[len - 1] = '\0';
@@ -575,8 +675,8 @@ dbg_interactive_loop(debugger_t *dbg)
 
 		dbg_run_command(dbg, input);
 
-		if (cmd == 's' || cmd == 'c' || strcmp(cmd_str, "s") == 0 ||
-		    strcmp(cmd_str, "c") == 0) {
+		if (cmd == 's' || cmd == 'c' || port_strcmp(cmd_str, "s") == 0 ||
+		    port_strcmp(cmd_str, "c") == 0) {
 			break;
 		}
 	}
@@ -601,14 +701,13 @@ dbg_printf(const char *format, ...)
 	int ret;
 
 	va_start(args, format);
-	ret = vsnprintf(buf, sizeof(buf), format, args);
+	ret = port_vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
 
 	if (s_active_dbg != NULL && s_active_dbg->out != NULL) {
 		s_active_dbg->out(s_active_dbg->out_ctx, buf);
 	} else if (g_bus != NULL && g_bus->opts.headless != 0) {
-		fputs(buf, stdout);
-		fflush(stdout);
+		port_term_write_buf(buf, port_strlen(buf));
 	} else {
 		dbg_log_append(buf);
 	}
