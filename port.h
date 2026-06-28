@@ -64,6 +64,15 @@ typedef signed int int32_t;
 #ifndef INT32_MAX
 #define INT32_MAX 2147483647
 #endif
+#ifndef LONG_MAX
+#define LONG_MAX 2147483647L
+#endif
+#ifndef LONG_MIN
+#define LONG_MIN (-2147483647L - 1L)
+#endif
+#ifndef ULONG_MAX
+#define ULONG_MAX 4294967295UL
+#endif
 
 /*
  * bool: C89 has no native boolean type.

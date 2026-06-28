@@ -70,6 +70,9 @@ port_strlen(const char *s)
 {
 	port_size_t len;
 
+	if (s == (void *)0) {
+		return (0);
+	}
 	len = 0;
 	while (s[len] != '\0') {
 		len++;
@@ -82,6 +85,9 @@ port_strncpy(char *dst, const char *src, port_size_t n)
 {
 	port_size_t i;
 
+	if (dst == (void *)0 || src == (void *)0) {
+		return (dst);
+	}
 	for (i = 0; i < n && src[i] != '\0'; i++) {
 		dst[i] = src[i];
 	}
@@ -94,6 +100,12 @@ port_strncpy(char *dst, const char *src, port_size_t n)
 int
 port_strcmp(const char *a, const char *b)
 {
+	if (a == (void *)0) {
+		return (b == (void *)0 ? 0 : -1);
+	}
+	if (b == (void *)0) {
+		return (1);
+	}
 	while (*a != '\0' && *a == *b) {
 		a++;
 		b++;
@@ -107,6 +119,12 @@ port_strncmp(const char *a, const char *b, port_size_t n)
 	if (n == 0) {
 		return (0);
 	}
+	if (a == (void *)0) {
+		return (b == (void *)0 ? 0 : -1);
+	}
+	if (b == (void *)0) {
+		return (1);
+	}
 	while (n > 1 && *a != '\0' && *a == *b) {
 		a++;
 		b++;
@@ -118,6 +136,9 @@ port_strncmp(const char *a, const char *b, port_size_t n)
 char *
 port_strchr(const char *s, int c)
 {
+	if (s == (void *)0) {
+		return ((void *)0);
+	}
 	while (*s != '\0') {
 		if (*s == (char)c) {
 			return ((char *)s);
@@ -134,12 +155,20 @@ char *
 port_strstr(const char *hay, const char *needle)
 {
 	port_size_t i, len;
+	port_size_t hay_len;
 
+	if (hay == (void *)0 || needle == (void *)0) {
+		return ((void *)0);
+	}
 	if (*needle == '\0') {
 		return ((char *)hay);
 	}
 	len = port_strlen(needle);
-	while (*hay != '\0') {
+	hay_len = port_strlen(hay);
+	if (len > hay_len) {
+		return ((void *)0);
+	}
+	while (*hay != '\0' && hay_len >= len) {
 		for (i = 0; i < len; i++) {
 			if (hay[i] != needle[i]) {
 				break;
@@ -149,6 +178,7 @@ port_strstr(const char *hay, const char *needle)
 			return ((char *)hay);
 		}
 		hay++;
+		hay_len--;
 	}
 	return ((void *)0);
 }
@@ -159,6 +189,18 @@ port_strtol(const char *s, char **endptr, int base)
 	long result;
 	int sign;
 
+	if (s == (void *)0) {
+		if (endptr != (void *)0) {
+			*endptr = (void *)0;
+		}
+		return (0);
+	}
+	if (base != 0 && (base < 2 || base > 36)) {
+		if (endptr != (void *)0) {
+			*endptr = (char *)s;
+		}
+		return (0);
+	}
 	result = 0;
 	sign = 1;
 	while (port_isspace((unsigned char)*s)) {
@@ -190,6 +232,7 @@ port_strtol(const char *s, char **endptr, int base)
 	while (*s != '\0') {
 		int digit;
 		char c;
+		long new_result;
 
 		c = *s;
 		if (port_isdigit((unsigned char)c)) {
@@ -204,7 +247,16 @@ port_strtol(const char *s, char **endptr, int base)
 		if (digit >= base) {
 			break;
 		}
-		result = result * base + digit;
+		new_result = result * base + digit;
+		if (sign == 1 && new_result < result) {
+			result = LONG_MAX;
+			break;
+		}
+		if (sign == -1 && new_result < result) {
+			result = LONG_MIN;
+			break;
+		}
+		result = new_result;
 		s++;
 	}
 	if (endptr != (void *)0) {
@@ -218,6 +270,18 @@ port_strtoul(const char *s, char **endptr, int base)
 {
 	unsigned long result;
 
+	if (s == (void *)0) {
+		if (endptr != (void *)0) {
+			*endptr = (void *)0;
+		}
+		return (0);
+	}
+	if (base != 0 && (base < 2 || base > 36)) {
+		if (endptr != (void *)0) {
+			*endptr = (char *)s;
+		}
+		return (0);
+	}
 	result = 0;
 	while (port_isspace((unsigned char)*s)) {
 		s++;
@@ -245,6 +309,7 @@ port_strtoul(const char *s, char **endptr, int base)
 	while (*s != '\0') {
 		int digit;
 		char c;
+		unsigned long new_result;
 
 		c = *s;
 		if (port_isdigit((unsigned char)c)) {
@@ -259,7 +324,12 @@ port_strtoul(const char *s, char **endptr, int base)
 		if (digit >= base) {
 			break;
 		}
-		result = result * base + digit;
+		new_result = result * base + digit;
+		if (new_result < result) {
+			result = ULONG_MAX;
+			break;
+		}
+		result = new_result;
 		s++;
 	}
 	if (endptr != (void *)0) {
@@ -279,6 +349,9 @@ port_memcpy(void *dst, const void *src, port_size_t n)
 	const char *s;
 	port_size_t i;
 
+	if (dst == (void *)0 || src == (void *)0) {
+		return (dst);
+	}
 	d = (char *)dst;
 	s = (const char *)src;
 	for (i = 0; i < n; i++) {
@@ -293,6 +366,9 @@ port_memset(void *dst, int c, port_size_t n)
 	char *d;
 	port_size_t i;
 
+	if (dst == (void *)0) {
+		return (dst);
+	}
 	d = (char *)dst;
 	for (i = 0; i < n; i++) {
 		d[i] = (char)c;
@@ -307,6 +383,9 @@ port_memmove(void *dst, const void *src, port_size_t n)
 	const char *s;
 	port_size_t i;
 
+	if (dst == (void *)0 || src == (void *)0) {
+		return (dst);
+	}
 	d = (char *)dst;
 	s = (const char *)src;
 	if (d < s) {
@@ -328,6 +407,9 @@ port_memcmp(const void *a, const void *b, port_size_t n)
 	const unsigned char *sb;
 	port_size_t i;
 
+	if (a == (void *)0 || b == (void *)0) {
+		return (a == b ? 0 : (a == (void *)0 ? -1 : 1));
+	}
 	sa = (const unsigned char *)a;
 	sb = (const unsigned char *)b;
 	for (i = 0; i < n; i++) {
@@ -404,6 +486,12 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 	port_size_t written;
 	port_size_t limit;
 
+	if (fmt == (void *)0) {
+		if (buf != (void *)0 && n > 0) {
+			buf[0] = '\0';
+		}
+		return (0);
+	}
 	written = 0;
 	limit = (n > 0) ? (n - 1) : 0;
 	while (*fmt != '\0') {
@@ -427,6 +515,12 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 			if (*fmt == 'l') {
 				is_long = 1;
 				fmt++;
+			}
+			if (*fmt == '\0') {
+				if (written < limit) {
+					buf[written++] = '%';
+				}
+				break;
 			}
 			switch (*fmt) {
 			case 's': {
@@ -527,7 +621,7 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 				if (written < limit) {
 					buf[written++] = '%';
 				}
-				if (written < limit) {
+				if (*fmt != '\0' && written < limit) {
 					buf[written++] = *fmt;
 				}
 				break;
