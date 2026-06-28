@@ -8,6 +8,9 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 static bool raw_mode_active = false;
 static bool reset_pending = false;
+static bool bracketed_paste_active = false;
+static int escape_seq_pos = 0;
+static char escape_seq_buf[32];
 
 /* Shared global authentic speed setting - defined in main.c */
 extern uint32_t opt_baud;
@@ -144,6 +147,11 @@ term_update(void)
 	uint32_t now;
 	bool blink_on;
 
+	/* Skip display updates during bracketed paste to prevent interference */
+	if (bracketed_paste_active != 0) {
+		return;
+	}
+
 	now = port_gettime_us();
 	blink_on = ((now / 250000UL) & 1) != 0;
 
@@ -178,6 +186,28 @@ term_poll(void)
 	}
 
 	if (ch != 0) {
+		/* Handle escape sequences for bracketed paste mode */
+		if (ch == 0x1B) {
+			escape_seq_pos = 0;
+			escape_seq_buf[escape_seq_pos++] = (char)ch;
+			return (0);
+		}
+		if (escape_seq_pos > 0) {
+			escape_seq_buf[escape_seq_pos++] = (char)ch;
+			if (escape_seq_pos >= 6) {
+				/* Check for bracketed paste start: ESC[200~ */
+				if (port_strcmp(escape_seq_buf, "\x1b[200~") == 0) {
+					bracketed_paste_active = true;
+				}
+				/* Check for bracketed paste end: ESC[201~ */
+				if (port_strcmp(escape_seq_buf, "\x1b[201~") == 0) {
+					bracketed_paste_active = false;
+				}
+				escape_seq_pos = 0;
+			}
+			return (0);
+		}
+
 		if (ch == 0x03) {
 			/* Ctrl-C: quit */
 			port_signal_quit();

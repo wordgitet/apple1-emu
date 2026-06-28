@@ -68,8 +68,13 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 	bus->opts.headless = false;
 
 	port_memset(bus->ram, 0, ram_size);
-	/* Default display control (bit 7 set = ready) */
-	bus->pia.dsp_control = 0x80;
+	/*
+	 * Initialize PIA control registers as Woz Monitor does:
+	 * KBD control: 0xA7 (input with handshake)
+	 * DSP control: 0xA7 (output with handshake, bit 2 set for data mode)
+	 */
+	bus->pia.kbd_control = 0xA7;
+	bus->pia.dsp_control = 0xA7;
 
 	return (PORT_OK);
 }
@@ -600,9 +605,20 @@ pia_read(struct bus *bus, uint16_t address)
 	}
 	case PIA_BASE + 1:
 		return (bus->pia.kbd_control);
-	case PIA_BASE + 2:
-		/* Always return 0x00 so that Wozmon doesn't hang in a busy loop */
-		return (0x00);
+	case PIA_BASE + 2: {
+		uint8_t val;
+
+		/*
+		 * Wozmon OUT ($FFEF) waits on BIT $D012 / BMI: bit 7 set means
+		 * busy, clear means ready.  Do not always return 0x00 — that
+		 * bypasses -B baud throttling entirely.  term_dsp_ready()
+		 * drives the inter-character window when -B is active.
+		 */
+		val = bus->pia.dsp_data & 0x7F;
+		if (term_dsp_ready() == 0)
+			val |= 0x80;
+		return (val);
+	}
 	case PIA_BASE + 3: {
 		uint8_t ctrl = bus->pia.dsp_control;
 		/*

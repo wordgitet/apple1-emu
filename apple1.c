@@ -945,6 +945,8 @@ port_term_raw_enable(void)
 		raw.c_cc[VTIME] = 0;
 		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 0) {
 			posix_raw_mode_active = 1;
+			/* Enable bracketed paste mode */
+			port_term_write_buf("\x1b[?2004h", 8);
 		}
 	}
 }
@@ -953,6 +955,8 @@ void
 port_term_raw_disable(void)
 {
 	if (posix_raw_mode_active != 0) {
+		/* Disable bracketed paste mode */
+		port_term_write_buf("\x1b[?2004l", 8);
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 		posix_raw_mode_active = 0;
 	}
@@ -1416,8 +1420,13 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 	bus->opts.headless = false;
 
 	port_memset(bus->ram, 0, ram_size);
-	/* Default display control (bit 7 set = ready) */
-	bus->pia.dsp_control = 0x80;
+	/*
+	 * Initialize PIA control registers as Woz Monitor does:
+	 * KBD control: 0xA7 (input with handshake)
+	 * DSP control: 0xA7 (output with handshake, bit 2 set for data mode)
+	 */
+	bus->pia.kbd_control = 0xA7;
+	bus->pia.dsp_control = 0xA7;
 
 	return (PORT_OK);
 }
@@ -1948,9 +1957,20 @@ pia_read(struct bus *bus, uint16_t address)
 	}
 	case PIA_BASE + 1:
 		return (bus->pia.kbd_control);
-	case PIA_BASE + 2:
-		/* Always return 0x00 so that Wozmon doesn't hang in a busy loop */
-		return (0x00);
+	case PIA_BASE + 2: {
+		uint8_t val;
+
+		/*
+		 * Wozmon OUT ($FFEF) waits on BIT $D012 / BMI: bit 7 set means
+		 * busy, clear means ready.  Do not always return 0x00 — that
+		 * bypasses -B baud throttling entirely.  term_dsp_ready()
+		 * drives the inter-character window when -B is active.
+		 */
+		val = bus->pia.dsp_data & 0x7F;
+		if (term_dsp_ready() == 0)
+			val |= 0x80;
+		return (val);
+	}
 	case PIA_BASE + 3: {
 		uint8_t ctrl = bus->pia.dsp_control;
 		/*
@@ -7562,6 +7582,9 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 static bool raw_mode_active = false;
 static bool reset_pending = false;
+static bool bracketed_paste_active = false;
+static int escape_seq_pos = 0;
+static char escape_seq_buf[32];
 
 /* Shared global authentic speed setting - defined in main.c */
 extern uint32_t opt_baud;
@@ -7698,6 +7721,11 @@ term_update(void)
 	uint32_t now;
 	bool blink_on;
 
+	/* Skip display updates during bracketed paste to prevent interference */
+	if (bracketed_paste_active != 0) {
+		return;
+	}
+
 	now = port_gettime_us();
 	blink_on = ((now / 250000UL) & 1) != 0;
 
@@ -7732,6 +7760,28 @@ term_poll(void)
 	}
 
 	if (ch != 0) {
+		/* Handle escape sequences for bracketed paste mode */
+		if (ch == 0x1B) {
+			escape_seq_pos = 0;
+			escape_seq_buf[escape_seq_pos++] = (char)ch;
+			return (0);
+		}
+		if (escape_seq_pos > 0) {
+			escape_seq_buf[escape_seq_pos++] = (char)ch;
+			if (escape_seq_pos >= 6) {
+				/* Check for bracketed paste start: ESC[200~ */
+				if (port_strcmp(escape_seq_buf, "\x1b[200~") == 0) {
+					bracketed_paste_active = true;
+				}
+				/* Check for bracketed paste end: ESC[201~ */
+				if (port_strcmp(escape_seq_buf, "\x1b[201~") == 0) {
+					bracketed_paste_active = false;
+				}
+				escape_seq_pos = 0;
+			}
+			return (0);
+		}
+
 		if (ch == 0x03) {
 			/* Ctrl-C: quit */
 			port_signal_quit();

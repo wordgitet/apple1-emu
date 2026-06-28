@@ -98,6 +98,8 @@ port_term_raw_enable(void)
 		raw.c_cc[VTIME] = 0;
 		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 0) {
 			posix_raw_mode_active = 1;
+			/* Enable bracketed paste mode */
+			port_term_write_buf("\x1b[?2004h", 8);
 		}
 	}
 }
@@ -106,6 +108,8 @@ void
 port_term_raw_disable(void)
 {
 	if (posix_raw_mode_active != 0) {
+		/* Disable bracketed paste mode */
+		port_term_write_buf("\x1b[?2004l", 8);
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 		posix_raw_mode_active = 0;
 	}
