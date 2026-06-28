@@ -97,11 +97,16 @@ test_interrupts: tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC) $(PORT_S
 
 # MS-DOS cross-build (requires i586-pc-msdosdjgpp-gcc on PATH)
 DOS_CC ?= i586-pc-msdosdjgpp-gcc
-DOS_CFLAGS = -O2 -Wall -std=gnu99 -D__MSDOS__ -DAPPLE1_OMIT_CHARMAP
+DOS_CFLAGS = -O2 -Wall -std=gnu99 -D__MSDOS__ -DAPPLE1_OMIT_CHARMAP -march=i386 -mtune=i386
 
-dos:
+dos: cwsdpmi.exe
 	python3 tools/amalgamate.py --port port_msdos.c --term term_dos.c
 	$(DOS_CC) $(DOS_CFLAGS) -o apple1.exe apple1.c
+
+cwsdpmi.exe:
+	curl -L -o cwsdpmi.zip https://www.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip
+	unzip -o cwsdpmi.zip cwsdpmi.exe
+	rm -f cwsdpmi.zip
 
 apple1.exe: dos
 
@@ -110,4 +115,4 @@ test-official: apple1 6502_functional_test.bin
 
 clean:
 	rm -f apple1 $(TESTS)
-	rm -f *.o port_*.o tests/*.o 6502_functional_test.bin
+	rm -f *.o port_*.o tests/*.o 6502_functional_test.bin cwsdpmi.exe

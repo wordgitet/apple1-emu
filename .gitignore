@@ -1,6 +1,8 @@
 # artifacts
 *.o
 apple1
+apple1.exe
+cwsdpmi.exe
 
 # test binaries
 tests/test_cpu
