@@ -8,6 +8,43 @@
  */
 
 /* ================================================================== */
+/* Error code system                                                   */
+/* ================================================================== */
+
+const char *
+port_error_string(port_result_t rc)
+{
+	switch (rc) {
+	case PORT_OK:
+		return ("ok");
+	case PORT_ERROR:
+		return ("error");
+	case PORT_NOMEM:
+		return ("out of memory");
+	case PORT_IO:
+		return ("I/O error");
+	case PORT_CORRUPT:
+		return ("corrupt");
+	case PORT_FULL:
+		return ("full");
+	case PORT_CANTOPEN:
+		return ("cannot open");
+	case PORT_PROTOCOL:
+		return ("protocol error");
+	case PORT_INVALID:
+		return ("invalid parameter");
+	case PORT_MISUSE:
+		return ("misuse");
+	case PORT_RANGE:
+		return ("out of range");
+	case PORT_NOTFOUND:
+		return ("not found");
+	default:
+		return ("unknown error");
+	}
+}
+
+/* ================================================================== */
 /* Character classification shims                                     */
 /* ================================================================== */
 
