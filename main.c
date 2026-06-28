@@ -71,9 +71,6 @@ debugger_t  *g_dbg  = NULL;
 char        *g_argv0 = NULL;
 bool         g_debug_enabled = false;
 
-static port_sig_flag g_debug_break = 0;
-
-/* Referenced by term_ansi.c for baud-rate throttle */
 extern uint32_t opt_baud;
 
 
@@ -81,7 +78,18 @@ extern uint32_t opt_baud;
 /*  Signal handler                                                      */
 /* ------------------------------------------------------------------ */
 
-static port_sig_flag g_quit_flag = 0;
+port_sig_flag g_quit_flag = 0;
+
+/* Ctrl-C / SIGINT always requests emulator exit. */
+static int
+process_sigint(void)
+{
+	if (g_quit_flag == 0) {
+		return (0);
+	}
+	g_quit_flag = 0;
+	return (1);
+}
 
 /* ------------------------------------------------------------------ */
 /*  stderr log callback                                                 */
@@ -700,7 +708,10 @@ main(int argc, char *argv[])
 
 	/* Debugger init */
 	cpu_init(&cpu, &bus);
-	if (opt_headless != false) {
+	/* Headless runs immediately; -g should break at the Woz Monitor
+	 * entry point, not power-on garbage at $0000.  Interactive play
+	 * still waits for Ctrl+R (authentic no-reset power-on). */
+	if (opt_headless != false || opt_debug != false) {
 		cpu_reset(&cpu);
 	}
 #ifndef APPLE1_OMIT_DEBUGGER
@@ -728,15 +739,8 @@ main(int argc, char *argv[])
 	loop_count = 0;
 
 	for (;;) {
-
-		/* Quit signal received (Ctrl-C) */
-		if (g_quit_flag != 0) {
-			if (g_debug_enabled != 0) {
-				g_debug_break = 1;
-				g_quit_flag = 0;
-			} else {
-				break;
-			}
+		if (process_sigint() != 0) {
+			break;
 		}
 
 		/* When paused / powered off: just sleep */
@@ -754,18 +758,31 @@ main(int argc, char *argv[])
 				io_reset();
 				cpu_reset(&cpu);
 			}
+			if (process_sigint() != 0) {
+				break;
+			}
 		}
 
-		/* Debugger breakpoint / step */
+		/* Debugger: pause before run (-g) or at breakpoint */
 #ifndef APPLE1_OMIT_DEBUGGER
 		if (g_debug_enabled != 0) {
-			if (g_debug_break != 0 || dbg.step_mode != 0 ||
+			if (dbg.step_mode != 0 ||
 			    dbg_has_breakpoint(&dbg, cpu.pc) != 0) {
-				g_debug_break = 0;
-				dbg_interactive_loop(&dbg);
+				int empty_step;
+
+				empty_step = dbg.step_mode;
+				dbg.step_mode = false;
+				if (dbg_interactive_loop(&dbg, empty_step) != 0) {
+					break;
+				}
+				continue;
 			}
 		}
 #endif
+
+		if (process_sigint() != 0) {
+			break;
+		}
 
 		/* Optional CPU trace */
 #ifndef APPLE1_OMIT_DISASM
@@ -818,6 +835,17 @@ main(int argc, char *argv[])
 				}
 			}
 		}
+
+#ifndef APPLE1_OMIT_DEBUGGER
+		/* Single-step from debugger: run one insn, then pause again */
+		if (g_debug_enabled != 0 && dbg.repause != 0) {
+			dbg.repause = 0;
+			if (dbg_interactive_loop(&dbg, 0) != 0) {
+				break;
+			}
+			continue;
+		}
+#endif
 
 		/* Loop detection (flat-bus headless mode) */
 		if (bus.opts.flat_bus != 0 && bus.opts.headless != 0) {

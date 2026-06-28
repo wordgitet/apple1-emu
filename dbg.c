@@ -7,6 +7,8 @@
 #include "io.h"
 #include "term_apple1.h"
 
+extern port_sig_flag g_quit_flag;
+
 static debugger_t *s_active_dbg = NULL;
 
 int
@@ -203,7 +205,8 @@ dbg_init(debugger_t *dbg, struct cpu *cpu)
 	dbg->cpu = cpu;
 	dbg->num_breakpoints = 0;
 	dbg->num_watchpoints = 0;
-	dbg->step_mode = true;
+	dbg->step_mode = false;
+	dbg->repause = 0;
 	dbg->current_instruction_pc = 0;
 	dbg->out = NULL;
 	dbg->out_ctx = NULL;
@@ -488,7 +491,8 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 'h' || cmd == '?') {
 			print_help();
 		} else if (cmd == 's') {
-			dbg->step_mode = true;
+			dbg->repause = 1;
+			dbg->step_mode = false;
 			term_request_step();
 		} else if (cmd == 'c') {
 			dbg->step_mode = false;
@@ -604,17 +608,40 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 	}
 }
 
-void
-dbg_interactive_loop(debugger_t *dbg)
+static int
+dbg_want_quit(void)
+{
+	if (g_quit_flag != 0) {
+		g_quit_flag = 0;
+		return (1);
+	}
+	return (0);
+}
+
+static int
+dbg_read_line(char *buf, port_size_t size)
+{
+	if (port_term_read_line_dbg(buf, size, &g_quit_flag) != NULL) {
+		return (1);
+	}
+	return (0);
+}
+
+int
+dbg_interactive_loop(debugger_t *dbg, int empty_step)
 {
 	bus_access_cb_t old_cb;
 	char     disasm_buf[64];
-	int      i;
 	uint8_t  op;
+	int      empty_step_ok;
 
 	if (dbg->cpu->bus->opts.headless == 0) {
 		io_cleanup();
+		port_term_write_buf("\x1b[0m\r\n", 6);
+		port_term_dbg_enable();
 	}
+
+	empty_step_ok = empty_step;
 
 	/* Suspend access callback to avoid infinite recursion/re-triggering
 	 * from debug reads */
@@ -628,24 +655,28 @@ dbg_interactive_loop(debugger_t *dbg)
 		dbg_printf("\n*** BRK INSTRUCTION DETECTED ***\n");
 	}
 
-	dbg_printf("\n[DEBUG] ");
+	dbg_printf("--- Apple-1 debugger ---\r\n");
 	print_registers(dbg->cpu);
-	dbg_printf("        $%04X: %s\n", dbg->cpu->pc, disasm_buf);
+	dbg_printf("  $%04X: %s\r\n", dbg->cpu->pc, disasm_buf);
 
-	/* Print stack dump (top 8 values) */
-	dbg_printf("        Stack: ");
+	/* Print stack dump (top 8 bytes below SP) */
+	dbg_printf("  Stack: ");
 	if (dbg->cpu->s == 0xFF) {
-		dbg_printf("[Empty]");
+		dbg_printf("(empty)\r\n");
 	} else {
-		for (i = 0x100 + dbg->cpu->s + 1; i <= 0x1FF; i++) {
-			dbg_printf("%02X ", bus_read(dbg->cpu->bus, i));
-			if (i > 0x100 + dbg->cpu->s + 8) {
-				dbg_printf("... ");
+		uint16_t top = (uint16_t)(0x100u + dbg->cpu->s);
+		int n;
+
+		for (n = 0; n < 8; n++) {
+			uint16_t addr = top - (uint16_t)n;
+
+			if (addr < 0x0100u) {
 				break;
 			}
+			dbg_printf("%02X ", bus_read(dbg->cpu->bus, addr));
 		}
+		dbg_printf("\r\n");
 	}
-	dbg_printf("\n");
 
 	for (;;) {
 		char input[256];
@@ -653,10 +684,24 @@ dbg_interactive_loop(debugger_t *dbg)
 		char cmd;
 		port_size_t len;
 
+		if (dbg_want_quit()) {
+			dbg_printf("Exiting emulator...\r\n");
+			return (1);
+		}
+
 		dbg_printf("dbg> ");
 
-		if (port_term_read_line(input, sizeof(input)) == (void *)0) {
-			break;
+		if (dbg_read_line(input, sizeof(input)) == 0) {
+			if (dbg_want_quit()) {
+				dbg_printf("Exiting emulator...\r\n");
+				return (1);
+			}
+			dbg_printf("Exiting emulator...\r\n");
+			return (1);
+		}
+		if (dbg_want_quit()) {
+			dbg_printf("Exiting emulator...\r\n");
+			return (1);
 		}
 
 		len = port_strlen(input);
@@ -670,8 +715,14 @@ dbg_interactive_loop(debugger_t *dbg)
 			cmd_str++;
 		}
 		cmd = cmd_str[0];
-		if (cmd == '\0')
-			cmd = 's';
+		if (cmd == '\0') {
+			if (empty_step_ok != 0) {
+				cmd = 's';
+				empty_step_ok = 0;
+			} else {
+				continue;
+			}
+		}
 
 		dbg_run_command(dbg, input);
 
@@ -685,13 +736,13 @@ dbg_interactive_loop(debugger_t *dbg)
 	dbg->cpu->bus->access_cb = old_cb;
 
 	if (dbg->cpu->bus->opts.headless == 0) {
-		io_init(); /* Re-enable raw mode when execution resumes */
+		port_term_dbg_disable();
+		io_init();
 	}
+	return (0);
 }
 
 extern struct bus *g_bus;
-void
-dbg_log_append(const char *str);
 
 int
 dbg_printf(const char *format, ...)
@@ -706,10 +757,8 @@ dbg_printf(const char *format, ...)
 
 	if (s_active_dbg != NULL && s_active_dbg->out != NULL) {
 		s_active_dbg->out(s_active_dbg->out_ctx, buf);
-	} else if (g_bus != NULL && g_bus->opts.headless != 0) {
-		port_term_write_buf(buf, port_strlen(buf));
 	} else {
-		dbg_log_append(buf);
+		port_term_write_buf(buf, port_strlen(buf));
 	}
 	return (ret);
 }
@@ -770,10 +819,12 @@ dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 	(void)val;
 }
 
-void
-dbg_interactive_loop(debugger_t *dbg)
+int
+dbg_interactive_loop(debugger_t *dbg, int empty_step)
 {
 	(void)dbg;
+	(void)empty_step;
+	return (0);
 }
 
 void

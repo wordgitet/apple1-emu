@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <termios.h>
+#include <errno.h>
 #include <signal.h>
 #include <sys/select.h>
 
@@ -80,7 +81,9 @@ port_sleep_us(uint32_t us)
 /* ================================================================== */
 
 static struct termios orig_termios;
+static struct termios dbg_termios;
 static int posix_raw_mode_active = 0;
+static int posix_dbg_mode_active = 0;
 
 void
 port_term_raw_enable(void)
@@ -108,15 +111,49 @@ port_term_raw_disable(void)
 	}
 }
 
+void
+port_term_dbg_enable(void)
+{
+	struct termios t;
+
+	if (tcgetattr(STDIN_FILENO, &dbg_termios) == 0) {
+		t = dbg_termios;
+		t.c_lflag &= ~(ICANON | ECHO);
+		t.c_iflag &= ~(IXON | ICRNL);
+		t.c_cc[VMIN] = 1;
+		t.c_cc[VTIME] = 0;
+		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &t) == 0) {
+			posix_dbg_mode_active = 1;
+		}
+	}
+}
+
+void
+port_term_dbg_disable(void)
+{
+	if (posix_dbg_mode_active != 0) {
+		tcsetattr(STDIN_FILENO, TCSAFLUSH, &dbg_termios);
+		posix_dbg_mode_active = 0;
+	}
+}
+
 int
 port_term_read_char(void)
 {
 	char c;
+	ssize_t r;
 
-	if (read(STDIN_FILENO, &c, 1) == 1) {
+	r = read(STDIN_FILENO, &c, 1);
+	if (r == 1) {
 		return ((int)(unsigned char)c);
 	}
-	return (-1);
+	if (r == 0) {
+		return (PORT_TERM_EOF);
+	}
+	if (r < 0 && errno == EINTR) {
+		return (PORT_TERM_NODATA);
+	}
+	return (PORT_TERM_NODATA);
 }
 
 void
@@ -149,8 +186,14 @@ handle_sigint(int sig)
 void
 port_signal_setup(port_sig_flag *flag)
 {
+	struct sigaction sa;
+
 	g_sig_flag = flag;
-	signal(SIGINT, handle_sigint);
+	port_memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = handle_sigint;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0; /* Don't restart fgets — Ctrl-C reaches dbg prompt */
+	sigaction(SIGINT, &sa, NULL);
 }
 
 void

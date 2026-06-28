@@ -616,3 +616,64 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 	}
 	return (ch);
 }
+
+/* ================================================================== */
+/* Debugger line input (freestanding — uses port_term_* hooks only)   */
+/* ================================================================== */
+
+char *
+port_term_read_line_dbg(char *buf, port_size_t size, port_sig_flag *quit_flag)
+{
+	port_size_t n = 0;
+	int c;
+
+	if (buf == (void *)0 || size < 2) {
+		return ((void *)0);
+	}
+	buf[0] = '\0';
+
+	for (;;) {
+		char ch;
+
+		if (quit_flag != (void *)0 && *quit_flag != 0) {
+			return ((void *)0);
+		}
+
+		c = port_term_read_char();
+		if (c == PORT_TERM_EOF) {
+			if (n > 0) {
+				buf[n] = '\0';
+				return (buf);
+			}
+			return ((void *)0);
+		}
+		if (c == PORT_TERM_NODATA || c < 0) {
+			port_sleep_us(5000);
+			continue;
+		}
+		if (c == 0x03) {
+			if (quit_flag != (void *)0) {
+				*quit_flag = 1;
+			}
+			return ((void *)0);
+		}
+		if (c == '\r' || c == '\n') {
+			buf[n] = '\0';
+			port_term_write_buf("\r\n", 2);
+			return (buf);
+		}
+		if (c == 0x7F || c == 0x08) {
+			if (n > 0) {
+				n--;
+				port_term_write_buf("\b \b", 3);
+			}
+			continue;
+		}
+		if (c >= 0x20 && n + 1 < size) {
+			ch = (char)c;
+			buf[n++] = ch;
+			buf[n] = '\0';
+			port_term_write_buf(&ch, 1);
+		}
+	}
+}

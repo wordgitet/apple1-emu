@@ -23,6 +23,7 @@ typedef struct {
 	watchpoint_t watchpoints[APPLE1_MAX_WATCHPOINTS];
 	int num_watchpoints;
 	bool step_mode;
+	int  repause;
 	uint16_t current_instruction_pc;
 	dbg_out_cb_t out;
 	void *out_ctx;
@@ -47,8 +48,10 @@ dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr);
 void
 dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val);
 
-void
-dbg_interactive_loop(debugger_t *dbg);
+/* Returns non-zero if the user requested full emulator exit (q or Ctrl-C).
+ * empty_step: if non-zero, Enter on the first prompt acts like 's'. */
+int
+dbg_interactive_loop(debugger_t *dbg, int empty_step);
 void
 dbg_run_command(debugger_t *dbg, const char *cmd_line);
 

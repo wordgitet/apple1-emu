@@ -5,6 +5,7 @@
 #include "../term_apple1.h"
 
 struct bus *g_bus = NULL;
+port_sig_flag g_quit_flag = 0;
 
 void
 dbg_log_append(const char *str)

@@ -65,6 +65,16 @@ port_term_raw_disable(void)
 {
 }
 
+void
+port_term_dbg_enable(void)
+{
+}
+
+void
+port_term_dbg_disable(void)
+{
+}
+
 int
 port_term_read_char(void)
 {

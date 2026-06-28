@@ -183,7 +183,7 @@ term_poll(void)
 
 	if (ch != 0) {
 		if (ch == 0x03) {
-			/* Ctrl-C: request quit (debug mode breaks in main loop) */
+			/* Ctrl-C: quit */
 			port_signal_quit();
 			term_shutdown();
 			return (0);
