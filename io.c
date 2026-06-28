@@ -2,7 +2,7 @@
 #include "port.h"
 #include "term_apple1.h"
 
-#define KBD_BUFFER_SIZE 256
+#define KBD_BUFFER_SIZE 16384
 
 static uint8_t kbd_buffer[KBD_BUFFER_SIZE];
 static int kbd_read_idx = 0;
@@ -29,7 +29,9 @@ io_check_keyboard(void)
 	 * the struct cpu hasn't consumed the previous keypress yet).  Only
 	 * store the result if the buffer has space.
 	 */
-	uint8_t key = term_poll();
+	uint8_t key;
+
+	key = term_poll();
 	if (key != 0) {
 		int next_write = (kbd_write_idx + 1) % KBD_BUFFER_SIZE;
 		if (next_write != kbd_read_idx) {
