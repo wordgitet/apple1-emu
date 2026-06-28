@@ -13,11 +13,11 @@ struct expansion_card *
 aci_create(struct bus *bus, const char *rom_path);
 
 /* Load a .aci tape file into the ACI card */
-bool
+port_result_t
 aci_load_tape(struct expansion_card *card, const char *tape_path);
 
 /* Save recorded ACI tape output to a .aci file */
-bool
+port_result_t
 aci_save_tape(struct expansion_card *card, const char *tape_path);
 
 /* Free ACI card resources */

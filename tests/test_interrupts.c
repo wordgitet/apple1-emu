@@ -39,7 +39,7 @@ static struct cpu cpu;
 static void
 setup(void)
 {
-	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
+	if (bus_init(&bus, test_ram, 16 * 1024) != PORT_OK) {
 		fprintf(stderr, "bus_init failed\n");
 		exit(1);
 	}

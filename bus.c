@@ -49,9 +49,12 @@ bus_translate_ram_address(struct bus *bus, uint16_t address)
 	return (address);
 }
 
-bool
+port_result_t
 bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 {
+	if (bus == (void *)0 || ram_buf == (void *)0) {
+		return (PORT_INVALID);
+	}
 	port_memset(bus, 0, sizeof(struct bus));
 	bus->ram_size = ram_size;
 	bus->ram = ram_buf;
@@ -68,7 +71,7 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 	/* Default display control (bit 7 set = ready) */
 	bus->pia.dsp_control = 0x80;
 
-	return (true);
+	return (PORT_OK);
 }
 
 void
@@ -77,7 +80,7 @@ bus_free(struct bus *bus)
 	bus->ram = NULL;
 }
 
-bool
+port_result_t
 bus_load_bin_buf(struct bus *bus,
     const uint8_t *data,
     size_t len,
@@ -86,9 +89,12 @@ bus_load_bin_buf(struct bus *bus,
 	uint32_t addr;
 	uint32_t i;
 
+	if (bus == (void *)0 || data == (void *)0) {
+		return (PORT_INVALID);
+	}
 	if (len == 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Binary buffer is empty.");
-		return (false);
+		return (PORT_INVALID);
 	}
 
 	for (addr = address; addr < (uint32_t)address + len; addr++) {
@@ -103,7 +109,7 @@ bus_load_bin_buf(struct bus *bus,
 			    address,
 			    bus->ram_size / 1024);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
-			return (false);
+			return (PORT_RANGE);
 		}
 	}
 
@@ -132,7 +138,7 @@ bus_load_bin_buf(struct bus *bus,
 		    (uint16_t)(address + len - 1));
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
 	}
-	return (true);
+	return (PORT_OK);
 }
 
 PORT_STATIC_INLINE int
@@ -147,7 +153,7 @@ hex_val(char c)
 	return (0);
 }
 
-bool
+port_result_t
 bus_load_wozmon_txt_buf(struct bus *bus,
     const char *text,
     size_t len,
@@ -171,9 +177,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 	uint16_t raddr;
 	uint8_t val;
 
+	if (bus == (void *)0 || text == (void *)0) {
+		return (PORT_INVALID);
+	}
 	if (len == 0) {
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Text buffer is empty.");
-		return (false);
+		return (PORT_INVALID);
 	}
 
 	/* Strip inline comments */
@@ -182,7 +191,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 		BUS_LOG(bus,
 		    BUS_LOG_ERROR,
 		    "Error: Failed to allocate wozmon parser buffer");
-		return (false);
+		return (PORT_NOMEM);
 	}
 
 	w = 0;
@@ -345,7 +354,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 	if (total_bytes == 0 && first_addr != 0) {
 		/* Nothing loaded, completely invalid format or empty */
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 
 	{
@@ -356,20 +365,23 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 		    total_bytes);
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
 	}
-	return (true);
+	return (PORT_OK);
 }
 
-bool
+port_result_t
 bus_load_rom(struct bus *bus, const char *rom_path)
 {
+	if (bus == (void *)0) {
+		return (PORT_INVALID);
+	}
 	if (rom_path == NULL) {
 #ifndef APPLE1_OMIT_WOZMON
 		port_memcpy(bus->rom, embedded_wozmon, 256);
 		bus->rom_loaded = true;
-		return (true);
+		return (PORT_OK);
 #else
 		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
-		return (false);
+		return (PORT_MISUSE);
 #endif
 	}
 
@@ -391,12 +403,12 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 #ifndef APPLE1_OMIT_WOZMON
 			port_memcpy(bus->rom, embedded_wozmon, 256);
 			bus->rom_loaded = true;
-			return (true);
+			return (PORT_OK);
 #else
 			BUS_LOG(bus,
 			    BUS_LOG_ERROR,
 			    "Error: Monitor ROM omitted");
-			return (false);
+			return (PORT_MISUSE);
 #endif
 		}
 
@@ -412,7 +424,7 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 			    size);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
-			return (false);
+			return (PORT_PROTOCOL);
 		}
 
 		read_bytes = 0;
@@ -425,31 +437,34 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 			    rom_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
-			return (false);
+			return (PORT_IO);
 		}
 		port_vfs_default.close(f);
 
 		bus->rom_loaded = true;
-		return (true);
+		return (PORT_OK);
 	}
 #else
 	BUS_LOG(bus,
 	    BUS_LOG_ERROR,
 	    "Error: Disk I/O disabled, cannot load ROM from file.");
-	return (false);
+	return (PORT_MISUSE);
 #endif
 }
 
 #ifndef APPLE1_OMIT_DISKIO
 
-bool
+port_result_t
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 {
 	void *f;
 	uint8_t *buf;
 	long size;
-	bool ret;
+	port_result_t ret;
 
+	if (bus == (void *)0 || bin_path == (void *)0) {
+		return (PORT_INVALID);
+	}
 	f = port_vfs_default.open(bin_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
@@ -458,7 +473,7 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 		    "Error: Could not open binary file '%s'",
 		    bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		return (false);
+		return (PORT_CANTOPEN);
 	}
 
 	size = port_vfs_default.size(f);
@@ -471,13 +486,13 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 		    bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_IO);
 	}
 
 	buf = (uint8_t *)port_malloc(size);
 	if (buf == NULL) {
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_NOMEM);
 	}
 
 	{
@@ -493,7 +508,7 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_free(buf);
 			port_vfs_default.close(f);
-			return (false);
+			return (PORT_IO);
 		}
 	}
 	port_vfs_default.close(f);
@@ -503,7 +518,7 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 	return (ret);
 }
 
-bool
+port_result_t
 bus_load_wozmon_txt(struct bus *bus,
     const char *txt_path,
     uint16_t *run_address,
@@ -513,8 +528,11 @@ bus_load_wozmon_txt(struct bus *bus,
 	port_size_t read_bytes;
 	long size;
 	void *f;
-	bool ret;
+	port_result_t ret;
 
+	if (bus == (void *)0 || txt_path == (void *)0) {
+		return (PORT_INVALID);
+	}
 	f = port_vfs_default.open(txt_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
@@ -523,7 +541,7 @@ bus_load_wozmon_txt(struct bus *bus,
 		    "Error: Could not open text file '%s'",
 		    txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
-		return (false);
+		return (PORT_CANTOPEN);
 	}
 
 	size = port_vfs_default.size(f);
@@ -536,20 +554,20 @@ bus_load_wozmon_txt(struct bus *bus,
 		    txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_IO);
 	}
 
 	content = (char *)port_malloc(size + 1);
 	if (content == NULL) {
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_NOMEM);
 	}
 
 	read_bytes = 0;
 	if (port_vfs_default.read(f, content, size, &read_bytes) != 0) {
 		port_free(content);
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_IO);
 	}
 	content[read_bytes] = '\0';
 	port_vfs_default.close(f);

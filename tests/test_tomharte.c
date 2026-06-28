@@ -177,7 +177,7 @@ main(int argc, char **argv)
 		    limit);
 	}
 
-	if (bus_init(&bus, test_ram, 65536) == false) {
+	if (bus_init(&bus, test_ram, 65536) != PORT_OK) {
 		fclose(f);
 		return (1);
 	}

@@ -17,7 +17,7 @@ run_test(const char *name, void (*test_fn)(struct cpu *, struct bus *))
 	struct cpu cpu;
 
 	/* Initialize 16KB mock RAM for testing */
-	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
+	if (bus_init(&bus, test_ram, 16 * 1024) != PORT_OK) {
 		fprintf(stderr, "Failed to init bus for test: %s\n", name);
 		exit(1);
 	}
@@ -505,13 +505,13 @@ test_reset_vectors(void)
 	uint16_t res;
 	uint16_t irq;
 
-	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
+	if (bus_init(&bus, test_ram, 16 * 1024) != PORT_OK) {
 		fprintf(stderr, "Failed to init bus for Reset Vectors test\n");
 		exit(1);
 	}
 
 	/* 1. Load real wozmon.bin ROM */
-	if (!bus_load_rom(&bus, "wozmon.bin")) {
+	if (bus_load_rom(&bus, "wozmon.bin") != PORT_OK) {
 		fprintf(stderr,
 		    "Failed to load wozmon.bin for Reset Vectors test\n");
 		bus_free(&bus);
@@ -825,13 +825,13 @@ test_bruce_clark_decimal(void)
 	int steps;
 	uint8_t error;
 
-	if (bus_init(&bus, test_ram, 65536) == false) {
+	if (bus_init(&bus, test_ram, 65536) != PORT_OK) {
 		fprintf(stderr, "Failed to init 64KB bus for Bruce Clark Decimal Test\n");
 		exit(1);
 	}
 	bus.opts.flat_bus = true;
 
-	if (!bus_load_bin(&bus, "tests/6502_decimal_test.bin", 0x0400)) {
+	if (bus_load_bin(&bus, "tests/6502_decimal_test.bin", 0x0400) != PORT_OK) {
 		fprintf(stderr, "Failed to load tests/6502_decimal_test.bin\n");
 		exit(1);
 	}

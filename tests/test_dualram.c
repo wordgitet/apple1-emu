@@ -38,7 +38,7 @@ test_pia_mirroring(void)
 {
 	struct bus bus;
 
-	if (bus_init(&bus, test_ram, 8192) == false) {
+	if (bus_init(&bus, test_ram, 8192) != PORT_OK) {
 		fprintf(stderr,
 		    "Failed to initialize bus for PIA mirroring test\n");
 		exit(1);
@@ -76,7 +76,7 @@ main(void)
 	printf("Starting Dual-Bank 8KB RAM Tests...\n");
 
 	/* Initialize with 8 KB (8192 bytes) RAM size */
-	if (bus_init(&bus, test_ram, 8192) == false) {
+	if (bus_init(&bus, test_ram, 8192) != PORT_OK) {
 		fprintf(stderr, "Failed to initialize bus with 8KB RAM\n");
 		return (1);
 	}

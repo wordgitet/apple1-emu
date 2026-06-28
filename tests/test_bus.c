@@ -17,7 +17,7 @@ main(void)
 	bool has_run;
 	bool ok;
 
-	if (bus_init(&bus, test_ram, 4096) == false) {
+	if (bus_init(&bus, test_ram, 4096) != PORT_OK) {
 		fprintf(stderr, "Failed to init bus\n");
 		return (1);
 	}
@@ -39,7 +39,7 @@ main(void)
 	has_run = false;
 
 	ok = bus_load_wozmon_txt(&bus, tmp_txt, &run_addr, &has_run);
-	assert(ok == true);
+	assert(ok == PORT_OK);
 	assert(has_run == true);
 	assert(run_addr == 0x030A);
 
@@ -64,7 +64,7 @@ main(void)
 	fclose(f);
 
 	ok = bus_load_wozmon_txt(&bus, tmp_txt, &run_addr, &has_run);
-	assert(ok == true);
+	assert(ok == PORT_OK);
 	assert(has_run == false);
 	assert(bus.ram[0x0200] == 0x00);
 	assert(bus.ram[0x0201] == 0x01);

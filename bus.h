@@ -90,7 +90,7 @@ struct bus {
 };
 
 /* Initialize the memory bus with a configured RAM size and buffer */
-bool
+port_result_t
 bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size);
 
 /* Clean up */
@@ -98,14 +98,14 @@ void
 bus_free(struct bus *bus);
 
 /* Load binary from buffer into RAM at address */
-bool
+port_result_t
 bus_load_bin_buf(struct bus *bus,
     const uint8_t *data,
     size_t len,
     uint16_t address);
 
 /* Load Woz Monitor formatted text from a buffer. */
-bool
+port_result_t
 bus_load_wozmon_txt_buf(struct bus *bus,
     const char *text,
     size_t len,
@@ -113,18 +113,18 @@ bus_load_wozmon_txt_buf(struct bus *bus,
     bool *has_run_address);
 
 /* Load exactly 256-byte ROM image (Woz Monitor) at 0xFF00-0xFFFF */
-bool
+port_result_t
 bus_load_rom(struct bus *bus, const char *rom_path);
 
 #ifndef APPLE1_OMIT_DISKIO
 /* Load arbitrary binary file into RAM at the specified starting address */
-bool
+port_result_t
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address);
 
-/* Load Woz Monitor formatted text file into RAM. Returns true on success.
+/* Load Woz Monitor formatted text file into RAM. Returns PORT_OK on success.
  * If run_address is not NULL, it will be set to the R (run) address if
  * specified in the file. */
-bool
+port_result_t
 bus_load_wozmon_txt(struct bus *bus,
     const char *txt_path,
     uint16_t *run_address,

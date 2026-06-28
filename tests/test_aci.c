@@ -125,7 +125,7 @@ run_roundtrip_test(const char *tape_path,
 	 * PHASE 1: Write RAM to tape (using ACI WRITE ROM routine)
 	 * ------------------------------------------------------------- */
 	printf("  Phase 1: Starting ACI WRITE execution...\n");
-	if (bus_init(&bus, test_ram, 16 * 1024) == false) {
+	if (bus_init(&bus, test_ram, 16 * 1024) != PORT_OK) {
 		fprintf(stderr, "Failed to init bus for ACI write test\n");
 		return (1);
 	}
@@ -133,7 +133,7 @@ run_roundtrip_test(const char *tape_path,
 	bus.opts.flat_bus = false;
 	bus.opts.headless = true;
 
-	if (bus_load_rom(&bus, "wozmon.bin") == false) {
+	if (bus_load_rom(&bus, "wozmon.bin") != PORT_OK) {
 		fprintf(stderr, "Failed to load wozmon.bin\n");
 		bus_free(&bus);
 		return (1);
@@ -210,7 +210,7 @@ run_roundtrip_test(const char *tape_path,
 	 * PHASE 2: Save the recorded tape
 	 * ------------------------------------------------------------- */
 	printf("  Phase 2: Saving tape to '%s'...\n", tape_path);
-	if (aci_save_tape(aci_card, tape_path) == false) {
+	if (aci_save_tape(aci_card, tape_path) != PORT_OK) {
 		fprintf(stderr, "FAIL: Failed to save recorded ACI tape.\n");
 		aci_free(aci_card);
 		bus_free(&bus);
@@ -224,7 +224,7 @@ run_roundtrip_test(const char *tape_path,
 	 * PHASE 3: Read back the tape in a fresh system
 	 * ------------------------------------------------------------- */
 	printf("  Phase 3: Restoring tape in a fresh struct cpu/struct bus instance...\n");
-	if (bus_init(&read_bus, test_ram, 16 * 1024) == false) {
+	if (bus_init(&read_bus, test_ram, 16 * 1024) != PORT_OK) {
 		fprintf(stderr, "Failed to init read bus\n");
 		unlink(tape_path);
 		return (1);
@@ -233,7 +233,7 @@ run_roundtrip_test(const char *tape_path,
 	read_bus.opts.flat_bus = false;
 	read_bus.opts.headless = true;
 
-	if (bus_load_rom(&read_bus, "wozmon.bin") == false) {
+	if (bus_load_rom(&read_bus, "wozmon.bin") != PORT_OK) {
 		fprintf(stderr, "Failed to load read wozmon.bin\n");
 		bus_free(&read_bus);
 		unlink(tape_path);
@@ -249,7 +249,7 @@ run_roundtrip_test(const char *tape_path,
 	}
 	bus_add_card(&read_bus, read_aci_card);
 
-	if (aci_load_tape(read_aci_card, tape_path) == false) {
+	if (aci_load_tape(read_aci_card, tape_path) != PORT_OK) {
 		fprintf(stderr,
 		    "FAIL: Failed to load ACI tape file '%s'\n",
 		    tape_path);

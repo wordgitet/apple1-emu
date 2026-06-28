@@ -323,7 +323,12 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 #ifndef APPLE1_OMIT_ACI
 		if (port_strcmp(bus->cards[i]->name, "ACI") == 0) {
 			if (save_tape_path != NULL) {
-				aci_save_tape(bus->cards[i], save_tape_path);
+				port_result_t rc;
+				rc = aci_save_tape(bus->cards[i], save_tape_path);
+				if (rc != PORT_OK) {
+					cli_error("Error: aci_save_tape failed: %s\n",
+					    port_error_string(rc));
+				}
 			}
 			aci_free(bus->cards[i]);
 		}
@@ -605,9 +610,14 @@ main(int argc, char *argv[])
 	port_signal_setup(&g_quit_flag);
 
 	/* Initialise bus with static buffer — no malloc required */
-	if (bus_init(&bus, static_ram, ram_size) == false) {
-		cli_error("Error: bus_init failed\n");
-		return (1);
+	{
+		port_result_t rc;
+		rc = bus_init(&bus, static_ram, ram_size);
+		if (rc != PORT_OK) {
+			cli_error("Error: bus_init failed: %s\n",
+			    port_error_string(rc));
+			return (1);
+		}
 	}
 	bus.log = stderr_log;
 	bus.log_ctx = NULL;
@@ -633,15 +643,25 @@ main(int argc, char *argv[])
 	}
 
 	/* Load ROM */
-	if (bus_load_rom(&bus, rom_path) == false) {
-		bus_free(&bus);
-		return (1);
+	{
+		port_result_t rc;
+		rc = bus_load_rom(&bus, rom_path);
+		if (rc != PORT_OK) {
+			cli_error("Error: bus_load_rom failed: %s\n",
+			    port_error_string(rc));
+			bus_free(&bus);
+			return (1);
+		}
 	}
 
 	/* Load flat binary */
 #ifndef APPLE1_OMIT_DISKIO
 	if (flat_bin_path != NULL) {
-		if (bus_load_bin(&bus, flat_bin_path, 0x0000) == false) {
+		port_result_t rc;
+		rc = bus_load_bin(&bus, flat_bin_path, 0x0000);
+		if (rc != PORT_OK) {
+			cli_error("Error: bus_load_bin failed: %s\n",
+			    port_error_string(rc));
 			bus_free(&bus);
 			return (1);
 		}
@@ -654,7 +674,11 @@ main(int argc, char *argv[])
 	/* Load -l binary */
 #ifndef APPLE1_OMIT_DISKIO
 	if (bin_path != NULL) {
-		if (bus_load_bin(&bus, bin_path, bin_address) == false) {
+		port_result_t rc;
+		rc = bus_load_bin(&bus, bin_path, bin_address);
+		if (rc != PORT_OK) {
+			cli_error("Error: bus_load_bin failed: %s\n",
+			    port_error_string(rc));
 			bus_free(&bus);
 			return (1);
 		}
@@ -666,12 +690,16 @@ main(int argc, char *argv[])
 	/* Load Woz Monitor text file */
 #ifndef APPLE1_OMIT_DISKIO
 	if (wozmon_txt_path != NULL) {
+		port_result_t rc;
 		has_run_addr = false;
 		run_addr = 0;
-		if (bus_load_wozmon_txt(&bus,
+		rc = bus_load_wozmon_txt(&bus,
 			wozmon_txt_path,
 			&run_addr,
-			&has_run_addr) == false) {
+			&has_run_addr);
+		if (rc != PORT_OK) {
+			cli_error("Error: bus_load_wozmon_txt failed: %s\n",
+			    port_error_string(rc));
 			bus_free(&bus);
 			return (1);
 		}
@@ -690,8 +718,11 @@ main(int argc, char *argv[])
 		aci_card = aci_create(&bus, aci_path);
 		if (aci_card != NULL) {
 			if (tape_path != NULL) {
-				if (aci_load_tape(aci_card, tape_path) ==
-				    false) {
+				port_result_t rc;
+				rc = aci_load_tape(aci_card, tape_path);
+				if (rc != PORT_OK) {
+					cli_error("Error: aci_load_tape failed: %s\n",
+					    port_error_string(rc));
 					aci_free(aci_card);
 					bus_free(&bus);
 					return (1);

@@ -226,7 +226,7 @@ aci_create(struct bus *bus, const char *rom_path)
 	return (card);
 }
 
-static bool
+static port_result_t
 pcm_to_durations(struct bus *bus,
     const float *mono,
     uint32_t num_samples,
@@ -241,7 +241,7 @@ pcm_to_durations(struct bus *bus,
 	bool current_level;
 
 	if (num_samples == 0 || sample_rate == 0) {
-		return (false);
+		return (PORT_INVALID);
 	}
 
 	threshold = 0.02f;
@@ -258,7 +258,7 @@ pcm_to_durations(struct bus *bus,
 		    BUS_LOG_ERROR,
 		    "Error: Audio file does not contain a detectable "
 		    "cassette signal");
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 
 	*out_initial_level = mono[first_active] >= 0.0f;
@@ -273,7 +273,7 @@ pcm_to_durations(struct bus *bus,
 		BUS_LOG(bus,
 		    BUS_LOG_ERROR,
 		    "Failed to allocate durations buffer");
-		return (false);
+		return (PORT_NOMEM);
 	}
 
 	for (i = first_active + 1; i < num_samples; i++) {
@@ -303,7 +303,7 @@ pcm_to_durations(struct bus *bus,
 					    "Error: Cassette signal durations "
 					    "array overflow");
 					port_free(durations);
-					return (false);
+					return (PORT_RANGE);
 				}
 				cap *= 2;
 				new_buf = port_realloc(durations,
@@ -315,7 +315,7 @@ pcm_to_durations(struct bus *bus,
 					    "Failed to reallocate durations "
 					    "buffer");
 					port_free(durations);
-					return (false);
+					return (PORT_NOMEM);
 				}
 				durations = new_buf;
 			}
@@ -327,15 +327,15 @@ pcm_to_durations(struct bus *bus,
 
 	if (count == 0) {
 		port_free(durations);
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 
 	*out_durations = durations;
 	*out_count = count;
-	return (true);
+	return (PORT_OK);
 }
 
-static bool
+static port_result_t
 load_wav_tape(struct aci_card *aci, const char *tape_path)
 {
 	void *f;
@@ -350,6 +350,9 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	bool initial_level;
 	port_size_t read_bytes;
 
+	if (aci == (void *)0 || tape_path == (void *)0) {
+		return (PORT_INVALID);
+	}
 	f = port_vfs_default.open(tape_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
@@ -358,7 +361,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		    "Error: Could not open WAV file '%s'",
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
-		return (false);
+		return (PORT_CANTOPEN);
 	}
 
 	read_bytes = 0;
@@ -366,14 +369,14 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	    read_bytes != 12) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated WAV header");
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_IO);
 	}
 
 	if (port_memcmp(riff_header, "RIFF", 4) != 0 ||
 	    port_memcmp(riff_header + 8, "WAVE", 4) != 0) {
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Invalid WAV format");
 		port_vfs_default.close(f);
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 
 	audio_format = 0;
@@ -405,7 +408,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 				    BUS_LOG_ERROR,
 				    "Error: Invalid fmt chunk size");
 				port_vfs_default.close(f);
-				return (false);
+				return (PORT_PROTOCOL);
 			}
 			read_bytes = 0;
 			if (port_vfs_default.read(f,
@@ -417,7 +420,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 				    BUS_LOG_ERROR,
 				    "Error: Truncated fmt chunk");
 				port_vfs_default.close(f);
-				return (false);
+				return (PORT_IO);
 			}
 			audio_format = fmt_data[0] | (fmt_data[1] << 8);
 			channels = fmt_data[2] | (fmt_data[3] << 8);
@@ -438,7 +441,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 				    BUS_LOG_ERROR,
 				    "Failed to allocate data chunk buffer");
 				port_vfs_default.close(f);
-				return (false);
+				return (PORT_NOMEM);
 			}
 			read_bytes = 0;
 			if (port_vfs_default.read(f,
@@ -451,7 +454,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 				    "Error: Truncated data chunk");
 				port_free(data_chunk);
 				port_vfs_default.close(f);
-				return (false);
+				return (PORT_IO);
 			}
 			break;
 		} else {
@@ -469,14 +472,14 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		BUS_LOG(aci->bus,
 		    BUS_LOG_ERROR,
 		    "Error: Missing WAV data chunk");
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
 		BUS_LOG(aci->bus,
 		    BUS_LOG_ERROR,
 		    "Error: Missing WAV format details");
 		port_free(data_chunk);
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 	if (audio_format != 1 && audio_format != 3) {
 		BUS_LOG(aci->bus,
@@ -484,7 +487,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		    "Error: Unsupported WAV format (only PCM and float32 "
 		    "are supported)");
 		port_free(data_chunk);
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 
 	bytes_per_sample = bits_per_sample / 8;
@@ -493,7 +496,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		    BUS_LOG_ERROR,
 		    "Error: Unsupported WAV sample format");
 		port_free(data_chunk);
-		return (false);
+		return (PORT_PROTOCOL);
 	}
 
 	frame_count = data_size / (bytes_per_sample * channels);
@@ -503,7 +506,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		    "Error: WAV file is too large (integer overflow "
 		    "prevention)");
 		port_free(data_chunk);
-		return (false);
+		return (PORT_RANGE);
 	}
 	mono_samples = port_malloc(frame_count * sizeof(float));
 	if (mono_samples == NULL) {
@@ -511,7 +514,7 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		    BUS_LOG_ERROR,
 		    "Failed to allocate mixed mono samples buffer");
 		port_free(data_chunk);
-		return (false);
+		return (PORT_NOMEM);
 	}
 
 	for (i = 0; i < frame_count; i++) {
@@ -573,9 +576,9 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		sample_rate,
 		&durations,
 		&count,
-		&initial_level) == 0) {
+		&initial_level) != PORT_OK) {
 		port_free(mono_samples);
-		return (false);
+		return (PORT_ERROR);
 	}
 
 	port_free(mono_samples);
@@ -605,10 +608,10 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		    sample_rate);
 		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
 	}
-	return (true);
+	return (PORT_OK);
 }
 
-static bool
+static port_result_t
 save_wav_tape(struct aci_card *aci, const char *tape_path)
 {
 	port_file_t f;
@@ -624,11 +627,14 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	bool level;
 	uint32_t i, s;
 
+	if (aci == (void *)0 || tape_path == (void *)0) {
+		return (PORT_INVALID);
+	}
 	if (aci->recorded_count == 0) {
 		BUS_LOG(aci->bus,
 		    BUS_LOG_WARN,
 		    "ACI: No tape output was recorded. Nothing to save.");
-		return (false);
+		return (PORT_ERROR);
 	}
 
 	wav_sample_rate = 44100;
@@ -653,7 +659,7 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 		BUS_LOG(aci->bus,
 		    BUS_LOG_ERROR,
 		    "Error: Recording is too long to save as WAV");
-		return (false);
+		return (PORT_RANGE);
 	}
 
 	data_size = (uint32_t)(total_samples * sizeof(int16_t));
@@ -667,7 +673,7 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 		    "Error: Could not open '%s' for writing",
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
-		return (false);
+		return (PORT_CANTOPEN);
 	}
 
 	port_vfs_default.write(f, "RIFF", 4);
@@ -765,28 +771,28 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
 	}
-	return (true);
+	return (PORT_OK);
 }
 
-bool
+port_result_t
 aci_load_tape(struct expansion_card *card, const char *tape_path)
 {
 	struct aci_card *aci;
 
 	if (card == NULL || port_strcmp(card->name, "ACI") != 0) {
-		return (false);
+		return (PORT_INVALID);
 	}
 	aci = (struct aci_card *)card->ctx;
 	return (load_wav_tape(aci, tape_path));
 }
 
-bool
+port_result_t
 aci_save_tape(struct expansion_card *card, const char *tape_path)
 {
 	struct aci_card *aci;
 
 	if (card == NULL || port_strcmp(card->name, "ACI") != 0) {
-		return (false);
+		return (PORT_INVALID);
 	}
 	aci = (struct aci_card *)card->ctx;
 	return (save_wav_tape(aci, tape_path));
