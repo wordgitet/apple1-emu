@@ -1,0 +1,24 @@
+Apple-1 Emulator
+================
+
+Portable, terminal-based Apple-1 emulator in C.
+
+Quick start:
+
+    make
+    ./apple1 -r wozmon.bin
+
+Documentation
+-------------
+
+Full docs live in documentation/ — start here:
+
+    documentation/README
+
+    building.md       Makefile, tests, MS-DOS cross-build
+    configuration.md  Compile-time flags and limits
+    usage.md          Command-line options and config files
+    debugger.md       Interactive debugger
+    hardware.md       Memory map and devices
+
+    manual.md         Legacy index (deprecated)

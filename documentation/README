@@ -1,0 +1,49 @@
+Apple-1 Emulator Documentation
+================================
+
+Portable, terminal-based Apple-1 emulator written in C. Core emulation code talks
+only to port.h; platform I/O lives in port_*.c shims (POSIX, MS-DOS, Windows,
+and others).
+
+Quick start
+-----------
+
+    make                  # build ./apple1
+    make check            # run unit tests
+    ./apple1 -r wozmon.bin
+
+Headless CPU test (no terminal UI):
+
+    ./apple1 -H -F wozmon.bin
+
+Documentation index
+-------------------
+
+    building.md       Makefile targets, amalgamation, cross-compilation (MS-DOS), tests
+    configuration.md  Compile-time limits, APPLE1_OMIT_* flags, port layer, malloc modes
+    usage.md          Command-line options, config files, keyboard shortcuts, examples
+    debugger.md       Interactive debugger commands
+    hardware.md       Memory map, PIA, expansion cards, timing
+
+Project layout (essentials)
+---------------------------
+
+    main.c              CLI entry point
+    cpu.c bus.c         6502 CPU and system bus
+    term_ansi.c         Terminal UI (ANSI escapes — POSIX/macOS/Linux)
+    term_dos.c          Terminal UI (conio — MS-DOS/DJGPP)
+    port.h              Portability interface (types + shims)
+    port_string.c       Freestanding string/format helpers (all builds)
+    port_posix.c        POSIX platform implementation (default on Unix)
+    port_msdos.c        MS-DOS platform implementation
+    apple1limit.h       Compile-time limits and defaults
+    tools/amalgamate.py Single-file apple1.c generator
+
+What this emulator is (and is not)
+------------------------------------
+
+Is: a cycle-oriented Apple-1 model with Woz Monitor, optional ACI cassette
+card, optional Krusader ROM, CLI debugger, and a 40×24 terminal display.
+
+Is not: the old SDL3 GUI build (removed). All interaction is via the terminal
+and command line.
