@@ -11,6 +11,7 @@
 #ifndef APPLE1_H
 #define APPLE1_H
 
+
 /* ======== begin port.h ======== */
 #ifndef PORT_H
 #define PORT_H
@@ -78,6 +79,45 @@ typedef signed int int32_t;
 #ifndef INT32_MAX
 #define INT32_MAX 2147483647
 #endif
+#ifndef LONG_MAX
+#define LONG_MAX 2147483647L
+#endif
+#ifndef LONG_MIN
+#define LONG_MIN (-2147483647L - 1L)
+#endif
+#ifndef ULONG_MAX
+#define ULONG_MAX 4294967295UL
+#endif
+
+/* ================================================================== */
+/* Error code system                                                     */
+/* ================================================================== */
+
+/*
+ * port_result_t - Standardized error codes following SQLite convention.
+ * PORT_OK indicates success. All other values indicate failure.
+ */
+typedef int port_result_t;
+
+#define PORT_OK          0  /* Successful operation */
+#define PORT_ERROR       1  /* Generic error */
+#define PORT_NOMEM       2  /* Memory allocation failed */
+#define PORT_IO          3  /* I/O error */
+#define PORT_CORRUPT     4  /* Data corruption */
+#define PORT_FULL        5  /* Buffer/full condition */
+#define PORT_CANTOPEN    6  /* Unable to open file */
+#define PORT_PROTOCOL    7  /* Protocol/format error */
+#define PORT_INVALID     8  /* Invalid parameter */
+#define PORT_MISUSE      9  /* Library used incorrectly */
+#define PORT_RANGE      10  /* Out of range */
+#define PORT_NOTFOUND   11  /* Not found */
+
+/*
+ * port_error_string - Return human-readable error message for error code.
+ * Never returns NULL; returns "unknown error" for unrecognized codes.
+ */
+const char *
+port_error_string(port_result_t rc);
 
 /*
  * bool: C89 has no native boolean type.
@@ -86,6 +126,15 @@ typedef signed int int32_t;
 #define bool  int
 #define true  1
 #define false 0
+#endif
+
+/*
+ * inline is C99; use plain static helpers on strict C89 compilers.
+ */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define PORT_STATIC_INLINE static inline
+#else
+#define PORT_STATIC_INLINE static
 #endif
 
 /*
@@ -244,17 +293,30 @@ port_sleep_us(uint32_t us);
  * port_term_raw_enable:  put the controlling terminal into raw/cbreak
  *   mode (no echo, no line buffering, non-blocking read).
  * port_term_raw_disable: restore the terminal to its original mode.
- * port_term_read_char:   read one byte; return -1 if none available.
+ * port_term_read_char:   read one byte; PORT_TERM_NODATA or PORT_TERM_EOF.
  * port_term_write_buf:   write n bytes to the terminal output.
  */
 void
 port_term_raw_enable(void);
 void
 port_term_raw_disable(void);
+void
+port_term_dbg_enable(void);
+void
+port_term_dbg_disable(void);
 int
 port_term_read_char(void);
 void
 port_term_write_buf(const char *buf, port_size_t n);
+
+#define PORT_TERM_NODATA (-1)
+#define PORT_TERM_EOF	 (-2)
+
+/*
+ * port_sig_flag: set to 1 by the platform on Ctrl-C / SIGINT.
+ * Declared here so debugger input can reference it without system headers.
+ */
+typedef volatile int port_sig_flag;
 
 /*
  * port_term_read_line: read a line of input into buf (up to size-1
@@ -264,16 +326,17 @@ port_term_write_buf(const char *buf, port_size_t n);
 char *
 port_term_read_line(char *buf, port_size_t size);
 
+/*
+ * port_term_read_line_dbg: read one debugger command line using only
+ * port_term_* hooks.  Ctrl-C (0x03) or *quit_flag sets quit and returns
+ * NULL.  Call with raw mode enabled where the platform requires it.
+ */
+char *
+port_term_read_line_dbg(char *buf, port_size_t size, port_sig_flag *quit_flag);
+
 /* ================================================================== */
 /* Signal handling shim                                               */
 /* ================================================================== */
-
-/*
- * port_sig_flag: an integer that the signal handler sets to 1 on
- * SIGINT (Ctrl-C) or the platform equivalent.  Must be volatile to
- * prevent the compiler from caching its value in a register.
- */
-typedef volatile int port_sig_flag;
 
 /*
  * port_signal_setup: install a handler so that SIGINT increments
@@ -427,8 +490,8 @@ extern struct port_vfs *g_port_vfs;
 #define ROM_BASE     0xFF00
 #define RESET_VECTOR 0xFFFC
 
-/* amalgamation: omit #include "port.h" */
 #include "apple1limit.h"
+/* amalgamation: omit #include "port.h" */
 #include <stddef.h>
 
 /* Log severity levels */
@@ -512,7 +575,7 @@ struct bus {
 };
 
 /* Initialize the memory bus with a configured RAM size and buffer */
-bool
+port_result_t
 bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size);
 
 /* Clean up */
@@ -520,14 +583,14 @@ void
 bus_free(struct bus *bus);
 
 /* Load binary from buffer into RAM at address */
-bool
+port_result_t
 bus_load_bin_buf(struct bus *bus,
     const uint8_t *data,
     size_t len,
     uint16_t address);
 
 /* Load Woz Monitor formatted text from a buffer. */
-bool
+port_result_t
 bus_load_wozmon_txt_buf(struct bus *bus,
     const char *text,
     size_t len,
@@ -535,18 +598,18 @@ bus_load_wozmon_txt_buf(struct bus *bus,
     bool *has_run_address);
 
 /* Load exactly 256-byte ROM image (Woz Monitor) at 0xFF00-0xFFFF */
-bool
+port_result_t
 bus_load_rom(struct bus *bus, const char *rom_path);
 
 #ifndef APPLE1_OMIT_DISKIO
 /* Load arbitrary binary file into RAM at the specified starting address */
-bool
+port_result_t
 bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address);
 
-/* Load Woz Monitor formatted text file into RAM. Returns true on success.
+/* Load Woz Monitor formatted text file into RAM. Returns PORT_OK on success.
  * If run_address is not NULL, it will be set to the R (run) address if
  * specified in the file. */
-bool
+port_result_t
 bus_load_wozmon_txt(struct bus *bus,
     const char *txt_path,
     uint16_t *run_address,
@@ -588,9 +651,8 @@ resolve_data_path(const char *rel_path, char *out_path, size_t max_len);
 #ifndef CPU_H
 #define CPU_H
 
-/* amalgamation: omit #include "port.h" */
-
 /* amalgamation: omit #include "bus.h" */
+/* amalgamation: omit #include "port.h" */
 
 /* 6502 Processor Status Flags */
 enum CPU_FLAGS {
@@ -657,10 +719,9 @@ cpu_nmi(struct cpu *cpu);
 #ifndef DBG_H
 #define DBG_H
 
-/* amalgamation: omit #include "port.h" */
 #include "apple1limit.h"
-
 /* amalgamation: omit #include "cpu.h" */
+/* amalgamation: omit #include "port.h" */
 
 typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
 
@@ -679,6 +740,7 @@ typedef struct {
 	watchpoint_t watchpoints[APPLE1_MAX_WATCHPOINTS];
 	int num_watchpoints;
 	bool step_mode;
+	int repause;
 	uint16_t current_instruction_pc;
 	dbg_out_cb_t out;
 	void *out_ctx;
@@ -703,8 +765,10 @@ dbg_remove_watchpoint(debugger_t *dbg, uint16_t addr);
 void
 dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val);
 
-void
-dbg_interactive_loop(debugger_t *dbg);
+/* Returns non-zero if the user requested full emulator exit (q or Ctrl-C).
+ * empty_step: if non-zero, Enter on the first prompt acts like 's'. */
+int
+dbg_interactive_loop(debugger_t *dbg, int empty_step);
 void
 dbg_run_command(debugger_t *dbg, const char *cmd_line);
 
@@ -719,9 +783,8 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line);
 
 #ifndef APPLE1_OMIT_DISASM
 
-/* amalgamation: omit #include "port.h" */
-
 /* amalgamation: omit #include "bus.h" */
+/* amalgamation: omit #include "port.h" */
 
 /* Disassembles one 6502 instruction at memory address pc.
  * Writes the human-readable representation into out_str.
@@ -750,11 +813,11 @@ struct expansion_card *
 aci_create(struct bus *bus, const char *rom_path);
 
 /* Load a .aci tape file into the ACI card */
-bool
+port_result_t
 aci_load_tape(struct expansion_card *card, const char *tape_path);
 
 /* Save recorded ACI tape output to a .aci file */
-bool
+port_result_t
 aci_save_tape(struct expansion_card *card, const char *tape_path);
 
 /* Free ACI card resources */
@@ -778,9 +841,8 @@ aci_get_recorded_count(struct expansion_card *card);
 
 #ifndef APPLE1_OMIT_KRUSADER
 
-/* amalgamation: omit #include "port.h" */
-
 /* amalgamation: omit #include "bus.h" */
+/* amalgamation: omit #include "port.h" */
 
 /*
  * Internal ROM + state for one Krusader card.
