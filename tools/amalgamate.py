@@ -44,7 +44,7 @@ C_SOURCES = [
     "dbg.c",
     "io.c",
     "term_ansi.c",
-    "main_cli.c",
+    "main.c",
 ]
 
 # Public headers that go into apple1.h (order matters for deps)

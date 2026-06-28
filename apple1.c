@@ -6880,7 +6880,7 @@ term_open_debugger(void)
 }
 /* ======== end term_ansi.c ======== */
 
-/* ======== begin main_cli.c ======== */
+/* ======== begin main.c ======== */
 /*
  * main_cli.c - Portable CLI entry point for the Apple 1 emulator.
  *
@@ -7792,4 +7792,4 @@ dbg_log_append(const char *str)
 {
 	(void)str;
 }
-/* ======== end main_cli.c ======== */
+/* ======== end main.c ======== */
