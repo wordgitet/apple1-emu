@@ -6900,6 +6900,7 @@ term_open_debugger(void)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 /* amalgamation: omit #include "aci.h" */
 /* amalgamation: omit #include "bus.h" */
