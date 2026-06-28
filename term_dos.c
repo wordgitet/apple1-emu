@@ -82,12 +82,6 @@ term_write(uint8_t val)
 			}
 			vram[cursor_y][cursor_x] = 0x00;
 		}
-	} else if (val == 0x08 || val == 0x7F || val == 0x5F) {
-		if (cursor_x > 0) {
-			vram[cursor_y][cursor_x] = 0x20;
-			cursor_x--;
-			vram[cursor_y][cursor_x] = 0x00;
-		}
 	} else if (val >= 0x20 && val <= 0x7E) {
 		uint8_t glyph = val;
 
@@ -105,6 +99,8 @@ term_write(uint8_t val)
 			}
 		}
 		vram[cursor_y][cursor_x] = 0x00;
+	} else if (val == 0x08 || val == 0x7F || val == 0x5F) {
+		/* Backspace - pass through to emulator, don't display locally */
 	}
 
 	if (opt_baud > 0) {
