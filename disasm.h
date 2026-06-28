@@ -5,9 +5,8 @@
 
 #ifndef APPLE1_OMIT_DISASM
 
-#include "port.h"
-
 #include "bus.h"
+#include "port.h"
 
 /* Disassembles one 6502 instruction at memory address pc.
  * Writes the human-readable representation into out_str.

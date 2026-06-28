@@ -5,16 +5,15 @@
 
 #ifndef APPLE1_OMIT_KRUSADER
 
-#include "port.h"
-
 #include "bus.h"
+#include "port.h"
 
 /*
  * Internal ROM + state for one Krusader card.
  * Declared here so callers can embed it without malloc.
  */
 struct krusader_card {
-	uint8_t  rom[4096];
+	uint8_t rom[4096];
 	uint32_t size;
 };
 

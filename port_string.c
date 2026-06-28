@@ -14,8 +14,8 @@
 int
 port_isspace(int c)
 {
-	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' ||
-	    c == '\v' || c == '\f');
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' ||
+	    c == '\f');
 }
 
 int
@@ -27,8 +27,7 @@ port_isdigit(int c)
 int
 port_isxdigit(int c)
 {
-	return (c >= '0' && c <= '9') ||
-	    (c >= 'a' && c <= 'f') ||
+	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
 	    (c >= 'A' && c <= 'F');
 }
 
@@ -344,8 +343,14 @@ port_memcmp(const void *a, const void *b, port_size_t n)
 /* ================================================================== */
 
 static void
-format_unsigned(char *buf, port_size_t *written, port_size_t limit,
-    unsigned long val, int base, int is_upper, int min_width, int zero_pad)
+format_unsigned(char *buf,
+    port_size_t *written,
+    port_size_t limit,
+    unsigned long val,
+    int base,
+    int is_upper,
+    int min_width,
+    int zero_pad)
 {
 	char temp[32];
 	int i;
@@ -456,8 +461,13 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 					}
 					val = -val;
 				}
-				format_unsigned(buf, &written, limit,
-				    (unsigned long)val, 10, 0, min_width,
+				format_unsigned(buf,
+				    &written,
+				    limit,
+				    (unsigned long)val,
+				    10,
+				    0,
+				    min_width,
 				    zero_pad);
 				break;
 			}
@@ -469,8 +479,14 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 				} else {
 					val = va_arg(ap, unsigned int);
 				}
-				format_unsigned(buf, &written, limit, val, 10,
-				    0, min_width, zero_pad);
+				format_unsigned(buf,
+				    &written,
+				    limit,
+				    val,
+				    10,
+				    0,
+				    min_width,
+				    zero_pad);
 				break;
 			}
 			case 'x':
@@ -482,8 +498,14 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 				} else {
 					val = va_arg(ap, unsigned int);
 				}
-				format_unsigned(buf, &written, limit, val, 16,
-				    (*fmt == 'X'), min_width, zero_pad);
+				format_unsigned(buf,
+				    &written,
+				    limit,
+				    val,
+				    16,
+				    (*fmt == 'X'),
+				    min_width,
+				    zero_pad);
 				break;
 			}
 			case 'c': {
@@ -534,7 +556,6 @@ port_snprintf(char *buf, port_size_t n, const char *fmt, ...)
 	va_end(ap);
 	return (r);
 }
-
 
 /* ================================================================== */
 /* Pseudo-random number generator shims                               */
@@ -626,6 +647,7 @@ port_term_read_line_dbg(char *buf, port_size_t size, port_sig_flag *quit_flag)
 {
 	port_size_t n = 0;
 	int c;
+	char ch;
 
 	if (buf == (void *)0 || size < 2) {
 		return ((void *)0);
@@ -633,8 +655,6 @@ port_term_read_line_dbg(char *buf, port_size_t size, port_sig_flag *quit_flag)
 	buf[0] = '\0';
 
 	for (;;) {
-		char ch;
-
 		if (quit_flag != (void *)0 && *quit_flag != 0) {
 			return ((void *)0);
 		}

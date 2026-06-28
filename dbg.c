@@ -1,10 +1,9 @@
 #ifndef APPLE1_OMIT_DEBUGGER
-#include "port.h"
-
 #include "bus.h"
 #include "dbg.h"
 #include "disasm.h"
 #include "io.h"
+#include "port.h"
 #include "term_apple1.h"
 
 extern port_sig_flag g_quit_flag;
@@ -14,29 +13,34 @@ static debugger_t *s_active_dbg = NULL;
 int
 dbg_printf(const char *format, ...);
 
-
 static void
 print_help(void)
 {
 	dbg_printf("Debugger commands:\n");
 	dbg_printf("  s, <Enter>        Step one instruction\n");
 	dbg_printf("  c                 Continue execution\n");
-	dbg_printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
-	       "flags)\n");
-	dbg_printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
-	dbg_printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
-	dbg_printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With no "
-	       "address, lists breakpoints\n");
-	dbg_printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). With no "
-	       "address, clears all\n");
+	dbg_printf("  r                 Show struct cpu registers (A, X, Y, "
+		   "PC, S, P "
+		   "flags)\n");
+	dbg_printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 "
+		   "0210')\n");
+	dbg_printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 "
+		   "EA')\n");
+	dbg_printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With "
+		   "no "
+		   "address, lists breakpoints\n");
+	dbg_printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). "
+		   "With no "
+		   "address, clears all\n");
 	dbg_printf("  wp [addr] [type]  Add watchpoint (type: r/w/rw, e.g. 'wp "
-	       "0200 w'). "
-	       "With no args, lists watchpoints\n");
-	dbg_printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). With "
-	       "no "
-	       "address, clears all\n");
+		   "0200 w'). "
+		   "With no args, lists watchpoints\n");
+	dbg_printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). "
+		   "With "
+		   "no "
+		   "address, clears all\n");
 	dbg_printf("  t                 Show recent control flow jumps (PC "
-	       "trace)\n");
+		   "trace)\n");
 	dbg_printf("  h, ?              Show this help menu\n");
 	dbg_printf("  q                 Quit emulator\n");
 }
@@ -105,8 +109,10 @@ dbg_parse_hex_pair(const char *s, unsigned int *a, unsigned int *b)
 }
 
 static int
-dbg_parse_hex_and_word(const char *s, unsigned int *addr,
-    char *word, port_size_t word_sz)
+dbg_parse_hex_and_word(const char *s,
+    unsigned int *addr,
+    char *word,
+    port_size_t word_sz)
 {
 	const char *p;
 	char *end;
@@ -136,8 +142,8 @@ dbg_parse_hex_and_word(const char *s, unsigned int *addr,
 		return (1);
 	}
 	i = 0;
-	while (*p != '\0' && !port_isspace((unsigned char)*p) &&
-	    i + 1 < word_sz) {
+	while (
+	    *p != '\0' && !port_isspace((unsigned char)*p) && i + 1 < word_sz) {
 		word[i++] = *p++;
 	}
 	word[i] = '\0';
@@ -232,7 +238,8 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 	}
 
 	if (dbg->num_watchpoints >= APPLE1_MAX_WATCHPOINTS) {
-		dbg_printf("Error: Maximum number of watchpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of watchpoints reached "
+			   "(%d).\n",
 		    APPLE1_MAX_WATCHPOINTS);
 		return;
 	}
@@ -302,13 +309,14 @@ dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 				dbg_printf("\n*** WATCHPOINT TRIGGERED ***\n");
 				if (is_write) {
 					dbg_printf("Write to $%04X with value "
-					       "$%02X at PC $%04X\n",
+						   "$%02X at PC $%04X\n",
 					    addr,
 					    val,
 					    dbg->current_instruction_pc);
 				} else {
-					dbg_printf("Read from $%04X: value $%02X "
-					       "at PC $%04X\n",
+					dbg_printf("Read from $%04X: value "
+						   "$%02X "
+						   "at PC $%04X\n",
 					    addr,
 					    val,
 					    dbg->current_instruction_pc);
@@ -327,7 +335,8 @@ dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
 		return;
 	}
 	if (dbg->num_breakpoints >= APPLE1_MAX_BREAKPOINTS) {
-		dbg_printf("Error: Maximum number of breakpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of breakpoints reached "
+			   "(%d).\n",
 		    APPLE1_MAX_BREAKPOINTS);
 		return;
 	}
@@ -411,26 +420,32 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		}
 		addr = 0;
 		type_str[0] = '\0';
-		parsed = dbg_parse_hex_and_word(args, &addr, type_str,
+		parsed = dbg_parse_hex_and_word(args,
+		    &addr,
+		    type_str,
 		    sizeof(type_str));
 		if (parsed >= 1) {
 			if (addr > 0xFFFF) {
-				dbg_printf("Error: Address must be a 16-bit hex "
-				       "value.\n");
+				dbg_printf("Error: Address must be a 16-bit "
+					   "hex "
+					   "value.\n");
 			} else {
 				wp_type_t type = WP_WRITE;
 				if (parsed == 2) {
 					if (port_strcmp(type_str, "r") == 0) {
 						type = WP_READ;
-					} else if (port_strcmp(type_str, "w") == 0) {
-						type = WP_WRITE;
-					} else if (port_strcmp(type_str, "rw") ==
+					} else if (port_strcmp(type_str, "w") ==
 					    0) {
+						type = WP_WRITE;
+					} else if (port_strcmp(type_str,
+						       "rw") == 0) {
 						type = WP_ACCESS;
 					} else {
-						dbg_printf("Warning: Unknown type "
-						       "'%s'. Defaulting to "
-						       "'w'.\n",
+						dbg_printf("Warning: Unknown "
+							   "type "
+							   "'%s'. Defaulting "
+							   "to "
+							   "'w'.\n",
 						    type_str);
 					}
 				}
@@ -452,7 +467,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					    WP_ACCESS)
 						t = "read/write";
 					dbg_printf("  Watchpoint %d at $%04X "
-					       "(%s)\n",
+						   "(%s)\n",
 					    i + 1,
 					    dbg->watchpoints[i].addr,
 					    t);
@@ -468,8 +483,9 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		addr = 0;
 		if (dbg_parse_hex(args, &addr) == 1) {
 			if (addr > 0xFFFF) {
-				dbg_printf("Error: Address must be a 16-bit hex "
-				       "value.\n");
+				dbg_printf("Error: Address must be a 16-bit "
+					   "hex "
+					   "value.\n");
 			} else {
 				dbg_remove_watchpoint(dbg, (uint16_t)addr);
 			}
@@ -511,16 +527,19 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				end_val = start_val + 15;
 			}
 			if (start_val > 0xFFFF || end_val > 0xFFFF) {
-				dbg_printf("Error: Addresses must be 16-bit hex "
-				       "values.\n");
+				dbg_printf("Error: Addresses must be 16-bit "
+					   "hex "
+					   "values.\n");
 			} else if (end_val < start_val) {
-				dbg_printf("Error: End address cannot be less than "
-				       "start address.\n");
+				dbg_printf("Error: End address cannot be less "
+					   "than "
+					   "start address.\n");
 			} else {
 				if (end_val - start_val > 255) {
 					end_val = start_val + 255;
-					dbg_printf("Warning: Capping memory dump "
-					       "to 256 bytes.\n");
+					dbg_printf("Warning: Capping memory "
+						   "dump "
+						   "to 256 bytes.\n");
 				}
 				dump_memory(dbg,
 				    (uint16_t)start_val,
@@ -532,8 +551,9 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 
 			if (dbg_parse_hex_pair(args, &addr, &val) == 2) {
 				if (addr > 0xFFFF || val > 0xFF) {
-					dbg_printf("Error: Invalid address ($%04X) "
-					       "or value ($%02X).\n",
+					dbg_printf("Error: Invalid address "
+						   "($%04X) "
+						   "or value ($%02X).\n",
 					    addr,
 					    val);
 				} else {
@@ -553,7 +573,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			if (dbg_parse_hex(args, &addr) == 1) {
 				if (addr > 0xFFFF) {
 					dbg_printf("Error: Address must be a "
-					       "16-bit hex value.\n");
+						   "16-bit hex value.\n");
 				} else {
 					dbg_add_breakpoint(dbg, (uint16_t)addr);
 				}
@@ -562,11 +582,10 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					dbg_printf("No active breakpoints.\n");
 				} else {
 					dbg_printf("Active breakpoints:\n");
-					for (i = 0;
-					    i < dbg->num_breakpoints;
+					for (i = 0; i < dbg->num_breakpoints;
 					    i++) {
 						dbg_printf("  Breakpoint %d at "
-						       "$%04X\n",
+							   "$%04X\n",
 						    i + 1,
 						    dbg->breakpoints[i]);
 					}
@@ -578,7 +597,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			if (dbg_parse_hex(args, &addr) == 1) {
 				if (addr > 0xFFFF) {
 					dbg_printf("Error: Address must be a "
-					       "16-bit hex value.\n");
+						   "16-bit hex value.\n");
 				} else {
 					dbg_remove_breakpoint(dbg,
 					    (uint16_t)addr);
@@ -589,7 +608,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			}
 		} else if (cmd == 't') {
 			dbg_printf("Control Flow Transitions (oldest to "
-			       "newest):\n");
+				   "newest):\n");
 			idx = dbg->cpu->pc_trace_idx;
 			for (i = 0; i < 24; i++) {
 				edge = dbg->cpu->pc_trace[idx];
@@ -602,7 +621,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			}
 		} else {
 			dbg_printf("Unknown command: %c. Type 'h' or '?' for "
-			       "help.\n",
+				   "help.\n",
 			    cmd);
 		}
 	}
@@ -631,9 +650,12 @@ int
 dbg_interactive_loop(debugger_t *dbg, int empty_step)
 {
 	bus_access_cb_t old_cb;
-	char     disasm_buf[64];
-	uint8_t  op;
-	int      empty_step_ok;
+	char disasm_buf[64];
+	uint8_t op;
+	int empty_step_ok;
+	uint16_t stack_top;
+	int n;
+	uint16_t addr;
 
 	if (dbg->cpu->bus->opts.headless == 0) {
 		io_cleanup();
@@ -664,11 +686,10 @@ dbg_interactive_loop(debugger_t *dbg, int empty_step)
 	if (dbg->cpu->s == 0xFF) {
 		dbg_printf("(empty)\r\n");
 	} else {
-		uint16_t top = (uint16_t)(0x100u + dbg->cpu->s);
-		int n;
+		stack_top = (uint16_t)(0x100u + dbg->cpu->s);
 
 		for (n = 0; n < 8; n++) {
-			uint16_t addr = top - (uint16_t)n;
+			addr = stack_top - (uint16_t)n;
 
 			if (addr < 0x0100u) {
 				break;
@@ -726,7 +747,8 @@ dbg_interactive_loop(debugger_t *dbg, int empty_step)
 
 		dbg_run_command(dbg, input);
 
-		if (cmd == 's' || cmd == 'c' || port_strcmp(cmd_str, "s") == 0 ||
+		if (cmd == 's' || cmd == 'c' ||
+		    port_strcmp(cmd_str, "s") == 0 ||
 		    port_strcmp(cmd_str, "c") == 0) {
 			break;
 		}

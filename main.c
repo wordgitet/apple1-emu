@@ -1,8 +1,8 @@
 /*
  * main_cli.c - Portable CLI entry point for the Apple 1 emulator.
  *
- * Zero platform dependencies beyond C99 + port.h.  Compiles on any
- * hosted C99 toolchain (POSIX, Windows, Haiku, OS/2, RTEMS, …).
+ * Zero platform dependencies beyond C89 + port.h.  Compiles on any
+ * hosted C89-or-later toolchain (POSIX, Windows, Haiku, OS/2, RTEMS, …).
  *
  * Config is loaded from a file passed with -f <file>.  All other
  * settings come from command-line switches only.  No XDG/macOS
@@ -14,8 +14,6 @@
  *      term_ansi.c main_cli.c -o apple1
  */
 
-#include "port.h"
-
 #include "aci.h"
 #include "bus.h"
 #include "cpu.h"
@@ -23,6 +21,7 @@
 #include "disasm.h"
 #include "io.h"
 #include "krusader.h"
+#include "port.h"
 #include "term_apple1.h"
 
 static void
@@ -58,21 +57,19 @@ cli_printf(const char *fmt, ...)
 	port_term_write_buf(buf, port_strlen(buf));
 }
 
-
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
 #define CYCLES_PER_MS (CLOCK_RATE_HZ / 1000)
 
 /* Globals read by dbg.c, term_ansi.c, and term_internal.h */
-struct bus  *g_bus  = NULL;
-struct cpu  *g_cpu  = NULL;
+struct bus *g_bus = NULL;
+struct cpu *g_cpu = NULL;
 #ifndef APPLE1_OMIT_DEBUGGER
-debugger_t  *g_dbg  = NULL;
+debugger_t *g_dbg = NULL;
 #endif
-char        *g_argv0 = NULL;
-bool         g_debug_enabled = false;
+char *g_argv0 = NULL;
+bool g_debug_enabled = false;
 
 extern uint32_t opt_baud;
-
 
 /* ------------------------------------------------------------------ */
 /*  Signal handler                                                      */
@@ -102,9 +99,10 @@ stderr_log(void *ctx, int level, const char *msg)
 	const char *prefix;
 
 	(void)ctx;
-	prefix = (level == BUS_LOG_ERROR) ? "Error" :
-	    (level == BUS_LOG_WARN)  ? "Warning" : "Info";
-	cli_error( "%s: %s\n", prefix, msg);
+	prefix = (level == BUS_LOG_ERROR) ? "Error"
+	    : (level == BUS_LOG_WARN)	  ? "Warning"
+					  : "Info";
+	cli_error("%s: %s\n", prefix, msg);
 #else
 	(void)ctx;
 	(void)level;
@@ -120,34 +118,34 @@ static void
 print_usage(const char *prog)
 {
 #ifndef APPLE1_OMIT_STDIO
-	cli_error(
-	    "Apple 1 Emulator (portable CLI build)\n"
-	    "Usage: %s [options] [flat_binary]\n"
-	    "\n"
-	    "Options:\n"
-	    "  -f <file>            Load configuration from <file>\n"
-	    "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
-	    "  -m <kb>              RAM size in KB (4-64, default 8)\n"
-	    "  -l <file>@<hex>      Load binary at hex address\n"
-	    "  -c                   Cap emulation speed to 1.023 MHz\n",
+	cli_error("Apple 1 Emulator (portable CLI build)\n"
+		  "Usage: %s [options] [flat_binary]\n"
+		  "\n"
+		  "Options:\n"
+		  "  -f <file>            Load configuration from <file>\n"
+		  "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
+		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
+		  "  -l <file>@<hex>      Load binary at hex address\n"
+		  "  -c                   Cap emulation speed to 1.023 MHz\n",
 	    prog);
-	cli_error(
-	    "  -p                   Disable PIA I/O throttling\n"
-	    "  -d                   Emulate DRAM refresh cycle stealing\n"
-	    "  -b                   Emulate keyboard bounce\n"
-	    "  -s                   Disable cold-boot RAM randomisation\n"
-	    "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
-	    "  -H                   Headless mode (no terminal rendering)\n"
-	    "  -g                   Enable debugger (pauses on start)\n");
-	cli_error(
-	    "  -t                   Enable CPU trace to stdout\n"
-	    "  -w <txt>             Load Woz Monitor text file\n"
-	    "  -a <rom>             Load ACI cassette card ROM\n"
-	    "  -e <wav>             Load WAV tape for ACI playback\n"
-	    "  -E <wav>             Save recorded ACI tape to WAV on exit\n"
-	    "  -B <baud>            Emulate terminal baud rate (e.g. 1200)\n"
-	    "  -k <rom>             Load Krusader assembler ROM\n"
-	    "  -h                   Show this help\n");
+	cli_error("  -p                   Disable PIA I/O throttling\n"
+		  "  -d                   Emulate DRAM refresh cycle stealing\n"
+		  "  -b                   Emulate keyboard bounce\n"
+		  "  -s                   Disable cold-boot RAM randomisation\n"
+		  "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
+		  "  -H                   Headless mode (no terminal "
+		  "rendering)\n"
+		  "  -g                   Enable debugger (pauses on start)\n");
+	cli_error("  -t                   Enable CPU trace to stdout\n"
+		  "  -w <txt>             Load Woz Monitor text file\n"
+		  "  -a <rom>             Load ACI cassette card ROM\n"
+		  "  -e <wav>             Load WAV tape for ACI playback\n"
+		  "  -E <wav>             Save recorded ACI tape to WAV on "
+		  "exit\n"
+		  "  -B <baud>            Emulate terminal baud rate (e.g. "
+		  "1200)\n"
+		  "  -k <rom>             Load Krusader assembler ROM\n"
+		  "  -h                   Show this help\n");
 #else
 	(void)prog;
 #endif
@@ -182,7 +180,7 @@ load_config_file(const char *path,
 
 	fp = port_vfs_default.open(path, PORT_VFS_READ);
 	if (fp == PORT_FILE_INVALID) {
-		cli_error( "Warning: cannot open config '%s'\n", path);
+		cli_error("Warning: cannot open config '%s'\n", path);
 		return;
 	}
 
@@ -196,7 +194,7 @@ load_config_file(const char *path,
 		len = port_strlen(line);
 		while (len > 0 &&
 		    (line[len - 1] == '\r' || line[len - 1] == '\n' ||
-			line[len - 1] == ' '  || line[len - 1] == '\t')) {
+			line[len - 1] == ' ' || line[len - 1] == '\t')) {
 			line[--len] = '\0';
 		}
 		ptr = line;
@@ -210,7 +208,7 @@ load_config_file(const char *path,
 			continue;
 		}
 		flag = ptr[1];
-		val  = ptr + 2;
+		val = ptr + 2;
 		while (*val == ' ' || *val == '\t') {
 			val++;
 		}
@@ -234,14 +232,14 @@ load_config_file(const char *path,
 		case 'l':
 			if (has_val != 0) {
 				char *dup = port_strdup(val);
-				char *at  = port_strchr(dup, '@');
+				char *at = port_strchr(dup, '@');
 				if (at != NULL) {
 					*at = '\0';
 					if (*bin_path != NULL)
 						port_free(*bin_path);
-					*bin_path    = port_strdup(dup);
-					*bin_address = (uint16_t)port_strtol(at + 1,
-					    NULL, 16);
+					*bin_path = port_strdup(dup);
+					*bin_address = (uint16_t)
+					    port_strtol(at + 1, NULL, 16);
 				}
 				port_free(dup);
 			}
@@ -350,15 +348,15 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 int
 main(int argc, char *argv[])
 {
-	uint8_t  static_ram[APPLE1_STATIC_RAM_SIZE];
+	uint8_t static_ram[APPLE1_STATIC_RAM_SIZE];
 	struct bus bus;
 #ifndef APPLE1_OMIT_DEBUGGER
 	debugger_t dbg;
 #endif
 	struct cpu cpu;
-	char     trace_line[160];
-	char     disasm_buf[64];
-	char     hex_bytes[16];
+	char trace_line[160];
+	char disasm_buf[64];
+	char hex_bytes[16];
 	uint32_t last_render;
 	uint32_t last_time;
 	struct expansion_card *aci_card;
@@ -417,28 +415,28 @@ main(int argc, char *argv[])
 #endif
 
 	/* Defaults */
-	aci_card       = NULL;
-	aci_path       = NULL;
-	bin_path       = NULL;
-	config_path    = NULL;
-	flat_bin_path  = NULL;
-	krusader_path  = NULL;
-	rom_path       = NULL;
+	aci_card = NULL;
+	aci_path = NULL;
+	bin_path = NULL;
+	config_path = NULL;
+	flat_bin_path = NULL;
+	krusader_path = NULL;
+	rom_path = NULL;
 	save_tape_path = NULL;
-	tape_path      = NULL;
+	tape_path = NULL;
 	wozmon_txt_path = NULL;
-	bin_address    = 0;
-	ram_size       = 8 * 1024; /* 8 KB default */
-	opt_baud       = 0;
-	opt_debug      = false;
+	bin_address = 0;
+	ram_size = 8 * 1024; /* 8 KB default */
+	opt_baud = 0;
+	opt_debug = false;
 	opt_emulate_bounce = false;
-	opt_emulate_dram   = false;
-	opt_flat_bus       = false;
-	opt_headless       = false;
+	opt_emulate_dram = false;
+	opt_flat_bus = false;
+	opt_headless = false;
 	opt_randomize_cold = true;
-	opt_throttle_pia   = true;
-	opt_trace          = false;
-	opt_uncapped       = true;
+	opt_throttle_pia = true;
+	opt_trace = false;
+	opt_uncapped = true;
 
 	/*
 	 * First pass: pick up -f <config> so it is loaded before other
@@ -456,18 +454,29 @@ main(int argc, char *argv[])
 
 	if (config_path != NULL) {
 		load_config_file(config_path,
-		    &rom_path, &ram_size, &bin_path, &bin_address,
-		    &opt_uncapped, &opt_throttle_pia,
-		    &opt_emulate_dram, &opt_emulate_bounce,
-		    &opt_randomize_cold, &opt_flat_bus,
-		    &opt_headless, &opt_debug, &opt_trace,
-		    &aci_path, &tape_path, &save_tape_path,
+		    &rom_path,
+		    &ram_size,
+		    &bin_path,
+		    &bin_address,
+		    &opt_uncapped,
+		    &opt_throttle_pia,
+		    &opt_emulate_dram,
+		    &opt_emulate_bounce,
+		    &opt_randomize_cold,
+		    &opt_flat_bus,
+		    &opt_headless,
+		    &opt_debug,
+		    &opt_trace,
+		    &aci_path,
+		    &tape_path,
+		    &save_tape_path,
 		    &krusader_path);
 	}
 
 	/* Second pass: command-line overrides */
-	while ((opt = port_getopt(argc, argv,
-	    "f:r:m:l:w:a:e:E:B:k:cFpdbsHgth")) != -1) {
+	while (
+	    (opt = port_getopt(argc, argv, "f:r:m:l:w:a:e:E:B:k:cFpdbsHgth")) !=
+	    -1) {
 		switch (opt) {
 		case 'f':
 			/* Already handled */
@@ -485,14 +494,14 @@ main(int argc, char *argv[])
 		}
 		case 'l': {
 			char *dup = port_strdup(port_optarg);
-			char *at  = port_strchr(dup, '@');
+			char *at = port_strchr(dup, '@');
 			if (at != NULL) {
 				*at = '\0';
 				if (bin_path != NULL)
 					port_free(bin_path);
-				bin_path    = port_strdup(dup);
-				bin_address = (uint16_t)port_strtol(at + 1,
-				    NULL, 16);
+				bin_path = port_strdup(dup);
+				bin_address =
+				    (uint16_t)port_strtol(at + 1, NULL, 16);
 			}
 			port_free(dup);
 			break;
@@ -516,7 +525,8 @@ main(int argc, char *argv[])
 			save_tape_path = port_strdup(port_optarg);
 			break;
 		case 'B': {
-			int baud = (int)port_strtoul(port_optarg, (void *)0, 10);
+			int baud =
+			    (int)port_strtoul(port_optarg, (void *)0, 10);
 			if (baud > 0)
 				opt_baud = (uint32_t)baud;
 			break;
@@ -565,15 +575,16 @@ main(int argc, char *argv[])
 	/* Positional arg = flat binary */
 	if (port_optind < argc) {
 		flat_bin_path = argv[port_optind];
-		opt_flat_bus  = true;
+		opt_flat_bus = true;
 	}
 
 	/* Validate RAM size */
 	if (opt_flat_bus != 0) {
 		if (APPLE1_STATIC_RAM_SIZE < 65536) {
-			cli_error(
-			    "Error: Flat bus option requires 64 KB of RAM, but "
-			    "emulator was compiled with APPLE1_STATIC_RAM_SIZE = %u KB.\n",
+			cli_error("Error: Flat bus option requires 64 KB of "
+				  "RAM, but "
+				  "emulator was compiled with "
+				  "APPLE1_STATIC_RAM_SIZE = %u KB.\n",
 			    APPLE1_STATIC_RAM_SIZE / 1024);
 			return (1);
 		}
@@ -583,9 +594,10 @@ main(int argc, char *argv[])
 		ram_size = APPLE1_DEFAULT_RAM_KB * 1024;
 	}
 	if (ram_size > APPLE1_STATIC_RAM_SIZE) {
-		cli_error(
-		    "Error: Requested RAM size (%u KB) exceeds maximum compiled static RAM size (%u KB).\n",
-		    ram_size / 1024, APPLE1_STATIC_RAM_SIZE / 1024);
+		cli_error("Error: Requested RAM size (%u KB) exceeds maximum "
+			  "compiled static RAM size (%u KB).\n",
+		    ram_size / 1024,
+		    APPLE1_STATIC_RAM_SIZE / 1024);
 		return (1);
 	}
 
@@ -594,22 +606,22 @@ main(int argc, char *argv[])
 
 	/* Initialise bus with static buffer — no malloc required */
 	if (bus_init(&bus, static_ram, ram_size) == false) {
-		cli_error( "Error: bus_init failed\n");
+		cli_error("Error: bus_init failed\n");
 		return (1);
 	}
-	bus.log     = stderr_log;
+	bus.log = stderr_log;
 	bus.log_ctx = NULL;
 
 	g_bus = &bus;
 
 	/* Apply options */
-	bus.opts.uncapped           = opt_uncapped;
-	bus.opts.throttle_pia       = opt_throttle_pia;
+	bus.opts.uncapped = opt_uncapped;
+	bus.opts.throttle_pia = opt_throttle_pia;
 	bus.opts.emulate_dram_refresh = opt_emulate_dram;
 	bus.opts.emulate_kbd_bounce = opt_emulate_bounce;
 	bus.opts.randomize_cold_boot = opt_randomize_cold;
-	bus.opts.flat_bus           = opt_flat_bus;
-	bus.opts.headless           = opt_headless;
+	bus.opts.flat_bus = opt_flat_bus;
+	bus.opts.headless = opt_headless;
 
 	/* Cold-boot RAM randomisation */
 	if (bus.opts.randomize_cold_boot != 0) {
@@ -655,9 +667,11 @@ main(int argc, char *argv[])
 #ifndef APPLE1_OMIT_DISKIO
 	if (wozmon_txt_path != NULL) {
 		has_run_addr = false;
-		run_addr     = 0;
-		if (bus_load_wozmon_txt(&bus, wozmon_txt_path,
-		    &run_addr, &has_run_addr) == false) {
+		run_addr = 0;
+		if (bus_load_wozmon_txt(&bus,
+			wozmon_txt_path,
+			&run_addr,
+			&has_run_addr) == false) {
 			bus_free(&bus);
 			return (1);
 		}
@@ -676,7 +690,8 @@ main(int argc, char *argv[])
 		aci_card = aci_create(&bus, aci_path);
 		if (aci_card != NULL) {
 			if (tape_path != NULL) {
-				if (aci_load_tape(aci_card, tape_path) == false) {
+				if (aci_load_tape(aci_card, tape_path) ==
+				    false) {
 					aci_free(aci_card);
 					bus_free(&bus);
 					return (1);
@@ -684,9 +699,9 @@ main(int argc, char *argv[])
 			}
 			bus_add_card(&bus, aci_card);
 		} else if (tape_path != NULL || save_tape_path != NULL) {
-			cli_error(
-			    "Error: ACI tape operations requested but ACI "
-			    "card failed to load.\n");
+			cli_error("Error: ACI tape operations requested but "
+				  "ACI "
+				  "card failed to load.\n");
 			bus_free(&bus);
 			return (1);
 		}
@@ -733,9 +748,9 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time   = port_gettime_us();
+	last_time = port_gettime_us();
 	last_render = port_gettime_us();
-	prev_pc    = 0xFFFF;
+	prev_pc = 0xFFFF;
 	loop_count = 0;
 
 	for (;;) {
@@ -744,8 +759,7 @@ main(int argc, char *argv[])
 		}
 
 		/* When paused / powered off: just sleep */
-		if (opt_headless == false &&
-		    term_is_powered() == false) {
+		if (opt_headless == false && term_is_powered() == false) {
 			port_sleep_us(10000UL); /* 10ms */
 			continue;
 		}
@@ -772,7 +786,8 @@ main(int argc, char *argv[])
 
 				empty_step = dbg.step_mode;
 				dbg.step_mode = false;
-				if (dbg_interactive_loop(&dbg, empty_step) != 0) {
+				if (dbg_interactive_loop(&dbg, empty_step) !=
+				    0) {
 					break;
 				}
 				continue;
@@ -790,34 +805,47 @@ main(int argc, char *argv[])
 			uint8_t op;
 			int len;
 
-			op  = bus_read(&bus, cpu.pc);
+			op = bus_read(&bus, cpu.pc);
 			len = cpu_disassemble(&bus, cpu.pc, disasm_buf);
 
 			if (len == 1) {
-				port_snprintf(hex_bytes, sizeof(hex_bytes),
-				    "%02X      ", op);
+				port_snprintf(hex_bytes,
+				    sizeof(hex_bytes),
+				    "%02X      ",
+				    op);
 			} else if (len == 2) {
-				port_snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes,
+				    sizeof(hex_bytes),
 				    "%02X %02X   ",
-				    op, bus_read(&bus, cpu.pc + 1));
+				    op,
+				    bus_read(&bus, cpu.pc + 1));
 			} else {
-				port_snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes,
+				    sizeof(hex_bytes),
 				    "%02X %02X %02X",
-				    op, bus_read(&bus, cpu.pc + 1),
+				    op,
+				    bus_read(&bus, cpu.pc + 1),
 				    bus_read(&bus, cpu.pc + 2));
 			}
-			port_snprintf(trace_line, sizeof(trace_line),
+			port_snprintf(trace_line,
+			    sizeof(trace_line),
 			    "$%04X  %s  %-20s A:%02X X:%02X Y:%02X "
 			    "SP:%02X P:%02X",
-			    cpu.pc, hex_bytes, disasm_buf,
-			    cpu.a, cpu.x, cpu.y, cpu.s, cpu.p);
+			    cpu.pc,
+			    hex_bytes,
+			    disasm_buf,
+			    cpu.a,
+			    cpu.x,
+			    cpu.y,
+			    cpu.s,
+			    cpu.p);
 			cli_printf("%s\n", trace_line);
 		}
 #endif
 
 		/* Step CPU */
 #ifndef APPLE1_OMIT_DEBUGGER
-		bus.access_cb     = dbg_check_access;
+		bus.access_cb = dbg_check_access;
 		bus.access_cb_ctx = &dbg;
 		dbg.current_instruction_pc = cpu.pc;
 #endif
@@ -830,8 +858,8 @@ main(int argc, char *argv[])
 			/* Tick expansion cards */
 			for (j = 0; j < bus.num_cards; j++) {
 				if (bus.cards[j]->tick != NULL) {
-					bus.cards[j]->tick(
-					    bus.cards[j]->ctx, cycles);
+					bus.cards[j]->tick(bus.cards[j]->ctx,
+					    cycles);
 				}
 			}
 		}
@@ -854,12 +882,12 @@ main(int argc, char *argv[])
 				if (loop_count >= 3) {
 					if (cpu.pc == 0x3469) {
 						cli_printf("Klaus Dormann "
-						       "functional test: "
-						       "PASS\n");
+							   "functional test: "
+							   "PASS\n");
 					} else {
-						cli_error(
-						    "FAIL: cpu trapped at "
-						    "$%04X\n",
+						cli_error("FAIL: cpu trapped "
+							  "at "
+							  "$%04X\n",
 						    cpu.pc);
 						cleanup_cards(&bus,
 						    save_tape_path);
@@ -888,13 +916,13 @@ main(int argc, char *argv[])
 			uint32_t expected_us;
 
 			current_time = port_gettime_us();
-			elapsed_us   = current_time - last_time;
-			expected_us  = 1000UL; /* 1 ms = 1000 us */
+			elapsed_us = current_time - last_time;
+			expected_us = 1000UL; /* 1 ms = 1000 us */
 
 			if (elapsed_us < expected_us) {
 				port_sleep_us(expected_us - elapsed_us);
 			}
-			last_time         = port_gettime_us();
+			last_time = port_gettime_us();
 			cycle_accumulator = 0;
 		}
 

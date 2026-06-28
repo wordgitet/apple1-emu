@@ -1,14 +1,13 @@
 #include "port.h"
-
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <termios.h>
-#include <errno.h>
-#include <signal.h>
 #include <sys/select.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 
 /* ================================================================== */
 /* Memory allocation shims                                            */
@@ -61,7 +60,8 @@ port_gettime_us(void)
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-		return ((uint32_t)ts.tv_sec * 1000000 + (uint32_t)(ts.tv_nsec / 1000));
+		return ((uint32_t)ts.tv_sec * 1000000 +
+		    (uint32_t)(ts.tv_nsec / 1000));
 	}
 	return (0);
 }
@@ -314,15 +314,13 @@ posix_vfs_read_line(port_file_t f, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs posix_vfs = {
-	posix_vfs_open,
+static struct port_vfs posix_vfs = { posix_vfs_open,
 	posix_vfs_close,
 	posix_vfs_read,
 	posix_vfs_size,
 	posix_vfs_seek,
 	posix_vfs_write,
-	posix_vfs_read_line
-};
+	posix_vfs_read_line };
 
 struct port_vfs *g_port_vfs = &posix_vfs;
 
@@ -335,4 +333,3 @@ port_exit(int code)
 {
 	exit(code);
 }
-

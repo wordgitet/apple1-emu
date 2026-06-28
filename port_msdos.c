@@ -1,10 +1,10 @@
 #include "port.h"
+#include <conio.h>
 #include <dos.h>
-#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h>
+#include <time.h>
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
 void *
@@ -224,14 +224,12 @@ msdos_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs msdos_vfs = {
-	msdos_xOpen,
+static struct port_vfs msdos_vfs = { msdos_xOpen,
 	msdos_xClose,
 	msdos_xRead,
 	msdos_xSize,
 	msdos_xSeek,
 	msdos_xWrite,
-	msdos_xReadLine
-};
+	msdos_xReadLine };
 
 struct port_vfs *g_port_vfs = &msdos_vfs;

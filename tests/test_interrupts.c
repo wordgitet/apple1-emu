@@ -81,12 +81,14 @@ setup(void)
 static void
 test_irq_basic(void)
 {
+	uint8_t cycles;
+
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT; /* I=0: IRQ unmasked */
 	cpu_irq(&cpu, true);
 
-	uint8_t cycles = cpu_step(&cpu);
+	cycles = cpu_step(&cpu);
 
 	assert(cycles == 7);           /* IRQ/NMI always 7 cycles */
 	assert(cpu.pc == 0x1200);      /* jumped to IRQ handler   */
@@ -109,6 +111,8 @@ test_irq_basic(void)
 static void
 test_irq_pc_held(void)
 {
+	uint16_t stk_pc;
+
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT;
@@ -116,7 +120,7 @@ test_irq_pc_held(void)
 
 	cpu_step(&cpu);
 
-	uint16_t stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
+	stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
 	assert(stk_pc == 0x1000); /* preempted NOP, NOT $1001 */
 
 	cpu_irq(&cpu, false);
@@ -132,6 +136,8 @@ test_irq_pc_held(void)
 static void
 test_irq_b_flag(void)
 {
+	uint8_t stk_p;
+
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT;
@@ -139,7 +145,7 @@ test_irq_b_flag(void)
 
 	cpu_step(&cpu);
 
-	uint8_t stk_p = bus.ram[0x01FB];
+	stk_p = bus.ram[0x01FB];
 	assert(!(stk_p & FLAG_BREAK)); /* B=0 for hardware IRQ */
 	assert(stk_p   & FLAG_UNUSED); /* bit 5 always 1 on push */
 
@@ -157,12 +163,14 @@ test_irq_b_flag(void)
 static void
 test_irq_masked(void)
 {
+	uint8_t cycles;
+
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
 	cpu.p |= FLAG_INTERRUPT; /* I=1: IRQ masked */
 	cpu_irq(&cpu, true);
 
-	uint8_t cycles = cpu_step(&cpu); /* must run NOP, not IRQ */
+	cycles = cpu_step(&cpu); /* must run NOP, not IRQ */
 
 	assert(cycles == 2);        /* NOP = 2 cycles; 7 means IRQ fired (bug) */
 	assert(cpu.pc == 0x1001);   /* advanced past NOP */
@@ -178,18 +186,22 @@ test_irq_masked(void)
 static void
 test_nmi_nonmaskable(void)
 {
+	uint8_t cycles;
+	uint8_t stk_p;
+	uint16_t stk_pc;
+
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
 	cpu.p |= FLAG_INTERRUPT; /* I=1 — would suppress IRQ, not NMI */
 	cpu_nmi(&cpu);
 
-	uint8_t cycles = cpu_step(&cpu);
+	cycles = cpu_step(&cpu);
 
 	assert(cycles == 7);
 	assert(cpu.pc == 0x1300); /* NMI handler */
 
-	uint8_t  stk_p  = bus.ram[0x01FB];
-	uint16_t stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
+	stk_p  = bus.ram[0x01FB];
+	stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
 
 	assert(!(stk_p & FLAG_BREAK)); /* B=0 for NMI */
 	assert(stk_p   & FLAG_UNUSED);
@@ -209,6 +221,10 @@ test_nmi_nonmaskable(void)
 static void
 test_brk_b_flag_and_return_addr(void)
 {
+	uint8_t cycles;
+	uint16_t stk_pc;
+	uint8_t stk_p;
+
 	bus.ram[0x1000] = 0x00; /* BRK opcode */
 	bus.ram[0x1001] = 0x42; /* padding byte (signature; discarded by struct cpu) */
 
@@ -216,13 +232,13 @@ test_brk_b_flag_and_return_addr(void)
 	cpu.s  = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT;
 
-	uint8_t cycles = cpu_step(&cpu);
+	cycles = cpu_step(&cpu);
 
 	assert(cycles == 7);
 	assert(cpu.pc == 0x1200); /* IRQ/BRK shared vector */
 
-	uint16_t stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
-	uint8_t  stk_p  = bus.ram[0x01FB];
+	stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
+	stk_p  = bus.ram[0x01FB];
 
 	assert(stk_pc == 0x1002);      /* BRK+2: past opcode AND padding byte */
 	assert(stk_p  & FLAG_BREAK);   /* B=1 for BRK */
@@ -246,13 +262,15 @@ test_brk_b_flag_and_return_addr(void)
 static void
 test_rti_roundtrip(void)
 {
+	uint8_t cycles;
+
 	cpu.pc = 0x1000;
 	cpu.s  = 0xFD;
 	cpu.p  = FLAG_UNUSED; /* I=0, all other flags clear */
 	cpu_irq(&cpu, true);
 
 	/* Step 1: IRQ fires, jumps to $1200 */
-	uint8_t cycles = cpu_step(&cpu);
+	cycles = cpu_step(&cpu);
 	assert(cycles == 7);
 	assert(cpu.pc == 0x1200);
 	cpu_irq(&cpu, false); /* deassert before RTI restores I=0 */

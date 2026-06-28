@@ -1,6 +1,5 @@
-#include "port.h"
-
 #include "io.h"
+#include "port.h"
 #include "term_apple1.h"
 
 static uint8_t buffered_key = 0;

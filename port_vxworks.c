@@ -1,7 +1,7 @@
 #include "port.h"
-#include <tickLib.h>
 #include <sysLib.h>
 #include <taskLib.h>
+#include <tickLib.h>
 
 /* Use POSIX for memory, terminal, signals, and VFS */
 #include "port_posix.c"

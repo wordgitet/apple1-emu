@@ -1,7 +1,6 @@
 #include "port.h"
-
-#include <u.h>
 #include <libc.h>
+#include <u.h>
 
 /* Plan 9 uses standard memory allocators and functions */
 
@@ -194,14 +193,12 @@ plan9_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs plan9_vfs = {
-	plan9_xOpen,
+static struct port_vfs plan9_vfs = { plan9_xOpen,
 	plan9_xClose,
 	plan9_xRead,
 	plan9_xSize,
 	plan9_xSeek,
 	plan9_xWrite,
-	plan9_xReadLine
-};
+	plan9_xReadLine };
 
 struct port_vfs *g_port_vfs = &plan9_vfs;

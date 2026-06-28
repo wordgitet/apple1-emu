@@ -6,7 +6,6 @@
  */
 #include "port.h"
 #include "term_apple1.h"
-
 #include <conio.h>
 
 static uint8_t vram[24][40];

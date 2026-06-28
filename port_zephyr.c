@@ -3,7 +3,7 @@
 
 /* Use custom memory allocators or Zephyr malloc */
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
-#  include <stdlib.h>
+#include <stdlib.h>
 void *
 port_malloc(port_size_t sz)
 {
@@ -148,14 +148,12 @@ zephyr_xReadLine(void *file, char *buf, port_size_t size)
 	return (0);
 }
 
-static struct port_vfs zephyr_vfs = {
-	zephyr_xOpen,
+static struct port_vfs zephyr_vfs = { zephyr_xOpen,
 	zephyr_xClose,
 	zephyr_xRead,
 	zephyr_xSize,
 	zephyr_xSeek,
 	zephyr_xWrite,
-	zephyr_xReadLine
-};
+	zephyr_xReadLine };
 
 struct port_vfs *g_port_vfs = &zephyr_vfs;

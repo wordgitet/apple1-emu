@@ -50,9 +50,11 @@ access_callback(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 static bool
 read_state(FILE *f, state_t *s)
 {
+	uint8_t regs[5];
+	int i;
+
 	if (fread(&s->pc, 2, 1, f) != 1)
 		return (false);
-	uint8_t regs[5];
 	if (fread(regs, 1, 5, f) != 5)
 		return (false);
 	s->s = regs[0];
@@ -63,7 +65,7 @@ read_state(FILE *f, state_t *s)
 
 	if (fread(&s->ram_count, 2, 1, f) != 1)
 		return (false);
-	for (int i = 0; i < s->ram_count; i++) {
+	for (i = 0; i < s->ram_count; i++) {
 		if (fread(&s->ram[i].addr, 2, 1, f) != 1)
 			return (false);
 		if (fread(&s->ram[i].val, 1, 1, f) != 1)
@@ -89,35 +91,59 @@ read_test_case(FILE *f, test_case_t *t)
 static void
 skip_state(FILE *f)
 {
-	fseek(f, 2 + 5, SEEK_CUR); // skip pc and regs
 	uint16_t ram_count;
+
+	fseek(f, 2 + 5, SEEK_CUR); /* skip pc and regs */
 	if (fread(&ram_count, 2, 1, f) == 1) {
-		fseek(f, ram_count * 3, SEEK_CUR); // skip addr + val
+		fseek(f, ram_count * 3, SEEK_CUR); /* skip addr + val */
 	}
 }
 
 static void
 skip_test_case(FILE *f)
 {
-	fseek(f, 1, SEEK_CUR); // skip op
+	fseek(f, 1, SEEK_CUR); /* skip op */
 	skip_state(f);
 	skip_state(f);
-	fseek(f, 1, SEEK_CUR); // skip cycles
+	fseek(f, 1, SEEK_CUR); /* skip cycles */
 }
 
 int
 main(int argc, char **argv)
 {
 	const char *bin_path = "tests/harte_6502.bin";
+	int limit = 10000;
+	FILE *f;
+	char header[4];
+	uint32_t total_cases;
+	int opcodes_count;
+	int cases_per_op;
+	struct bus bus;
+	struct cpu cpu;
+	int passed_ops;
+	int failed_ops;
+	int op_idx;
+	int i;
+	int r;
+	int run_count;
+	int skip_count;
+	uint8_t expected_p;
+	uint8_t actual_p;
+	uint16_t addr;
+	uint8_t val;
+	bool ram_ok;
+	bool first_case;
+	uint8_t op_val;
+	test_case_t t;
+
 	if (argc >= 2) {
 		bin_path = argv[1];
 	}
-	int limit = 10000;
 	if (argc >= 3) {
 		limit = atoi(argv[2]);
 	}
 
-	FILE *f = fopen(bin_path, "rb");
+	f = fopen(bin_path, "rb");
 	if (!f) {
 		fprintf(stderr,
 		    "Error: Could not open test fixture %s\n",
@@ -125,7 +151,6 @@ main(int argc, char **argv)
 		return (1);
 	}
 
-	char header[4];
 	if (fread(header, 1, 4, f) != 4 || memcmp(header, "HRT1", 4) != 0) {
 		fprintf(stderr,
 		    "Error: Invalid test fixture header in %s\n",
@@ -134,15 +159,14 @@ main(int argc, char **argv)
 		return (1);
 	}
 
-	uint32_t total_cases;
 	if (fread(&total_cases, 4, 1, f) != 1) {
 		fprintf(stderr, "Error: Could not read total case count\n");
 		fclose(f);
 		return (1);
 	}
 
-	int opcodes_count = 244;
-	int cases_per_op = total_cases / opcodes_count;
+	opcodes_count = 244;
+	cases_per_op = total_cases / opcodes_count;
 
 	printf("Loaded %s: %u total cases (~%d per opcode)\n",
 	    bin_path,
@@ -153,7 +177,6 @@ main(int argc, char **argv)
 		    limit);
 	}
 
-	struct bus bus;
 	if (bus_init(&bus, test_ram, 65536) == false) {
 		fclose(f);
 		return (1);
@@ -161,21 +184,19 @@ main(int argc, char **argv)
 	bus.opts.flat_bus = true;
 	bus.access_cb = access_callback;
 
-	struct cpu cpu;
 	cpu_init(&cpu, &bus);
 
-	int passed_ops = 0;
-	int failed_ops = 0;
-	test_case_t t;
+	passed_ops = 0;
+	failed_ops = 0;
 
-	for (int op_idx = 0; op_idx < opcodes_count; op_idx++) {
-		int run_count = limit < cases_per_op ? limit : cases_per_op;
-		int skip_count = cases_per_op - run_count;
+	for (op_idx = 0; op_idx < opcodes_count; op_idx++) {
+		run_count = limit < cases_per_op ? limit : cases_per_op;
+		skip_count = cases_per_op - run_count;
 
-		bool first_case = true;
-		uint8_t op_val = 0;
+		first_case = true;
+		op_val = 0;
 
-		for (int i = 0; i < run_count; i++) {
+		for (i = 0; i < run_count; i++) {
 			if (!read_test_case(f, &t)) {
 				fprintf(stderr,
 				    "Error: Premature end of file reading case "
@@ -195,7 +216,7 @@ main(int argc, char **argv)
 				first_case = false;
 			}
 
-			// Setup struct cpu initial state
+			/* Setup struct cpu initial state */
 			cpu.pc = t.initial.pc;
 			cpu.s = t.initial.s;
 			cpu.a = t.initial.a;
@@ -204,9 +225,9 @@ main(int argc, char **argv)
 			cpu.p = t.initial.p | FLAG_UNUSED;
 			cpu.halted = false;
 
-			// Setup initial RAM
+			/* Setup initial RAM */
 			memset(bus.ram, 0, 65536);
-			for (int r = 0; r < t.initial.ram_count; r++) {
+			for (r = 0; r < t.initial.ram_count; r++) {
 				bus.ram[t.initial.ram[r].addr] =
 				    t.initial.ram[r].val;
 			}
@@ -215,10 +236,10 @@ main(int argc, char **argv)
 
 			cpu_step(&cpu);
 
-			// Verify final state
-			uint8_t expected_p = t.final.p | FLAG_UNUSED;
-			uint8_t actual_p = cpu.p | FLAG_UNUSED;
-			expected_p &= ~0x10; // Ignore B flag differences
+			/* Verify final state */
+			expected_p = t.final.p | FLAG_UNUSED;
+			actual_p = cpu.p | FLAG_UNUSED;
+			expected_p &= ~0x10; /* Ignore B flag differences */
 			actual_p &= ~0x10;
 
 			if (cpu.pc != t.final.pc || cpu.s != t.final.s ||
@@ -248,11 +269,11 @@ main(int argc, char **argv)
 				break;
 			}
 
-			// Verify RAM
-			bool ram_ok = true;
-			for (int r = 0; r < t.final.ram_count; r++) {
-				uint16_t addr = t.final.ram[r].addr;
-				uint8_t val = t.final.ram[r].val;
+			/* Verify RAM */
+			ram_ok = true;
+			for (r = 0; r < t.final.ram_count; r++) {
+				addr = t.final.ram[r].addr;
+				val = t.final.ram[r].val;
 				if (bus.ram[addr] != val) {
 					printf("FAILED (RAM mismatch in case "
 					       "%d at $%04X: expected %02X, "
@@ -270,7 +291,7 @@ main(int argc, char **argv)
 				break;
 			}
 
-			// Verify cycles count
+			/* Verify cycles count */
 			if (actual_cycles_count != t.cycles) {
 				printf("FAILED (Cycles mismatch in case %d: "
 				       "expected %d, got %d)\n",
@@ -289,8 +310,8 @@ main(int argc, char **argv)
 		printf("PASSED\n");
 		passed_ops++;
 
-		// Skip remaining cases for this opcode
-		for (int i = 0; i < skip_count; i++) {
+		/* Skip remaining cases for this opcode */
+		for (i = 0; i < skip_count; i++) {
 			skip_test_case(f);
 		}
 	}

@@ -3,7 +3,6 @@
 #define INCL_DOS
 #define INCL_DOSPROFILE
 #include <os2.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +25,8 @@ port_gettime_us(void)
 	freq = 0;
 	if (DosTmrQueryFreq(&freq) == 0 && freq != 0 &&
 	    DosTmrQueryTime(&timer) == 0) {
-		ticks = (double)timer.ulLo + ((double)timer.ulHi * 4294967296.0);
+		ticks = (double)timer.ulLo +
+		    ((double)timer.ulHi * 4294967296.0);
 		return ((uint32_t)((ticks * 1000000.0) / freq));
 	}
 	ms = 0;

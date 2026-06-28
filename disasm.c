@@ -1,8 +1,7 @@
 #ifndef APPLE1_OMIT_DISASM
-#include "port.h"
-
 #include "bus.h"
 #include "disasm.h"
+#include "port.h"
 
 enum addr_mode {
 	ADDR_IMP, /* Implied (e.g. TAX) */

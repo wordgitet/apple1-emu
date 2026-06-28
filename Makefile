@@ -16,7 +16,7 @@
 CC      = cc
 CFLAGS  = -O2 -g
 WFLAGS  = -Wall -Wextra
-STDFLAG = -std=c99
+STDFLAG = -std=c89
 DEFS    = -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
 
 # Combined flags used for every translation unit

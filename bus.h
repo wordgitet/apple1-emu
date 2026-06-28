@@ -1,12 +1,12 @@
 #ifndef BUS_H
 #define BUS_H
 
-#define PIA_BASE      0xD010
-#define ROM_BASE      0xFF00
-#define RESET_VECTOR  0xFFFC
+#define PIA_BASE     0xD010
+#define ROM_BASE     0xFF00
+#define RESET_VECTOR 0xFFFC
 
-#include "port.h"
 #include "apple1limit.h"
+#include "port.h"
 #include <stddef.h>
 
 /* Log severity levels */
@@ -18,11 +18,11 @@
  * Route a log message through the bus log callback.
  * Silently dropped when log is NULL (embedded targets with no output).
  */
-#define BUS_LOG(bus, lvl, msg) \
-    do { \
-        if ((bus)->log != NULL) \
-            (bus)->log((bus)->log_ctx, (lvl), (msg)); \
-    } while (0)
+#define BUS_LOG(bus, lvl, msg)                                    \
+	do {                                                      \
+		if ((bus)->log != NULL)                           \
+			(bus)->log((bus)->log_ctx, (lvl), (msg)); \
+	} while (0)
 
 #ifndef APPLE1_OMIT_BUS_ACCESS_CB
 /* Callback fired on every non-dummy bus read and write.
@@ -34,8 +34,9 @@ typedef void (
 #endif
 
 struct pia_6821 {
-	uint8_t kbd_data;    /* 0xD010: Keyboard Data */
-	uint8_t kbd_control; /* 0xD011: Keyboard Control (Bit 7: Keyboard Strobe) */
+	uint8_t kbd_data; /* 0xD010: Keyboard Data */
+	uint8_t
+	    kbd_control; /* 0xD011: Keyboard Control (Bit 7: Keyboard Strobe) */
 	uint8_t dsp_data;    /* 0xD012: Display Data */
 	uint8_t dsp_control; /* 0xD013: Display Control (Bit 7: Display Ready) */
 };
@@ -99,13 +100,17 @@ bus_free(struct bus *bus);
 /* Load binary from buffer into RAM at address */
 bool
 bus_load_bin_buf(struct bus *bus,
-    const uint8_t *data, size_t len, uint16_t address);
+    const uint8_t *data,
+    size_t len,
+    uint16_t address);
 
 /* Load Woz Monitor formatted text from a buffer. */
 bool
 bus_load_wozmon_txt_buf(struct bus *bus,
-    const char *text, size_t len,
-    uint16_t *run_address, bool *has_run_address);
+    const char *text,
+    size_t len,
+    uint16_t *run_address,
+    bool *has_run_address);
 
 /* Load exactly 256-byte ROM image (Woz Monitor) at 0xFF00-0xFFFF */
 bool

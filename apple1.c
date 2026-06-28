@@ -10,7 +10,6 @@
 */
 #include "apple1.h"
 
-
 /* ======== begin port_string.c ======== */
 /* amalgamation: omit #include "port.h" */
 
@@ -28,8 +27,8 @@
 int
 port_isspace(int c)
 {
-	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' ||
-	    c == '\v' || c == '\f');
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' ||
+	    c == '\f');
 }
 
 int
@@ -41,8 +40,7 @@ port_isdigit(int c)
 int
 port_isxdigit(int c)
 {
-	return (c >= '0' && c <= '9') ||
-	    (c >= 'a' && c <= 'f') ||
+	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
 	    (c >= 'A' && c <= 'F');
 }
 
@@ -358,8 +356,14 @@ port_memcmp(const void *a, const void *b, port_size_t n)
 /* ================================================================== */
 
 static void
-format_unsigned(char *buf, port_size_t *written, port_size_t limit,
-    unsigned long val, int base, int is_upper, int min_width, int zero_pad)
+format_unsigned(char *buf,
+    port_size_t *written,
+    port_size_t limit,
+    unsigned long val,
+    int base,
+    int is_upper,
+    int min_width,
+    int zero_pad)
 {
 	char temp[32];
 	int i;
@@ -470,8 +474,13 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 					}
 					val = -val;
 				}
-				format_unsigned(buf, &written, limit,
-				    (unsigned long)val, 10, 0, min_width,
+				format_unsigned(buf,
+				    &written,
+				    limit,
+				    (unsigned long)val,
+				    10,
+				    0,
+				    min_width,
 				    zero_pad);
 				break;
 			}
@@ -483,8 +492,14 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 				} else {
 					val = va_arg(ap, unsigned int);
 				}
-				format_unsigned(buf, &written, limit, val, 10,
-				    0, min_width, zero_pad);
+				format_unsigned(buf,
+				    &written,
+				    limit,
+				    val,
+				    10,
+				    0,
+				    min_width,
+				    zero_pad);
 				break;
 			}
 			case 'x':
@@ -496,8 +511,14 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 				} else {
 					val = va_arg(ap, unsigned int);
 				}
-				format_unsigned(buf, &written, limit, val, 16,
-				    (*fmt == 'X'), min_width, zero_pad);
+				format_unsigned(buf,
+				    &written,
+				    limit,
+				    val,
+				    16,
+				    (*fmt == 'X'),
+				    min_width,
+				    zero_pad);
 				break;
 			}
 			case 'c': {
@@ -548,7 +569,6 @@ port_snprintf(char *buf, port_size_t n, const char *fmt, ...)
 	va_end(ap);
 	return (r);
 }
-
 
 /* ================================================================== */
 /* Pseudo-random number generator shims                               */
@@ -634,12 +654,12 @@ port_getopt(int argc, char *const argv[], const char *optstring)
 
 /* ======== begin port_msdos.c ======== */
 /* amalgamation: omit #include "port.h" */
+#include <conio.h>
 #include <dos.h>
-#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h>
+#include <time.h>
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
 void *
@@ -849,15 +869,13 @@ msdos_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs msdos_vfs = {
-	msdos_xOpen,
+static struct port_vfs msdos_vfs = { msdos_xOpen,
 	msdos_xClose,
 	msdos_xRead,
 	msdos_xSize,
 	msdos_xSeek,
 	msdos_xWrite,
-	msdos_xReadLine
-};
+	msdos_xReadLine };
 
 struct port_vfs *g_port_vfs = &msdos_vfs;
 /* ======== end port_msdos.c ======== */
@@ -1105,11 +1123,11 @@ bus_free(struct bus *bus)
 	bus->ram = NULL;
 }
 
-
-
 bool
 bus_load_bin_buf(struct bus *bus,
-    const uint8_t *data, size_t len, uint16_t address)
+    const uint8_t *data,
+    size_t len,
+    uint16_t address)
 {
 	uint32_t addr;
 	uint32_t i;
@@ -1123,10 +1141,13 @@ bus_load_bin_buf(struct bus *bus,
 		if (addr > 0xFFFF ||
 		    bus_is_ram_address(bus, (uint16_t)addr) == 0) {
 			char msg[256];
-			port_snprintf(msg, sizeof(msg),
+			port_snprintf(msg,
+			    sizeof(msg),
 			    "Error: Binary buffer (%lu bytes) at 0x%04X "
 			    "exceeds RAM size (%u KB).",
-			    (unsigned long)len, address, bus->ram_size / 1024);
+			    (unsigned long)len,
+			    address,
+			    bus->ram_size / 1024);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			return (false);
 		}
@@ -1149,9 +1170,12 @@ bus_load_bin_buf(struct bus *bus,
 
 	{
 		char msg[256];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Loaded buffer (%lu bytes) into RAM at 0x%04X-0x%04X",
-		    (unsigned long)len, address, (uint16_t)(address + len - 1));
+		    (unsigned long)len,
+		    address,
+		    (uint16_t)(address + len - 1));
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
 	}
 	return (true);
@@ -1171,8 +1195,10 @@ hex_val(char c)
 
 bool
 bus_load_wozmon_txt_buf(struct bus *bus,
-    const char *text, size_t len,
-    uint16_t *run_address, bool *has_run_address)
+    const char *text,
+    size_t len,
+    uint16_t *run_address,
+    bool *has_run_address)
 {
 	char *cleaned;
 	size_t addr_digits;
@@ -1199,7 +1225,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 	/* Strip inline comments */
 	cleaned = port_malloc(len + 1);
 	if (cleaned == NULL) {
-		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Failed to allocate wozmon parser buffer");
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
+		    "Error: Failed to allocate wozmon parser buffer");
 		return (false);
 	}
 
@@ -1219,8 +1247,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			in_comment = true;
 			continue;
 		}
-		if (text[i] == '/' && i + 1 < len &&
-		    text[i + 1] == '/') {
+		if (text[i] == '/' && i + 1 < len && text[i + 1] == '/') {
 			in_comment = true;
 			continue;
 		}
@@ -1255,7 +1282,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 		if (port_toupper((unsigned char)c) == 'X' && i + 1 < w &&
 		    port_isxdigit((unsigned char)cleaned[i + 1])) {
 			i++;
-			while (i < w && port_isxdigit((unsigned char)cleaned[i]))
+			while (
+			    i < w && port_isxdigit((unsigned char)cleaned[i]))
 				i++;
 			continue;
 		}
@@ -1267,13 +1295,14 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 		if (port_isxdigit((unsigned char)c)) {
 			hex_start = i;
-			while (i < w && port_isxdigit((unsigned char)cleaned[i]))
+			while (
+			    i < w && port_isxdigit((unsigned char)cleaned[i]))
 				i++;
 			hex_len = i - hex_start;
 
 			peek = i;
-			while (
-			    peek < w && port_isspace((unsigned char)cleaned[peek]))
+			while (peek < w &&
+			    port_isspace((unsigned char)cleaned[peek]))
 				peek++;
 
 			if (i < w &&
@@ -1281,13 +1310,14 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				/* run command */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
-					val =
-					    (hex_val(cleaned[hex_start + j])
-						<< 4) |
+					val = (hex_val(cleaned[hex_start + j])
+						  << 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
+						bus->ram[bus_translate_ram_address(
+						    bus,
+						    current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -1297,8 +1327,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					    &cleaned[hex_start + data_len],
 					    4);
 					addr_str[4] = '\0';
-					raddr = (uint16_t)
-					    port_strtol(addr_str, NULL, 16);
+					raddr = (uint16_t)port_strtol(addr_str,
+					    NULL,
+					    16);
 					if (run_address != NULL)
 						*run_address = raddr;
 					if (has_run_address != NULL)
@@ -1312,13 +1343,14 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				/* Address change (and possibly some data bytes before it in merged strings) */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
-					val =
-					    (hex_val(cleaned[hex_start + j])
-						<< 4) |
+					val = (hex_val(cleaned[hex_start + j])
+						  << 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
+						bus->ram[bus_translate_ram_address(
+						    bus,
+						    current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -1339,11 +1371,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 			/* Data bytes */
 			for (j = 0; j + 1 < hex_len; j += 2) {
-				val =
-				    (hex_val(cleaned[hex_start + j]) << 4) |
+				val = (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
-				if (bus_is_ram_address(bus, current_addr) != 0) {
-					bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
+				if (bus_is_ram_address(bus, current_addr) !=
+				    0) {
+					bus->ram[bus_translate_ram_address(bus,
+					    current_addr)] = val;
 				}
 				current_addr++;
 				total_bytes++;
@@ -1363,7 +1396,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 	{
 		char msg[256];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Loaded %d bytes via Woz Monitor text format",
 		    total_bytes);
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
@@ -1394,8 +1428,10 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 		f = port_vfs_default.open(rom_path, PORT_VFS_READ);
 		if (f == NULL) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
-			    "Warning: '%s' not found, using embedded Wozmon ROM.",
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Warning: '%s' not found, using embedded Wozmon "
+			    "ROM.",
 			    rom_path);
 			BUS_LOG(bus, BUS_LOG_WARN, msg);
 #ifndef APPLE1_OMIT_WOZMON
@@ -1403,7 +1439,9 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 			bus->rom_loaded = true;
 			return (true);
 #else
-			BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
+			BUS_LOG(bus,
+			    BUS_LOG_ERROR,
+			    "Error: Monitor ROM omitted");
 			return (false);
 #endif
 		}
@@ -1412,10 +1450,12 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 
 		if (size != 256) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
+			port_snprintf(msg,
+			    sizeof(msg),
 			    "Error: ROM file '%s' is %ld bytes. "
 			    "Apple 1 Monitor ROM must be exactly 256 bytes.",
-			    rom_path, size);
+			    rom_path,
+			    size);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
 			return (false);
@@ -1425,8 +1465,10 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 		if (port_vfs_default.read(f, bus->rom, 256, &read_bytes) != 0 ||
 		    read_bytes != 256) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
-			    "Error: Failed to read 256 bytes from '%s'", rom_path);
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Error: Failed to read 256 bytes from '%s'",
+			    rom_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
 			return (false);
@@ -1437,7 +1479,9 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 		return (true);
 	}
 #else
-	BUS_LOG(bus, BUS_LOG_ERROR, "Error: Disk I/O disabled, cannot load ROM from file.");
+	BUS_LOG(bus,
+	    BUS_LOG_ERROR,
+	    "Error: Disk I/O disabled, cannot load ROM from file.");
 	return (false);
 #endif
 }
@@ -1455,8 +1499,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 	f = port_vfs_default.open(bin_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Could not open binary file '%s'", bin_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Could not open binary file '%s'",
+		    bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
@@ -1465,8 +1511,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 
 	if (size <= 0) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Binary file '%s' is empty.", bin_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Binary file '%s' is empty.",
+		    bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (false);
@@ -1484,8 +1532,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 		if (port_vfs_default.read(f, buf, size, &read_bytes) != 0 ||
 		    read_bytes != (port_size_t)size) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
-			    "Error: Failed to read entire binary file '%s'", bin_path);
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Error: Failed to read entire binary file '%s'",
+			    bin_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_free(buf);
 			port_vfs_default.close(f);
@@ -1514,8 +1564,10 @@ bus_load_wozmon_txt(struct bus *bus,
 	f = port_vfs_default.open(txt_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Could not open text file '%s'", txt_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Could not open text file '%s'",
+		    txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
@@ -1524,8 +1576,10 @@ bus_load_wozmon_txt(struct bus *bus,
 
 	if (size <= 0) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Text file '%s' is empty.", txt_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Text file '%s' is empty.",
+		    txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (false);
@@ -1546,8 +1600,11 @@ bus_load_wozmon_txt(struct bus *bus,
 	content[read_bytes] = '\0';
 	port_vfs_default.close(f);
 
-	ret = bus_load_wozmon_txt_buf(bus, content, read_bytes,
-	    run_address, has_run_address);
+	ret = bus_load_wozmon_txt_buf(bus,
+	    content,
+	    read_bytes,
+	    run_address,
+	    has_run_address);
 	port_free(content);
 	return (ret);
 }
@@ -1679,7 +1736,10 @@ bus_read(struct bus *bus, uint16_t address)
 			}
 			if (card_hit == 0) {
 				if (bus_is_ram_address(bus, address) != 0)
-					bus->last_bus_value = bus->ram[bus_translate_ram_address(bus, address)];
+					bus->last_bus_value =
+					    bus->ram[bus_translate_ram_address(
+						bus,
+						address)];
 				result = bus->last_bus_value;
 			}
 		}
@@ -1744,7 +1804,8 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			}
 			if (card_hit == 0 &&
 			    bus_is_ram_address(bus, address) != 0)
-				bus->ram[bus_translate_ram_address(bus, address)] = value;
+				bus->ram[bus_translate_ram_address(bus,
+				    address)] = value;
 		}
 	}
 
@@ -1784,8 +1845,7 @@ bus_update_keyboard(struct bus *bus)
 	 * $D010 read) - no toggling, no fake rising edges.
 	 */
 #ifndef APPLE1_OMIT_KBD_BOUNCE
-	if (bus->opts.emulate_kbd_bounce != 0 &&
-	    bus->kbd_bounce_cycles > 0) {
+	if (bus->opts.emulate_kbd_bounce != 0 && bus->kbd_bounce_cycles > 0) {
 		bus->kbd_bounce_cycles--;
 		return; /* encoder still settling - ignore new input */
 	}
@@ -1835,7 +1895,8 @@ bus_add_card(struct bus *bus, struct expansion_card *card)
 		bus->cards[bus->num_cards++] = card;
 	} else {
 		char msg[128];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Error: Maximum number of expansion cards (%d) exceeded.",
 		    APPLE1_MAX_CARDS);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
@@ -2215,7 +2276,8 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 	}
 	result = (high << 4) | (low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW,
+	set_flag(cpu,
+	    FLAG_OVERFLOW,
 	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high > 9) {
 		result -= 0xA0; /* 10 * 16 */
@@ -2244,7 +2306,8 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 	}
 	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW,
+	set_flag(cpu,
+	    FLAG_OVERFLOW,
 	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high < 0) {
 		result += 0xA0; /* 10 * 16 */
@@ -2969,8 +3032,8 @@ op_jsr(struct cpu *cpu)
 	uint8_t hi;
 	uint8_t lo;
 
-	lo = read_byte(cpu, cpu->pc++); /* cycle 2: addr low */
-	read_byte(cpu, 0x0100 + cpu->s);	/* cycle 3: dummy stack read */
+	lo = read_byte(cpu, cpu->pc++);	 /* cycle 2: addr low */
+	read_byte(cpu, 0x0100 + cpu->s); /* cycle 3: dummy stack read */
 	push_word(cpu,
 	    cpu->pc); /* cycles 4-5: push return addr (PC-1 already advanced) */
 	hi = read_byte(cpu, cpu->pc); /* cycle 6: addr high */
@@ -4211,7 +4274,8 @@ op_jam(struct cpu *cpu)
 	cpu->halted = true;
 	{
 		char msg[128];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "\nJAM: struct cpu halted by opcode 0x%02X at PC=0x%04X. "
 		    "RESET required.\n",
 		    opcode,
@@ -4343,7 +4407,8 @@ op_xaa(struct cpu *cpu)
 	uint8_t magic, val;
 
 	val = read_byte(cpu, cpu->pc++);
-	magic = 0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	magic =
+	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 	cpu->a = (cpu->a | magic) & cpu->x & val;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -4356,7 +4421,8 @@ op_lxa(struct cpu *cpu)
 	uint8_t magic, val;
 
 	val = read_byte(cpu, cpu->pc++);
-	magic = 0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	magic =
+	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 	cpu->a = cpu->x = (cpu->a | magic) & val;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -4799,7 +4865,8 @@ cpu_step(struct cpu *cpu)
 		cpu->halted = true;
 		{
 			char msg[128];
-			port_snprintf(msg, sizeof(msg),
+			port_snprintf(msg,
+			    sizeof(msg),
 			    "\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
 			    "RESET required.\n",
 			    opcode,
@@ -5386,8 +5453,7 @@ aci_tick(void *ctx, uint8_t cycles)
 
 	if (aci->tape_loaded != 0 && aci->tape_active != 0) {
 		aci->cycles_until_toggle -= cycles;
-		while (aci->cycles_until_toggle <= 0 &&
-		    aci->tape_active != 0) {
+		while (aci->cycles_until_toggle <= 0 && aci->tape_active != 0) {
 			aci->input_level = !aci->input_level;
 			aci->playback_index++;
 			if (aci->playback_index >= aci->num_durations) {
@@ -5419,9 +5485,11 @@ aci_create(struct bus *bus, const char *rom_path)
 
 	if (size != 256) {
 		char msg[128];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Error: ACI ROM '%s' is %ld bytes, must be exactly 256.",
-		    rom_path, size);
+		    rom_path,
+		    size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (NULL);
@@ -5429,7 +5497,9 @@ aci_create(struct bus *bus, const char *rom_path)
 
 	aci = (struct aci_card *)port_malloc(sizeof(struct aci_card));
 	if (aci == NULL) {
-		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI card context");
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
+		    "Failed to allocate ACI card context");
 		port_vfs_default.close(f);
 		return (NULL);
 	}
@@ -5442,8 +5512,10 @@ aci_create(struct bus *bus, const char *rom_path)
 		if (port_vfs_default.read(f, aci->rom, 256, &read_bytes) != 0 ||
 		    read_bytes != 256) {
 			char msg[128];
-			port_snprintf(msg, sizeof(msg),
-			    "Error: Failed to read ACI ROM '%s'", rom_path);
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Error: Failed to read ACI ROM '%s'",
+			    rom_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_free(aci);
 			port_vfs_default.close(f);
@@ -5452,9 +5524,12 @@ aci_create(struct bus *bus, const char *rom_path)
 	}
 	port_vfs_default.close(f);
 
-	card = (struct expansion_card *)port_malloc(sizeof(struct expansion_card));
+	card = (struct expansion_card *)port_malloc(
+	    sizeof(struct expansion_card));
 	if (card == NULL) {
-		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate ACI expansion card");
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
+		    "Failed to allocate ACI expansion card");
 		port_free(aci);
 		return (NULL);
 	}
@@ -5468,7 +5543,8 @@ aci_create(struct bus *bus, const char *rom_path)
 	card->tick = aci_tick;
 	card->ctx = aci;
 
-	BUS_LOG(bus, BUS_LOG_INFO,
+	BUS_LOG(bus,
+	    BUS_LOG_INFO,
 	    "Registered ACI card: ROM mapped at 0xC100 - 0xC1FF, registers "
 	    "at 0xC000 - 0xC0FF");
 	return (card);
@@ -5502,7 +5578,8 @@ pcm_to_durations(struct bus *bus,
 	}
 
 	if (first_active == num_samples) {
-		BUS_LOG(bus, BUS_LOG_ERROR,
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
 		    "Error: Audio file does not contain a detectable "
 		    "cassette signal");
 		return (false);
@@ -5517,7 +5594,9 @@ pcm_to_durations(struct bus *bus,
 	durations = port_malloc(cap * sizeof(uint32_t));
 
 	if (durations == NULL) {
-		BUS_LOG(bus, BUS_LOG_ERROR, "Failed to allocate durations buffer");
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
+		    "Failed to allocate durations buffer");
 		return (false);
 	}
 
@@ -5543,19 +5622,22 @@ pcm_to_durations(struct bus *bus,
 
 			if (count >= cap) {
 				if (cap > (UINT32_MAX / 2) / sizeof(uint32_t)) {
-					BUS_LOG(bus, BUS_LOG_ERROR,
+					BUS_LOG(bus,
+					    BUS_LOG_ERROR,
 					    "Error: Cassette signal durations "
 					    "array overflow");
 					port_free(durations);
 					return (false);
 				}
 				cap *= 2;
-				new_buf =
-				    port_realloc(durations, cap * sizeof(uint32_t));
+				new_buf = port_realloc(durations,
+				    cap * sizeof(uint32_t));
 
 				if (new_buf == NULL) {
-					BUS_LOG(bus, BUS_LOG_ERROR,
-					    "Failed to reallocate durations buffer");
+					BUS_LOG(bus,
+					    BUS_LOG_ERROR,
+					    "Failed to reallocate durations "
+					    "buffer");
 					port_free(durations);
 					return (false);
 				}
@@ -5595,7 +5677,8 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	f = port_vfs_default.open(tape_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Error: Could not open WAV file '%s'",
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
@@ -5629,7 +5712,8 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		uint32_t chunk_size;
 
 		read_bytes = 0;
-		if (port_vfs_default.read(f, chunk_header, 8, &read_bytes) != 0 ||
+		if (port_vfs_default.read(f, chunk_header, 8, &read_bytes) !=
+			0 ||
 		    read_bytes != 8) {
 			break;
 		}
@@ -5641,14 +5725,21 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			uint8_t fmt_data[16];
 
 			if (chunk_size < 16) {
-				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Invalid fmt chunk size");
+				BUS_LOG(aci->bus,
+				    BUS_LOG_ERROR,
+				    "Error: Invalid fmt chunk size");
 				port_vfs_default.close(f);
 				return (false);
 			}
 			read_bytes = 0;
-			if (port_vfs_default.read(f, fmt_data, 16, &read_bytes) != 0 ||
+			if (port_vfs_default.read(f,
+				fmt_data,
+				16,
+				&read_bytes) != 0 ||
 			    read_bytes != 16) {
-				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated fmt chunk");
+				BUS_LOG(aci->bus,
+				    BUS_LOG_ERROR,
+				    "Error: Truncated fmt chunk");
 				port_vfs_default.close(f);
 				return (false);
 			}
@@ -5659,20 +5750,29 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			bits_per_sample = fmt_data[14] | (fmt_data[15] << 8);
 
 			if (chunk_size > 16) {
-				port_vfs_default.seek(f, chunk_size - 16, PORT_VFS_SEEK_CUR);
+				port_vfs_default.seek(f,
+				    chunk_size - 16,
+				    PORT_VFS_SEEK_CUR);
 			}
 		} else if (port_memcmp(chunk_header, "data", 4) == 0) {
 			data_size = chunk_size;
 			data_chunk = port_malloc(data_size);
 			if (data_chunk == NULL) {
-				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate data chunk buffer");
+				BUS_LOG(aci->bus,
+				    BUS_LOG_ERROR,
+				    "Failed to allocate data chunk buffer");
 				port_vfs_default.close(f);
 				return (false);
 			}
 			read_bytes = 0;
-			if (port_vfs_default.read(f, data_chunk, data_size, &read_bytes) != 0 ||
+			if (port_vfs_default.read(f,
+				data_chunk,
+				data_size,
+				&read_bytes) != 0 ||
 			    read_bytes != data_size) {
-				BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Truncated data chunk");
+				BUS_LOG(aci->bus,
+				    BUS_LOG_ERROR,
+				    "Error: Truncated data chunk");
 				port_free(data_chunk);
 				port_vfs_default.close(f);
 				return (false);
@@ -5681,23 +5781,30 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 		} else {
 			uint32_t aligned_size = chunk_size + (chunk_size & 1);
 
-			port_vfs_default.seek(f, aligned_size, PORT_VFS_SEEK_CUR);
+			port_vfs_default.seek(f,
+			    aligned_size,
+			    PORT_VFS_SEEK_CUR);
 		}
 	}
 
 	port_vfs_default.close(f);
 
 	if (data_chunk == NULL) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV data chunk");
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
+		    "Error: Missing WAV data chunk");
 		return (false);
 	}
 	if (channels == 0 || sample_rate == 0 || bits_per_sample == 0) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Missing WAV format details");
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
+		    "Error: Missing WAV format details");
 		port_free(data_chunk);
 		return (false);
 	}
 	if (audio_format != 1 && audio_format != 3) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR,
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
 		    "Error: Unsupported WAV format (only PCM and float32 "
 		    "are supported)");
 		port_free(data_chunk);
@@ -5705,16 +5812,18 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	}
 
 	bytes_per_sample = bits_per_sample / 8;
-	if (bytes_per_sample == 0 ||
-	    data_size < bytes_per_sample * channels) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Error: Unsupported WAV sample format");
+	if (bytes_per_sample == 0 || data_size < bytes_per_sample * channels) {
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
+		    "Error: Unsupported WAV sample format");
 		port_free(data_chunk);
 		return (false);
 	}
 
 	frame_count = data_size / (bytes_per_sample * channels);
 	if (frame_count > UINT32_MAX / sizeof(float)) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR,
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
 		    "Error: WAV file is too large (integer overflow "
 		    "prevention)");
 		port_free(data_chunk);
@@ -5722,7 +5831,9 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 	}
 	mono_samples = port_malloc(frame_count * sizeof(float));
 	if (mono_samples == NULL) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR, "Failed to allocate mixed mono samples buffer");
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
+		    "Failed to allocate mixed mono samples buffer");
 		port_free(data_chunk);
 		return (false);
 	}
@@ -5810,9 +5921,12 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 
 	{
 		char msg[256];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Loaded WAV tape '%s' (%u pulses, sample rate %u Hz)",
-		    tape_path, count, sample_rate);
+		    tape_path,
+		    count,
+		    sample_rate);
 		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
 	}
 	return (true);
@@ -5835,7 +5949,8 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	uint32_t i, s;
 
 	if (aci->recorded_count == 0) {
-		BUS_LOG(aci->bus, BUS_LOG_WARN,
+		BUS_LOG(aci->bus,
+		    BUS_LOG_WARN,
 		    "ACI: No tape output was recorded. Nothing to save.");
 		return (false);
 	}
@@ -5859,7 +5974,8 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	total_samples += wav_sample_rate / 10;
 
 	if (total_samples > UINT32_MAX / 2) {
-		BUS_LOG(aci->bus, BUS_LOG_ERROR,
+		BUS_LOG(aci->bus,
+		    BUS_LOG_ERROR,
 		    "Error: Recording is too long to save as WAV");
 		return (false);
 	}
@@ -5870,7 +5986,8 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	f = port_vfs_default.open(tape_path, PORT_VFS_WRITE);
 	if (f == PORT_FILE_INVALID) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Error: Could not open '%s' for writing",
 		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_ERROR, msg);
@@ -5966,8 +6083,10 @@ save_wav_tape(struct aci_card *aci, const char *tape_path)
 	port_vfs_default.close(f);
 	{
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Saved ACI tape '%s' as WAV format", tape_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Saved ACI tape '%s' as WAV format",
+		    tape_path);
 		BUS_LOG(aci->bus, BUS_LOG_INFO, msg);
 	}
 	return (true);
@@ -6046,9 +6165,9 @@ aci_get_recorded_count(struct expansion_card *card)
 /* amalgamation: omit #include "bus.h" */
 /* amalgamation: omit #include "krusader.h" */
 
-static struct krusader_card  s_kru;
+static struct krusader_card s_kru;
 static struct expansion_card s_card;
-static bool                  s_in_use = false;
+static bool s_in_use = false;
 
 static uint8_t
 krusader_read(void *ctx, uint16_t addr, bool is_dummy)
@@ -6057,7 +6176,7 @@ krusader_read(void *ctx, uint16_t addr, bool is_dummy)
 	uint16_t offset;
 
 	(void)is_dummy;
-	kru    = (struct krusader_card *)ctx;
+	kru = (struct krusader_card *)ctx;
 	offset = addr & 0x0FFF;
 
 	if (offset < kru->size) {
@@ -6075,15 +6194,18 @@ krusader_create(struct bus *bus, const char *rom_path)
 	port_size_t nread;
 
 	if (s_in_use != 0) {
-		BUS_LOG(bus, BUS_LOG_ERROR,
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
 		    "Krusader: only one instance supported");
 		return (NULL);
 	}
 
 	f = port_vfs_default.open(rom_path, PORT_VFS_READ);
 	if (f == NULL) {
-		port_snprintf(msg, sizeof(msg),
-		    "Krusader: cannot open ROM '%s'", rom_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Krusader: cannot open ROM '%s'",
+		    rom_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (NULL);
 	}
@@ -6091,9 +6213,11 @@ krusader_create(struct bus *bus, const char *rom_path)
 	size = port_vfs_default.size(f);
 
 	if (size <= 0 || size > 4096) {
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Krusader: ROM '%s' is %ld bytes; must be 1-4096",
-		    rom_path, size);
+		    rom_path,
+		    size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (NULL);
@@ -6101,11 +6225,15 @@ krusader_create(struct bus *bus, const char *rom_path)
 
 	port_memset(s_kru.rom, 0xFF, 4096);
 	nread = 0;
-	if (port_vfs_default.read(f, s_kru.rom, (port_size_t)size, &nread) != 0 ||
+	if (port_vfs_default.read(f, s_kru.rom, (port_size_t)size, &nread) !=
+		0 ||
 	    nread != (port_size_t)size) {
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Krusader: short read on '%s' (%lu of %ld bytes)",
-		    rom_path, (unsigned long)nread, size);
+		    rom_path,
+		    (unsigned long)nread,
+		    size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (NULL);
@@ -6114,18 +6242,19 @@ krusader_create(struct bus *bus, const char *rom_path)
 
 	s_kru.size = (uint32_t)size;
 
-	s_card.name    = "Krusader";
-	s_card.base    = 0xE000;
-	s_card.mask    = 0xF000;
+	s_card.name = "Krusader";
+	s_card.base = 0xE000;
+	s_card.mask = 0xF000;
 	s_card.rom_only = true;
-	s_card.read    = krusader_read;
-	s_card.write   = NULL;
-	s_card.tick    = NULL;
-	s_card.ctx     = &s_kru;
+	s_card.read = krusader_read;
+	s_card.write = NULL;
+	s_card.tick = NULL;
+	s_card.ctx = &s_kru;
 
 	s_in_use = true;
 
-	port_snprintf(msg, sizeof(msg),
+	port_snprintf(msg,
+	    sizeof(msg),
 	    "Registered Krusader card: ROM at 0xE000-0x%04X",
 	    (uint16_t)(0xE000 + size - 1));
 	BUS_LOG(bus, BUS_LOG_INFO, msg);
@@ -6141,7 +6270,7 @@ krusader_free(struct expansion_card *card)
 	}
 	/* Static storage — nothing to free; just mark slot available. */
 	s_in_use = false;
-	port_memset(&s_kru,  0, sizeof(s_kru));
+	port_memset(&s_kru, 0, sizeof(s_kru));
 	port_memset(&s_card, 0, sizeof(s_card));
 }
 
@@ -6163,29 +6292,34 @@ static debugger_t *s_active_dbg = NULL;
 int
 dbg_printf(const char *format, ...);
 
-
 static void
 print_help(void)
 {
 	dbg_printf("Debugger commands:\n");
 	dbg_printf("  s, <Enter>        Step one instruction\n");
 	dbg_printf("  c                 Continue execution\n");
-	dbg_printf("  r                 Show struct cpu registers (A, X, Y, PC, S, P "
-	       "flags)\n");
-	dbg_printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 0210')\n");
-	dbg_printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 EA')\n");
-	dbg_printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With no "
-	       "address, lists breakpoints\n");
-	dbg_printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). With no "
-	       "address, clears all\n");
+	dbg_printf("  r                 Show struct cpu registers (A, X, Y, "
+		   "PC, S, P "
+		   "flags)\n");
+	dbg_printf("  m [start] [end]   Dump memory in hex (e.g. 'm 0200 "
+		   "0210')\n");
+	dbg_printf("  w [addr] [val]    Write byte to memory (e.g. 'w 0200 "
+		   "EA')\n");
+	dbg_printf("  b [addr]          Add breakpoint (e.g. 'b FF00'). With "
+		   "no "
+		   "address, lists breakpoints\n");
+	dbg_printf("  d [addr]          Delete breakpoint (e.g. 'd FF00'). "
+		   "With no "
+		   "address, clears all\n");
 	dbg_printf("  wp [addr] [type]  Add watchpoint (type: r/w/rw, e.g. 'wp "
-	       "0200 w'). "
-	       "With no args, lists watchpoints\n");
-	dbg_printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). With "
-	       "no "
-	       "address, clears all\n");
+		   "0200 w'). "
+		   "With no args, lists watchpoints\n");
+	dbg_printf("  wd [addr]         Delete watchpoint (e.g. 'wd 0200'). "
+		   "With "
+		   "no "
+		   "address, clears all\n");
 	dbg_printf("  t                 Show recent control flow jumps (PC "
-	       "trace)\n");
+		   "trace)\n");
 	dbg_printf("  h, ?              Show this help menu\n");
 	dbg_printf("  q                 Quit emulator\n");
 }
@@ -6254,8 +6388,10 @@ dbg_parse_hex_pair(const char *s, unsigned int *a, unsigned int *b)
 }
 
 static int
-dbg_parse_hex_and_word(const char *s, unsigned int *addr,
-    char *word, port_size_t word_sz)
+dbg_parse_hex_and_word(const char *s,
+    unsigned int *addr,
+    char *word,
+    port_size_t word_sz)
 {
 	const char *p;
 	char *end;
@@ -6285,8 +6421,8 @@ dbg_parse_hex_and_word(const char *s, unsigned int *addr,
 		return (1);
 	}
 	i = 0;
-	while (*p != '\0' && !port_isspace((unsigned char)*p) &&
-	    i + 1 < word_sz) {
+	while (
+	    *p != '\0' && !port_isspace((unsigned char)*p) && i + 1 < word_sz) {
 		word[i++] = *p++;
 	}
 	word[i] = '\0';
@@ -6380,7 +6516,8 @@ dbg_add_watchpoint(debugger_t *dbg, uint16_t addr, wp_type_t type)
 	}
 
 	if (dbg->num_watchpoints >= APPLE1_MAX_WATCHPOINTS) {
-		dbg_printf("Error: Maximum number of watchpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of watchpoints reached "
+			   "(%d).\n",
 		    APPLE1_MAX_WATCHPOINTS);
 		return;
 	}
@@ -6450,13 +6587,14 @@ dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 				dbg_printf("\n*** WATCHPOINT TRIGGERED ***\n");
 				if (is_write) {
 					dbg_printf("Write to $%04X with value "
-					       "$%02X at PC $%04X\n",
+						   "$%02X at PC $%04X\n",
 					    addr,
 					    val,
 					    dbg->current_instruction_pc);
 				} else {
-					dbg_printf("Read from $%04X: value $%02X "
-					       "at PC $%04X\n",
+					dbg_printf("Read from $%04X: value "
+						   "$%02X "
+						   "at PC $%04X\n",
 					    addr,
 					    val,
 					    dbg->current_instruction_pc);
@@ -6475,7 +6613,8 @@ dbg_add_breakpoint(debugger_t *dbg, uint16_t addr)
 		return;
 	}
 	if (dbg->num_breakpoints >= APPLE1_MAX_BREAKPOINTS) {
-		dbg_printf("Error: Maximum number of breakpoints reached (%d).\n",
+		dbg_printf("Error: Maximum number of breakpoints reached "
+			   "(%d).\n",
 		    APPLE1_MAX_BREAKPOINTS);
 		return;
 	}
@@ -6559,26 +6698,32 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		}
 		addr = 0;
 		type_str[0] = '\0';
-		parsed = dbg_parse_hex_and_word(args, &addr, type_str,
+		parsed = dbg_parse_hex_and_word(args,
+		    &addr,
+		    type_str,
 		    sizeof(type_str));
 		if (parsed >= 1) {
 			if (addr > 0xFFFF) {
-				dbg_printf("Error: Address must be a 16-bit hex "
-				       "value.\n");
+				dbg_printf("Error: Address must be a 16-bit "
+					   "hex "
+					   "value.\n");
 			} else {
 				wp_type_t type = WP_WRITE;
 				if (parsed == 2) {
 					if (port_strcmp(type_str, "r") == 0) {
 						type = WP_READ;
-					} else if (port_strcmp(type_str, "w") == 0) {
-						type = WP_WRITE;
-					} else if (port_strcmp(type_str, "rw") ==
+					} else if (port_strcmp(type_str, "w") ==
 					    0) {
+						type = WP_WRITE;
+					} else if (port_strcmp(type_str,
+						       "rw") == 0) {
 						type = WP_ACCESS;
 					} else {
-						dbg_printf("Warning: Unknown type "
-						       "'%s'. Defaulting to "
-						       "'w'.\n",
+						dbg_printf("Warning: Unknown "
+							   "type "
+							   "'%s'. Defaulting "
+							   "to "
+							   "'w'.\n",
 						    type_str);
 					}
 				}
@@ -6600,7 +6745,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					    WP_ACCESS)
 						t = "read/write";
 					dbg_printf("  Watchpoint %d at $%04X "
-					       "(%s)\n",
+						   "(%s)\n",
 					    i + 1,
 					    dbg->watchpoints[i].addr,
 					    t);
@@ -6616,8 +6761,9 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		addr = 0;
 		if (dbg_parse_hex(args, &addr) == 1) {
 			if (addr > 0xFFFF) {
-				dbg_printf("Error: Address must be a 16-bit hex "
-				       "value.\n");
+				dbg_printf("Error: Address must be a 16-bit "
+					   "hex "
+					   "value.\n");
 			} else {
 				dbg_remove_watchpoint(dbg, (uint16_t)addr);
 			}
@@ -6658,16 +6804,19 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 				end_val = start_val + 15;
 			}
 			if (start_val > 0xFFFF || end_val > 0xFFFF) {
-				dbg_printf("Error: Addresses must be 16-bit hex "
-				       "values.\n");
+				dbg_printf("Error: Addresses must be 16-bit "
+					   "hex "
+					   "values.\n");
 			} else if (end_val < start_val) {
-				dbg_printf("Error: End address cannot be less than "
-				       "start address.\n");
+				dbg_printf("Error: End address cannot be less "
+					   "than "
+					   "start address.\n");
 			} else {
 				if (end_val - start_val > 255) {
 					end_val = start_val + 255;
-					dbg_printf("Warning: Capping memory dump "
-					       "to 256 bytes.\n");
+					dbg_printf("Warning: Capping memory "
+						   "dump "
+						   "to 256 bytes.\n");
 				}
 				dump_memory(dbg,
 				    (uint16_t)start_val,
@@ -6679,8 +6828,9 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 
 			if (dbg_parse_hex_pair(args, &addr, &val) == 2) {
 				if (addr > 0xFFFF || val > 0xFF) {
-					dbg_printf("Error: Invalid address ($%04X) "
-					       "or value ($%02X).\n",
+					dbg_printf("Error: Invalid address "
+						   "($%04X) "
+						   "or value ($%02X).\n",
 					    addr,
 					    val);
 				} else {
@@ -6700,7 +6850,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			if (dbg_parse_hex(args, &addr) == 1) {
 				if (addr > 0xFFFF) {
 					dbg_printf("Error: Address must be a "
-					       "16-bit hex value.\n");
+						   "16-bit hex value.\n");
 				} else {
 					dbg_add_breakpoint(dbg, (uint16_t)addr);
 				}
@@ -6709,11 +6859,10 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 					dbg_printf("No active breakpoints.\n");
 				} else {
 					dbg_printf("Active breakpoints:\n");
-					for (i = 0;
-					    i < dbg->num_breakpoints;
+					for (i = 0; i < dbg->num_breakpoints;
 					    i++) {
 						dbg_printf("  Breakpoint %d at "
-						       "$%04X\n",
+							   "$%04X\n",
 						    i + 1,
 						    dbg->breakpoints[i]);
 					}
@@ -6725,7 +6874,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			if (dbg_parse_hex(args, &addr) == 1) {
 				if (addr > 0xFFFF) {
 					dbg_printf("Error: Address must be a "
-					       "16-bit hex value.\n");
+						   "16-bit hex value.\n");
 				} else {
 					dbg_remove_breakpoint(dbg,
 					    (uint16_t)addr);
@@ -6736,7 +6885,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			}
 		} else if (cmd == 't') {
 			dbg_printf("Control Flow Transitions (oldest to "
-			       "newest):\n");
+				   "newest):\n");
 			idx = dbg->cpu->pc_trace_idx;
 			for (i = 0; i < 24; i++) {
 				edge = dbg->cpu->pc_trace[idx];
@@ -6749,7 +6898,7 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 			}
 		} else {
 			dbg_printf("Unknown command: %c. Type 'h' or '?' for "
-			       "help.\n",
+				   "help.\n",
 			    cmd);
 		}
 	}
@@ -6759,9 +6908,9 @@ void
 dbg_interactive_loop(debugger_t *dbg)
 {
 	bus_access_cb_t old_cb;
-	char     disasm_buf[64];
-	int      i;
-	uint8_t  op;
+	char disasm_buf[64];
+	int i;
+	uint8_t op;
 
 	if (dbg->cpu->bus->opts.headless == 0) {
 		io_cleanup();
@@ -6826,7 +6975,8 @@ dbg_interactive_loop(debugger_t *dbg)
 
 		dbg_run_command(dbg, input);
 
-		if (cmd == 's' || cmd == 'c' || port_strcmp(cmd_str, "s") == 0 ||
+		if (cmd == 's' || cmd == 'c' ||
+		    port_strcmp(cmd_str, "s") == 0 ||
 		    port_strcmp(cmd_str, "c") == 0) {
 			break;
 		}
@@ -7337,24 +7487,22 @@ cli_printf(const char *fmt, ...)
 	port_term_write_buf(buf, port_strlen(buf));
 }
 
-
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
 #define CYCLES_PER_MS (CLOCK_RATE_HZ / 1000)
 
 /* Globals read by dbg.c, term_ansi.c, and term_internal.h */
-struct bus  *g_bus  = NULL;
-struct cpu  *g_cpu  = NULL;
+struct bus *g_bus = NULL;
+struct cpu *g_cpu = NULL;
 #ifndef APPLE1_OMIT_DEBUGGER
-debugger_t  *g_dbg  = NULL;
+debugger_t *g_dbg = NULL;
 #endif
-char        *g_argv0 = NULL;
-bool         g_debug_enabled = false;
+char *g_argv0 = NULL;
+bool g_debug_enabled = false;
 
 static port_sig_flag g_debug_break = 0;
 
 /* Referenced by term_ansi.c for baud-rate throttle */
 extern uint32_t opt_baud;
-
 
 /* ------------------------------------------------------------------ */
 /*  Signal handler                                                      */
@@ -7373,9 +7521,10 @@ stderr_log(void *ctx, int level, const char *msg)
 	const char *prefix;
 
 	(void)ctx;
-	prefix = (level == BUS_LOG_ERROR) ? "Error" :
-	    (level == BUS_LOG_WARN)  ? "Warning" : "Info";
-	cli_error( "%s: %s\n", prefix, msg);
+	prefix = (level == BUS_LOG_ERROR) ? "Error"
+	    : (level == BUS_LOG_WARN)	  ? "Warning"
+					  : "Info";
+	cli_error("%s: %s\n", prefix, msg);
 #else
 	(void)ctx;
 	(void)level;
@@ -7391,34 +7540,34 @@ static void
 print_usage(const char *prog)
 {
 #ifndef APPLE1_OMIT_STDIO
-	cli_error(
-	    "Apple 1 Emulator (portable CLI build)\n"
-	    "Usage: %s [options] [flat_binary]\n"
-	    "\n"
-	    "Options:\n"
-	    "  -f <file>            Load configuration from <file>\n"
-	    "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
-	    "  -m <kb>              RAM size in KB (4-64, default 8)\n"
-	    "  -l <file>@<hex>      Load binary at hex address\n"
-	    "  -c                   Cap emulation speed to 1.023 MHz\n",
+	cli_error("Apple 1 Emulator (portable CLI build)\n"
+		  "Usage: %s [options] [flat_binary]\n"
+		  "\n"
+		  "Options:\n"
+		  "  -f <file>            Load configuration from <file>\n"
+		  "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
+		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
+		  "  -l <file>@<hex>      Load binary at hex address\n"
+		  "  -c                   Cap emulation speed to 1.023 MHz\n",
 	    prog);
-	cli_error(
-	    "  -p                   Disable PIA I/O throttling\n"
-	    "  -d                   Emulate DRAM refresh cycle stealing\n"
-	    "  -b                   Emulate keyboard bounce\n"
-	    "  -s                   Disable cold-boot RAM randomisation\n"
-	    "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
-	    "  -H                   Headless mode (no terminal rendering)\n"
-	    "  -g                   Enable debugger (pauses on start)\n");
-	cli_error(
-	    "  -t                   Enable CPU trace to stdout\n"
-	    "  -w <txt>             Load Woz Monitor text file\n"
-	    "  -a <rom>             Load ACI cassette card ROM\n"
-	    "  -e <wav>             Load WAV tape for ACI playback\n"
-	    "  -E <wav>             Save recorded ACI tape to WAV on exit\n"
-	    "  -B <baud>            Emulate terminal baud rate (e.g. 1200)\n"
-	    "  -k <rom>             Load Krusader assembler ROM\n"
-	    "  -h                   Show this help\n");
+	cli_error("  -p                   Disable PIA I/O throttling\n"
+		  "  -d                   Emulate DRAM refresh cycle stealing\n"
+		  "  -b                   Emulate keyboard bounce\n"
+		  "  -s                   Disable cold-boot RAM randomisation\n"
+		  "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
+		  "  -H                   Headless mode (no terminal "
+		  "rendering)\n"
+		  "  -g                   Enable debugger (pauses on start)\n");
+	cli_error("  -t                   Enable CPU trace to stdout\n"
+		  "  -w <txt>             Load Woz Monitor text file\n"
+		  "  -a <rom>             Load ACI cassette card ROM\n"
+		  "  -e <wav>             Load WAV tape for ACI playback\n"
+		  "  -E <wav>             Save recorded ACI tape to WAV on "
+		  "exit\n"
+		  "  -B <baud>            Emulate terminal baud rate (e.g. "
+		  "1200)\n"
+		  "  -k <rom>             Load Krusader assembler ROM\n"
+		  "  -h                   Show this help\n");
 #else
 	(void)prog;
 #endif
@@ -7453,7 +7602,7 @@ load_config_file(const char *path,
 
 	fp = port_vfs_default.open(path, PORT_VFS_READ);
 	if (fp == PORT_FILE_INVALID) {
-		cli_error( "Warning: cannot open config '%s'\n", path);
+		cli_error("Warning: cannot open config '%s'\n", path);
 		return;
 	}
 
@@ -7467,7 +7616,7 @@ load_config_file(const char *path,
 		len = port_strlen(line);
 		while (len > 0 &&
 		    (line[len - 1] == '\r' || line[len - 1] == '\n' ||
-			line[len - 1] == ' '  || line[len - 1] == '\t')) {
+			line[len - 1] == ' ' || line[len - 1] == '\t')) {
 			line[--len] = '\0';
 		}
 		ptr = line;
@@ -7481,7 +7630,7 @@ load_config_file(const char *path,
 			continue;
 		}
 		flag = ptr[1];
-		val  = ptr + 2;
+		val = ptr + 2;
 		while (*val == ' ' || *val == '\t') {
 			val++;
 		}
@@ -7505,14 +7654,14 @@ load_config_file(const char *path,
 		case 'l':
 			if (has_val != 0) {
 				char *dup = port_strdup(val);
-				char *at  = port_strchr(dup, '@');
+				char *at = port_strchr(dup, '@');
 				if (at != NULL) {
 					*at = '\0';
 					if (*bin_path != NULL)
 						port_free(*bin_path);
-					*bin_path    = port_strdup(dup);
-					*bin_address = (uint16_t)port_strtol(at + 1,
-					    NULL, 16);
+					*bin_path = port_strdup(dup);
+					*bin_address = (uint16_t)
+					    port_strtol(at + 1, NULL, 16);
 				}
 				port_free(dup);
 			}
@@ -7621,15 +7770,15 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 int
 main(int argc, char *argv[])
 {
-	uint8_t  static_ram[APPLE1_STATIC_RAM_SIZE];
+	uint8_t static_ram[APPLE1_STATIC_RAM_SIZE];
 	struct bus bus;
 #ifndef APPLE1_OMIT_DEBUGGER
 	debugger_t dbg;
 #endif
 	struct cpu cpu;
-	char     trace_line[160];
-	char     disasm_buf[64];
-	char     hex_bytes[16];
+	char trace_line[160];
+	char disasm_buf[64];
+	char hex_bytes[16];
 	uint32_t last_render;
 	uint32_t last_time;
 	struct expansion_card *aci_card;
@@ -7688,28 +7837,28 @@ main(int argc, char *argv[])
 #endif
 
 	/* Defaults */
-	aci_card       = NULL;
-	aci_path       = NULL;
-	bin_path       = NULL;
-	config_path    = NULL;
-	flat_bin_path  = NULL;
-	krusader_path  = NULL;
-	rom_path       = NULL;
+	aci_card = NULL;
+	aci_path = NULL;
+	bin_path = NULL;
+	config_path = NULL;
+	flat_bin_path = NULL;
+	krusader_path = NULL;
+	rom_path = NULL;
 	save_tape_path = NULL;
-	tape_path      = NULL;
+	tape_path = NULL;
 	wozmon_txt_path = NULL;
-	bin_address    = 0;
-	ram_size       = 8 * 1024; /* 8 KB default */
-	opt_baud       = 0;
-	opt_debug      = false;
+	bin_address = 0;
+	ram_size = 8 * 1024; /* 8 KB default */
+	opt_baud = 0;
+	opt_debug = false;
 	opt_emulate_bounce = false;
-	opt_emulate_dram   = false;
-	opt_flat_bus       = false;
-	opt_headless       = false;
+	opt_emulate_dram = false;
+	opt_flat_bus = false;
+	opt_headless = false;
 	opt_randomize_cold = true;
-	opt_throttle_pia   = true;
-	opt_trace          = false;
-	opt_uncapped       = true;
+	opt_throttle_pia = true;
+	opt_trace = false;
+	opt_uncapped = true;
 
 	/*
 	 * First pass: pick up -f <config> so it is loaded before other
@@ -7727,18 +7876,29 @@ main(int argc, char *argv[])
 
 	if (config_path != NULL) {
 		load_config_file(config_path,
-		    &rom_path, &ram_size, &bin_path, &bin_address,
-		    &opt_uncapped, &opt_throttle_pia,
-		    &opt_emulate_dram, &opt_emulate_bounce,
-		    &opt_randomize_cold, &opt_flat_bus,
-		    &opt_headless, &opt_debug, &opt_trace,
-		    &aci_path, &tape_path, &save_tape_path,
+		    &rom_path,
+		    &ram_size,
+		    &bin_path,
+		    &bin_address,
+		    &opt_uncapped,
+		    &opt_throttle_pia,
+		    &opt_emulate_dram,
+		    &opt_emulate_bounce,
+		    &opt_randomize_cold,
+		    &opt_flat_bus,
+		    &opt_headless,
+		    &opt_debug,
+		    &opt_trace,
+		    &aci_path,
+		    &tape_path,
+		    &save_tape_path,
 		    &krusader_path);
 	}
 
 	/* Second pass: command-line overrides */
-	while ((opt = port_getopt(argc, argv,
-	    "f:r:m:l:w:a:e:E:B:k:cFpdbsHgth")) != -1) {
+	while (
+	    (opt = port_getopt(argc, argv, "f:r:m:l:w:a:e:E:B:k:cFpdbsHgth")) !=
+	    -1) {
 		switch (opt) {
 		case 'f':
 			/* Already handled */
@@ -7756,14 +7916,14 @@ main(int argc, char *argv[])
 		}
 		case 'l': {
 			char *dup = port_strdup(port_optarg);
-			char *at  = port_strchr(dup, '@');
+			char *at = port_strchr(dup, '@');
 			if (at != NULL) {
 				*at = '\0';
 				if (bin_path != NULL)
 					port_free(bin_path);
-				bin_path    = port_strdup(dup);
-				bin_address = (uint16_t)port_strtol(at + 1,
-				    NULL, 16);
+				bin_path = port_strdup(dup);
+				bin_address =
+				    (uint16_t)port_strtol(at + 1, NULL, 16);
 			}
 			port_free(dup);
 			break;
@@ -7787,7 +7947,8 @@ main(int argc, char *argv[])
 			save_tape_path = port_strdup(port_optarg);
 			break;
 		case 'B': {
-			int baud = (int)port_strtoul(port_optarg, (void *)0, 10);
+			int baud =
+			    (int)port_strtoul(port_optarg, (void *)0, 10);
 			if (baud > 0)
 				opt_baud = (uint32_t)baud;
 			break;
@@ -7836,15 +7997,16 @@ main(int argc, char *argv[])
 	/* Positional arg = flat binary */
 	if (port_optind < argc) {
 		flat_bin_path = argv[port_optind];
-		opt_flat_bus  = true;
+		opt_flat_bus = true;
 	}
 
 	/* Validate RAM size */
 	if (opt_flat_bus != 0) {
 		if (APPLE1_STATIC_RAM_SIZE < 65536) {
-			cli_error(
-			    "Error: Flat bus option requires 64 KB of RAM, but "
-			    "emulator was compiled with APPLE1_STATIC_RAM_SIZE = %u KB.\n",
+			cli_error("Error: Flat bus option requires 64 KB of "
+				  "RAM, but "
+				  "emulator was compiled with "
+				  "APPLE1_STATIC_RAM_SIZE = %u KB.\n",
 			    APPLE1_STATIC_RAM_SIZE / 1024);
 			return (1);
 		}
@@ -7854,9 +8016,10 @@ main(int argc, char *argv[])
 		ram_size = APPLE1_DEFAULT_RAM_KB * 1024;
 	}
 	if (ram_size > APPLE1_STATIC_RAM_SIZE) {
-		cli_error(
-		    "Error: Requested RAM size (%u KB) exceeds maximum compiled static RAM size (%u KB).\n",
-		    ram_size / 1024, APPLE1_STATIC_RAM_SIZE / 1024);
+		cli_error("Error: Requested RAM size (%u KB) exceeds maximum "
+			  "compiled static RAM size (%u KB).\n",
+		    ram_size / 1024,
+		    APPLE1_STATIC_RAM_SIZE / 1024);
 		return (1);
 	}
 
@@ -7865,22 +8028,22 @@ main(int argc, char *argv[])
 
 	/* Initialise bus with static buffer — no malloc required */
 	if (bus_init(&bus, static_ram, ram_size) == false) {
-		cli_error( "Error: bus_init failed\n");
+		cli_error("Error: bus_init failed\n");
 		return (1);
 	}
-	bus.log     = stderr_log;
+	bus.log = stderr_log;
 	bus.log_ctx = NULL;
 
 	g_bus = &bus;
 
 	/* Apply options */
-	bus.opts.uncapped           = opt_uncapped;
-	bus.opts.throttle_pia       = opt_throttle_pia;
+	bus.opts.uncapped = opt_uncapped;
+	bus.opts.throttle_pia = opt_throttle_pia;
 	bus.opts.emulate_dram_refresh = opt_emulate_dram;
 	bus.opts.emulate_kbd_bounce = opt_emulate_bounce;
 	bus.opts.randomize_cold_boot = opt_randomize_cold;
-	bus.opts.flat_bus           = opt_flat_bus;
-	bus.opts.headless           = opt_headless;
+	bus.opts.flat_bus = opt_flat_bus;
+	bus.opts.headless = opt_headless;
 
 	/* Cold-boot RAM randomisation */
 	if (bus.opts.randomize_cold_boot != 0) {
@@ -7926,9 +8089,11 @@ main(int argc, char *argv[])
 #ifndef APPLE1_OMIT_DISKIO
 	if (wozmon_txt_path != NULL) {
 		has_run_addr = false;
-		run_addr     = 0;
-		if (bus_load_wozmon_txt(&bus, wozmon_txt_path,
-		    &run_addr, &has_run_addr) == false) {
+		run_addr = 0;
+		if (bus_load_wozmon_txt(&bus,
+			wozmon_txt_path,
+			&run_addr,
+			&has_run_addr) == false) {
 			bus_free(&bus);
 			return (1);
 		}
@@ -7947,7 +8112,8 @@ main(int argc, char *argv[])
 		aci_card = aci_create(&bus, aci_path);
 		if (aci_card != NULL) {
 			if (tape_path != NULL) {
-				if (aci_load_tape(aci_card, tape_path) == false) {
+				if (aci_load_tape(aci_card, tape_path) ==
+				    false) {
 					aci_free(aci_card);
 					bus_free(&bus);
 					return (1);
@@ -7955,9 +8121,9 @@ main(int argc, char *argv[])
 			}
 			bus_add_card(&bus, aci_card);
 		} else if (tape_path != NULL || save_tape_path != NULL) {
-			cli_error(
-			    "Error: ACI tape operations requested but ACI "
-			    "card failed to load.\n");
+			cli_error("Error: ACI tape operations requested but "
+				  "ACI "
+				  "card failed to load.\n");
 			bus_free(&bus);
 			return (1);
 		}
@@ -8001,13 +8167,12 @@ main(int argc, char *argv[])
 	}
 
 	cycle_accumulator = 0;
-	last_time   = port_gettime_us();
+	last_time = port_gettime_us();
 	last_render = port_gettime_us();
-	prev_pc    = 0xFFFF;
+	prev_pc = 0xFFFF;
 	loop_count = 0;
 
 	for (;;) {
-
 		/* Quit signal received (Ctrl-C) */
 		if (g_quit_flag != 0) {
 			if (g_debug_enabled != 0) {
@@ -8019,8 +8184,7 @@ main(int argc, char *argv[])
 		}
 
 		/* When paused / powered off: just sleep */
-		if (opt_headless == false &&
-		    term_is_powered() == false) {
+		if (opt_headless == false && term_is_powered() == false) {
 			port_sleep_us(10000UL); /* 10ms */
 			continue;
 		}
@@ -8052,34 +8216,47 @@ main(int argc, char *argv[])
 			uint8_t op;
 			int len;
 
-			op  = bus_read(&bus, cpu.pc);
+			op = bus_read(&bus, cpu.pc);
 			len = cpu_disassemble(&bus, cpu.pc, disasm_buf);
 
 			if (len == 1) {
-				port_snprintf(hex_bytes, sizeof(hex_bytes),
-				    "%02X      ", op);
+				port_snprintf(hex_bytes,
+				    sizeof(hex_bytes),
+				    "%02X      ",
+				    op);
 			} else if (len == 2) {
-				port_snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes,
+				    sizeof(hex_bytes),
 				    "%02X %02X   ",
-				    op, bus_read(&bus, cpu.pc + 1));
+				    op,
+				    bus_read(&bus, cpu.pc + 1));
 			} else {
-				port_snprintf(hex_bytes, sizeof(hex_bytes),
+				port_snprintf(hex_bytes,
+				    sizeof(hex_bytes),
 				    "%02X %02X %02X",
-				    op, bus_read(&bus, cpu.pc + 1),
+				    op,
+				    bus_read(&bus, cpu.pc + 1),
 				    bus_read(&bus, cpu.pc + 2));
 			}
-			port_snprintf(trace_line, sizeof(trace_line),
+			port_snprintf(trace_line,
+			    sizeof(trace_line),
 			    "$%04X  %s  %-20s A:%02X X:%02X Y:%02X "
 			    "SP:%02X P:%02X",
-			    cpu.pc, hex_bytes, disasm_buf,
-			    cpu.a, cpu.x, cpu.y, cpu.s, cpu.p);
+			    cpu.pc,
+			    hex_bytes,
+			    disasm_buf,
+			    cpu.a,
+			    cpu.x,
+			    cpu.y,
+			    cpu.s,
+			    cpu.p);
 			cli_printf("%s\n", trace_line);
 		}
 #endif
 
 		/* Step CPU */
 #ifndef APPLE1_OMIT_DEBUGGER
-		bus.access_cb     = dbg_check_access;
+		bus.access_cb = dbg_check_access;
 		bus.access_cb_ctx = &dbg;
 		dbg.current_instruction_pc = cpu.pc;
 #endif
@@ -8092,8 +8269,8 @@ main(int argc, char *argv[])
 			/* Tick expansion cards */
 			for (j = 0; j < bus.num_cards; j++) {
 				if (bus.cards[j]->tick != NULL) {
-					bus.cards[j]->tick(
-					    bus.cards[j]->ctx, cycles);
+					bus.cards[j]->tick(bus.cards[j]->ctx,
+					    cycles);
 				}
 			}
 		}
@@ -8105,12 +8282,12 @@ main(int argc, char *argv[])
 				if (loop_count >= 3) {
 					if (cpu.pc == 0x3469) {
 						cli_printf("Klaus Dormann "
-						       "functional test: "
-						       "PASS\n");
+							   "functional test: "
+							   "PASS\n");
 					} else {
-						cli_error(
-						    "FAIL: cpu trapped at "
-						    "$%04X\n",
+						cli_error("FAIL: cpu trapped "
+							  "at "
+							  "$%04X\n",
 						    cpu.pc);
 						cleanup_cards(&bus,
 						    save_tape_path);
@@ -8139,13 +8316,13 @@ main(int argc, char *argv[])
 			uint32_t expected_us;
 
 			current_time = port_gettime_us();
-			elapsed_us   = current_time - last_time;
-			expected_us  = 1000UL; /* 1 ms = 1000 us */
+			elapsed_us = current_time - last_time;
+			expected_us = 1000UL; /* 1 ms = 1000 us */
 
 			if (elapsed_us < expected_us) {
 				port_sleep_us(expected_us - elapsed_us);
 			}
-			last_time         = port_gettime_us();
+			last_time = port_gettime_us();
 			cycle_accumulator = 0;
 		}
 

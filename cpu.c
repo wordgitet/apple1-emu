@@ -1,29 +1,29 @@
-#include "port.h"
 #include "cpu.h"
+#include "port.h"
 
 /* ------------------------------------------------------------------ */
 /* Memory helpers                                                       */
 /* ------------------------------------------------------------------ */
 
-static inline uint8_t
+PORT_STATIC_INLINE uint8_t
 read_byte(struct cpu *cpu, uint16_t addr)
 {
 	return (bus_read(cpu->bus, addr));
 }
 
-static inline void
+PORT_STATIC_INLINE void
 write_byte(struct cpu *cpu, uint16_t addr, uint8_t val)
 {
 	bus_write(cpu->bus, addr, val);
 }
 
-static inline void
+PORT_STATIC_INLINE void
 write_byte_dummy(struct cpu *cpu, uint16_t addr, uint8_t val)
 {
 	bus_write_ext(cpu->bus, addr, val, true);
 }
 
-static inline uint16_t
+PORT_STATIC_INLINE uint16_t
 read_word(struct cpu *cpu, uint16_t addr)
 {
 	uint8_t lo = read_byte(cpu, addr);
@@ -36,28 +36,28 @@ read_word(struct cpu *cpu, uint16_t addr)
 /* Stack helpers                                                        */
 /* ------------------------------------------------------------------ */
 
-static inline void
+PORT_STATIC_INLINE void
 push_byte(struct cpu *cpu, uint8_t val)
 {
 	write_byte(cpu, 0x0100 + cpu->s, val);
 	cpu->s--;
 }
 
-static inline uint8_t
+PORT_STATIC_INLINE uint8_t
 pull_byte(struct cpu *cpu)
 {
 	cpu->s++;
 	return (read_byte(cpu, 0x0100 + cpu->s));
 }
 
-static inline void
+PORT_STATIC_INLINE void
 push_word(struct cpu *cpu, uint16_t val)
 {
 	push_byte(cpu, (val >> 8) & 0xFF);
 	push_byte(cpu, val & 0xFF);
 }
 
-static inline uint16_t
+PORT_STATIC_INLINE uint16_t
 pull_word(struct cpu *cpu)
 {
 	uint8_t lo = pull_byte(cpu);
@@ -70,7 +70,7 @@ pull_word(struct cpu *cpu)
 /* Flag helpers                                                         */
 /* ------------------------------------------------------------------ */
 
-static inline void
+PORT_STATIC_INLINE void
 set_flag(struct cpu *cpu, uint8_t flag, bool cond)
 {
 	if (cond)
@@ -79,7 +79,7 @@ set_flag(struct cpu *cpu, uint8_t flag, bool cond)
 		cpu->p &= ~flag;
 }
 
-static inline void
+PORT_STATIC_INLINE void
 update_nz(struct cpu *cpu, uint8_t val)
 {
 	set_flag(cpu, FLAG_ZERO, val == 0);
@@ -369,7 +369,8 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 	}
 	result = (high << 4) | (low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW,
+	set_flag(cpu,
+	    FLAG_OVERFLOW,
 	    (~(cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high > 9) {
 		result -= 0xA0; /* 10 * 16 */
@@ -398,7 +399,8 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 	}
 	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
-	set_flag(cpu, FLAG_OVERFLOW,
+	set_flag(cpu,
+	    FLAG_OVERFLOW,
 	    ((cpu->a ^ m) & (cpu->a ^ result) & 0x80) != 0);
 	if (high < 0) {
 		result += 0xA0; /* 10 * 16 */
@@ -1123,8 +1125,8 @@ op_jsr(struct cpu *cpu)
 	uint8_t hi;
 	uint8_t lo;
 
-	lo = read_byte(cpu, cpu->pc++); /* cycle 2: addr low */
-	read_byte(cpu, 0x0100 + cpu->s);	/* cycle 3: dummy stack read */
+	lo = read_byte(cpu, cpu->pc++);	 /* cycle 2: addr low */
+	read_byte(cpu, 0x0100 + cpu->s); /* cycle 3: dummy stack read */
 	push_word(cpu,
 	    cpu->pc); /* cycles 4-5: push return addr (PC-1 already advanced) */
 	hi = read_byte(cpu, cpu->pc); /* cycle 6: addr high */
@@ -2365,7 +2367,8 @@ op_jam(struct cpu *cpu)
 	cpu->halted = true;
 	{
 		char msg[128];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "\nJAM: struct cpu halted by opcode 0x%02X at PC=0x%04X. "
 		    "RESET required.\n",
 		    opcode,
@@ -2497,7 +2500,8 @@ op_xaa(struct cpu *cpu)
 	uint8_t magic, val;
 
 	val = read_byte(cpu, cpu->pc++);
-	magic = 0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	magic =
+	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 	cpu->a = (cpu->a | magic) & cpu->x & val;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -2510,7 +2514,8 @@ op_lxa(struct cpu *cpu)
 	uint8_t magic, val;
 
 	val = read_byte(cpu, cpu->pc++);
-	magic = 0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
+	magic =
+	    0xEE; /* UNSTABLE: varies by chip/temp. 0xEE is the standard emulator approximation. */
 	cpu->a = cpu->x = (cpu->a | magic) & val;
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
@@ -2953,7 +2958,8 @@ cpu_step(struct cpu *cpu)
 		cpu->halted = true;
 		{
 			char msg[128];
-			port_snprintf(msg, sizeof(msg),
+			port_snprintf(msg,
+			    sizeof(msg),
 			    "\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
 			    "RESET required.\n",
 			    opcode,

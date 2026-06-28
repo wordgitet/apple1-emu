@@ -11,14 +11,20 @@ int
 main(void)
 {
 	struct bus bus;
+	const char *tmp_txt;
+	FILE *f;
+	uint16_t run_addr;
+	bool has_run;
+	bool ok;
+
 	if (bus_init(&bus, test_ram, 4096) == false) {
 		fprintf(stderr, "Failed to init bus\n");
 		return (1);
 	}
 
 	/* Create a temporary wozmon dump */
-	const char *tmp_txt = "test_wozmon.txt";
-	FILE *f = fopen(tmp_txt, "w");
+	tmp_txt = "test_wozmon.txt";
+	f = fopen(tmp_txt, "w");
 	if (f == NULL)
 		return (1);
 
@@ -26,13 +32,13 @@ main(void)
 	fprintf(f, "0300: A9 01 8D 00  04\n");
 	fprintf(f, "0305: A9 02 8D 01 04\n");
 	fprintf(f, "  # A comment\n");
-	fprintf(f, "030AR\n"); // Just R with address
+	fprintf(f, "030AR\n"); /* Just R with address */
 	fclose(f);
 
-	uint16_t run_addr = 0;
-	bool has_run = false;
+	run_addr = 0;
+	has_run = false;
 
-	bool ok = bus_load_wozmon_txt(&bus, tmp_txt, &run_addr, &has_run);
+	ok = bus_load_wozmon_txt(&bus, tmp_txt, &run_addr, &has_run);
 	assert(ok == true);
 	assert(has_run == true);
 	assert(run_addr == 0x030A);
@@ -51,10 +57,10 @@ main(void)
 
 	remove(tmp_txt);
 
-	// Create another dump with merged address+data and turbo/X blocks to test edge cases
+	/* Create another dump with merged address+data and turbo/X blocks to test edge cases */
 	f = fopen(tmp_txt, "w");
 	fprintf(f, "0200:00 01 02\n");
-	fprintf(f, "X03000203:040506\n"); // X marker and merged address
+	fprintf(f, "X03000203:040506\n"); /* X marker and merged address */
 	fclose(f);
 
 	ok = bus_load_wozmon_txt(&bus, tmp_txt, &run_addr, &has_run);

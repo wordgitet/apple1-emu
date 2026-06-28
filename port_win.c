@@ -1,10 +1,9 @@
 #include "port.h"
-
-#include <windows.h>
 #include <conio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
@@ -274,14 +273,12 @@ win_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs win_vfs = {
-	win_xOpen,
+static struct port_vfs win_vfs = { win_xOpen,
 	win_xClose,
 	win_xRead,
 	win_xSize,
 	win_xSeek,
 	win_xWrite,
-	win_xReadLine
-};
+	win_xReadLine };
 
 struct port_vfs *g_port_vfs = &win_vfs;

@@ -1,5 +1,5 @@
-#include "port.h"
 #include "FreeRTOS.h"
+#include "port.h"
 #include "task.h"
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
@@ -162,14 +162,12 @@ freertos_xReadLine(void *file, char *buf, port_size_t size)
 	return (0);
 }
 
-static struct port_vfs freertos_vfs = {
-	freertos_xOpen,
+static struct port_vfs freertos_vfs = { freertos_xOpen,
 	freertos_xClose,
 	freertos_xRead,
 	freertos_xSize,
 	freertos_xSeek,
 	freertos_xWrite,
-	freertos_xReadLine
-};
+	freertos_xReadLine };
 
 struct port_vfs *g_port_vfs = &freertos_vfs;

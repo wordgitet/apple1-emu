@@ -1,7 +1,7 @@
-#include "port.h"
 #include "bus.h"
 #include "embedded_roms.h"
 #include "io.h"
+#include "port.h"
 #include "term_apple1.h"
 
 static void
@@ -17,7 +17,7 @@ delay_microseconds(long us)
 	}
 }
 
-static inline bool
+PORT_STATIC_INLINE bool
 bus_is_ram_address(struct bus *bus, uint16_t address)
 {
 	if (bus->ram_size == 8192) {
@@ -39,7 +39,7 @@ bus_is_ram_address(struct bus *bus, uint16_t address)
  * Without this translation any access to the upper window would index far
  * beyond the end of the allocated buffer and corrupt host memory.
  */
-static inline uint16_t
+PORT_STATIC_INLINE uint16_t
 bus_translate_ram_address(struct bus *bus, uint16_t address)
 {
 	if (bus->ram_size == 8192) {
@@ -77,11 +77,11 @@ bus_free(struct bus *bus)
 	bus->ram = NULL;
 }
 
-
-
 bool
 bus_load_bin_buf(struct bus *bus,
-    const uint8_t *data, size_t len, uint16_t address)
+    const uint8_t *data,
+    size_t len,
+    uint16_t address)
 {
 	uint32_t addr;
 	uint32_t i;
@@ -95,10 +95,13 @@ bus_load_bin_buf(struct bus *bus,
 		if (addr > 0xFFFF ||
 		    bus_is_ram_address(bus, (uint16_t)addr) == 0) {
 			char msg[256];
-			port_snprintf(msg, sizeof(msg),
+			port_snprintf(msg,
+			    sizeof(msg),
 			    "Error: Binary buffer (%lu bytes) at 0x%04X "
 			    "exceeds RAM size (%u KB).",
-			    (unsigned long)len, address, bus->ram_size / 1024);
+			    (unsigned long)len,
+			    address,
+			    bus->ram_size / 1024);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			return (false);
 		}
@@ -121,15 +124,18 @@ bus_load_bin_buf(struct bus *bus,
 
 	{
 		char msg[256];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Loaded buffer (%lu bytes) into RAM at 0x%04X-0x%04X",
-		    (unsigned long)len, address, (uint16_t)(address + len - 1));
+		    (unsigned long)len,
+		    address,
+		    (uint16_t)(address + len - 1));
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
 	}
 	return (true);
 }
 
-static inline int
+PORT_STATIC_INLINE int
 hex_val(char c)
 {
 	if (c >= '0' && c <= '9')
@@ -143,8 +149,10 @@ hex_val(char c)
 
 bool
 bus_load_wozmon_txt_buf(struct bus *bus,
-    const char *text, size_t len,
-    uint16_t *run_address, bool *has_run_address)
+    const char *text,
+    size_t len,
+    uint16_t *run_address,
+    bool *has_run_address)
 {
 	char *cleaned;
 	size_t addr_digits;
@@ -171,7 +179,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 	/* Strip inline comments */
 	cleaned = port_malloc(len + 1);
 	if (cleaned == NULL) {
-		BUS_LOG(bus, BUS_LOG_ERROR, "Error: Failed to allocate wozmon parser buffer");
+		BUS_LOG(bus,
+		    BUS_LOG_ERROR,
+		    "Error: Failed to allocate wozmon parser buffer");
 		return (false);
 	}
 
@@ -191,8 +201,7 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 			in_comment = true;
 			continue;
 		}
-		if (text[i] == '/' && i + 1 < len &&
-		    text[i + 1] == '/') {
+		if (text[i] == '/' && i + 1 < len && text[i + 1] == '/') {
 			in_comment = true;
 			continue;
 		}
@@ -227,7 +236,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 		if (port_toupper((unsigned char)c) == 'X' && i + 1 < w &&
 		    port_isxdigit((unsigned char)cleaned[i + 1])) {
 			i++;
-			while (i < w && port_isxdigit((unsigned char)cleaned[i]))
+			while (
+			    i < w && port_isxdigit((unsigned char)cleaned[i]))
 				i++;
 			continue;
 		}
@@ -239,13 +249,14 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 		if (port_isxdigit((unsigned char)c)) {
 			hex_start = i;
-			while (i < w && port_isxdigit((unsigned char)cleaned[i]))
+			while (
+			    i < w && port_isxdigit((unsigned char)cleaned[i]))
 				i++;
 			hex_len = i - hex_start;
 
 			peek = i;
-			while (
-			    peek < w && port_isspace((unsigned char)cleaned[peek]))
+			while (peek < w &&
+			    port_isspace((unsigned char)cleaned[peek]))
 				peek++;
 
 			if (i < w &&
@@ -253,13 +264,14 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				/* run command */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
-					val =
-					    (hex_val(cleaned[hex_start + j])
-						<< 4) |
+					val = (hex_val(cleaned[hex_start + j])
+						  << 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
+						bus->ram[bus_translate_ram_address(
+						    bus,
+						    current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -269,8 +281,9 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 					    &cleaned[hex_start + data_len],
 					    4);
 					addr_str[4] = '\0';
-					raddr = (uint16_t)
-					    port_strtol(addr_str, NULL, 16);
+					raddr = (uint16_t)port_strtol(addr_str,
+					    NULL,
+					    16);
 					if (run_address != NULL)
 						*run_address = raddr;
 					if (has_run_address != NULL)
@@ -284,13 +297,14 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				/* Address change (and possibly some data bytes before it in merged strings) */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
-					val =
-					    (hex_val(cleaned[hex_start + j])
-						<< 4) |
+					val = (hex_val(cleaned[hex_start + j])
+						  << 4) |
 					    hex_val(cleaned[hex_start + j + 1]);
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
-						bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
+						bus->ram[bus_translate_ram_address(
+						    bus,
+						    current_addr)] = val;
 					}
 					current_addr++;
 					total_bytes++;
@@ -311,11 +325,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 			/* Data bytes */
 			for (j = 0; j + 1 < hex_len; j += 2) {
-				val =
-				    (hex_val(cleaned[hex_start + j]) << 4) |
+				val = (hex_val(cleaned[hex_start + j]) << 4) |
 				    hex_val(cleaned[hex_start + j + 1]);
-				if (bus_is_ram_address(bus, current_addr) != 0) {
-					bus->ram[bus_translate_ram_address(bus, current_addr)] = val;
+				if (bus_is_ram_address(bus, current_addr) !=
+				    0) {
+					bus->ram[bus_translate_ram_address(bus,
+					    current_addr)] = val;
 				}
 				current_addr++;
 				total_bytes++;
@@ -335,7 +350,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 	{
 		char msg[256];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Loaded %d bytes via Woz Monitor text format",
 		    total_bytes);
 		BUS_LOG(bus, BUS_LOG_INFO, msg);
@@ -366,8 +382,10 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 		f = port_vfs_default.open(rom_path, PORT_VFS_READ);
 		if (f == NULL) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
-			    "Warning: '%s' not found, using embedded Wozmon ROM.",
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Warning: '%s' not found, using embedded Wozmon "
+			    "ROM.",
 			    rom_path);
 			BUS_LOG(bus, BUS_LOG_WARN, msg);
 #ifndef APPLE1_OMIT_WOZMON
@@ -375,7 +393,9 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 			bus->rom_loaded = true;
 			return (true);
 #else
-			BUS_LOG(bus, BUS_LOG_ERROR, "Error: Monitor ROM omitted");
+			BUS_LOG(bus,
+			    BUS_LOG_ERROR,
+			    "Error: Monitor ROM omitted");
 			return (false);
 #endif
 		}
@@ -384,10 +404,12 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 
 		if (size != 256) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
+			port_snprintf(msg,
+			    sizeof(msg),
 			    "Error: ROM file '%s' is %ld bytes. "
 			    "Apple 1 Monitor ROM must be exactly 256 bytes.",
-			    rom_path, size);
+			    rom_path,
+			    size);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
 			return (false);
@@ -397,8 +419,10 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 		if (port_vfs_default.read(f, bus->rom, 256, &read_bytes) != 0 ||
 		    read_bytes != 256) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
-			    "Error: Failed to read 256 bytes from '%s'", rom_path);
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Error: Failed to read 256 bytes from '%s'",
+			    rom_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
 			return (false);
@@ -409,7 +433,9 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 		return (true);
 	}
 #else
-	BUS_LOG(bus, BUS_LOG_ERROR, "Error: Disk I/O disabled, cannot load ROM from file.");
+	BUS_LOG(bus,
+	    BUS_LOG_ERROR,
+	    "Error: Disk I/O disabled, cannot load ROM from file.");
 	return (false);
 #endif
 }
@@ -427,8 +453,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 	f = port_vfs_default.open(bin_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Could not open binary file '%s'", bin_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Could not open binary file '%s'",
+		    bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
@@ -437,8 +465,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 
 	if (size <= 0) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Binary file '%s' is empty.", bin_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Binary file '%s' is empty.",
+		    bin_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (false);
@@ -456,8 +486,10 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 		if (port_vfs_default.read(f, buf, size, &read_bytes) != 0 ||
 		    read_bytes != (port_size_t)size) {
 			char msg[512];
-			port_snprintf(msg, sizeof(msg),
-			    "Error: Failed to read entire binary file '%s'", bin_path);
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Error: Failed to read entire binary file '%s'",
+			    bin_path);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_free(buf);
 			port_vfs_default.close(f);
@@ -486,8 +518,10 @@ bus_load_wozmon_txt(struct bus *bus,
 	f = port_vfs_default.open(txt_path, PORT_VFS_READ);
 	if (f == NULL) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Could not open text file '%s'", txt_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Could not open text file '%s'",
+		    txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		return (false);
 	}
@@ -496,8 +530,10 @@ bus_load_wozmon_txt(struct bus *bus,
 
 	if (size <= 0) {
 		char msg[512];
-		port_snprintf(msg, sizeof(msg),
-		    "Error: Text file '%s' is empty.", txt_path);
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Text file '%s' is empty.",
+		    txt_path);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (false);
@@ -518,8 +554,11 @@ bus_load_wozmon_txt(struct bus *bus,
 	content[read_bytes] = '\0';
 	port_vfs_default.close(f);
 
-	ret = bus_load_wozmon_txt_buf(bus, content, read_bytes,
-	    run_address, has_run_address);
+	ret = bus_load_wozmon_txt_buf(bus,
+	    content,
+	    read_bytes,
+	    run_address,
+	    has_run_address);
 	port_free(content);
 	return (ret);
 }
@@ -651,7 +690,10 @@ bus_read(struct bus *bus, uint16_t address)
 			}
 			if (card_hit == 0) {
 				if (bus_is_ram_address(bus, address) != 0)
-					bus->last_bus_value = bus->ram[bus_translate_ram_address(bus, address)];
+					bus->last_bus_value =
+					    bus->ram[bus_translate_ram_address(
+						bus,
+						address)];
 				result = bus->last_bus_value;
 			}
 		}
@@ -716,7 +758,8 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 			}
 			if (card_hit == 0 &&
 			    bus_is_ram_address(bus, address) != 0)
-				bus->ram[bus_translate_ram_address(bus, address)] = value;
+				bus->ram[bus_translate_ram_address(bus,
+				    address)] = value;
 		}
 	}
 
@@ -756,8 +799,7 @@ bus_update_keyboard(struct bus *bus)
 	 * $D010 read) - no toggling, no fake rising edges.
 	 */
 #ifndef APPLE1_OMIT_KBD_BOUNCE
-	if (bus->opts.emulate_kbd_bounce != 0 &&
-	    bus->kbd_bounce_cycles > 0) {
+	if (bus->opts.emulate_kbd_bounce != 0 && bus->kbd_bounce_cycles > 0) {
 		bus->kbd_bounce_cycles--;
 		return; /* encoder still settling - ignore new input */
 	}
@@ -807,7 +849,8 @@ bus_add_card(struct bus *bus, struct expansion_card *card)
 		bus->cards[bus->num_cards++] = card;
 	} else {
 		char msg[128];
-		port_snprintf(msg, sizeof(msg),
+		port_snprintf(msg,
+		    sizeof(msg),
 		    "Error: Maximum number of expansion cards (%d) exceeded.",
 		    APPLE1_MAX_CARDS);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);

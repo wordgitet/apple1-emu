@@ -1,12 +1,11 @@
 #ifndef TERM_INTERNAL_H
 #define TERM_INTERNAL_H
 
-#include <SDL3/SDL.h>
-#include "port.h"
-
 #include "bus.h"
 #include "cpu.h"
 #include "dbg.h"
+#include "port.h"
+#include <SDL3/SDL.h>
 
 /* ── CONSTANTS & PALETTES ────────────────────────────────────────────────── */
 #define CELL_W	      28

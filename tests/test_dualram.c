@@ -44,23 +44,23 @@ test_pia_mirroring(void)
 		exit(1);
 	}
 
-	// 1. Write to D011 (KBDCR) and read from mirrors
+	/* 1. Write to D011 (KBDCR) and read from mirrors */
 	bus_write(&bus, 0xD011, 0x55);
 	assert(bus_read(&bus, 0xD011) == 0x55);
 	assert(bus_read(&bus, 0xD0F1) == 0x55);
 	assert(bus_read(&bus, 0xDF11) == 0x55);
 
-	// 2. Write to mirror D0F1 and read from D011 / DF11
+	/* 2. Write to mirror D0F1 and read from D011 / DF11 */
 	bus_write(&bus, 0xD0F1, 0x33);
 	assert(bus_read(&bus, 0xD011) == 0x33);
 	assert(bus_read(&bus, 0xDF11) == 0x33);
 
-	// 3. Write to D013 (DSPCR) and read from mirrors
+	/* 3. Write to D013 (DSPCR) and read from mirrors */
 	bus_write(&bus, 0xD013, 0x66);
 	assert(bus_read(&bus, 0xD013) == 0xE6);
 	assert(bus_read(&bus, 0xDF13) == 0xE6);
 
-	// 4. Write to mirror DF13 and read from D013
+	/* 4. Write to mirror DF13 and read from D013 */
 	bus_write(&bus, 0xDF13, 0x22);
 	assert(bus_read(&bus, 0xD013) == 0xA2);
 
@@ -71,9 +71,9 @@ test_pia_mirroring(void)
 int
 main(void)
 {
-	printf("Starting Dual-Bank 8KB RAM Tests...\n");
-
 	struct bus bus;
+
+	printf("Starting Dual-Bank 8KB RAM Tests...\n");
 
 	/* Initialize with 8 KB (8192 bytes) RAM size */
 	if (bus_init(&bus, test_ram, 8192) == false) {
@@ -81,13 +81,13 @@ main(void)
 		return (1);
 	}
 
-	// Standard Apple-1 / Replica dual-bank RAM: low 4 KB plus high 4 KB.
+	/* Standard Apple-1 / Replica dual-bank RAM: low 4 KB plus high 4 KB. */
 	expect_writable(&bus, 0x0000, 0x11);
 	expect_writable(&bus, 0x0FFF, 0x12);
 	expect_writable(&bus, 0xE000, 0x13);
 	expect_writable(&bus, 0xEFFF, 0x14);
 
-	// The gap between the two banks is not RAM.
+	/* The gap between the two banks is not RAM. */
 	expect_unmapped(&bus, 0x1000, 0x21);
 	expect_unmapped(&bus, 0x1FFF, 0x22);
 	expect_unmapped(&bus, 0x7FFF, 0x23);
@@ -96,7 +96,7 @@ main(void)
 
 	printf("Test PASS: Dual-Bank 8KB RAM\n");
 
-	// Run mirroring test
+	/* Run mirroring test */
 	test_pia_mirroring();
 
 	return (0);

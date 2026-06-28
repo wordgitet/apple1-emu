@@ -1,10 +1,9 @@
 #ifndef DBG_H
 #define DBG_H
 
-#include "port.h"
 #include "apple1limit.h"
-
 #include "cpu.h"
+#include "port.h"
 
 typedef enum { WP_READ = 1, WP_WRITE = 2, WP_ACCESS = 3 } wp_type_t;
 
@@ -23,7 +22,7 @@ typedef struct {
 	watchpoint_t watchpoints[APPLE1_MAX_WATCHPOINTS];
 	int num_watchpoints;
 	bool step_mode;
-	int  repause;
+	int repause;
 	uint16_t current_instruction_pc;
 	dbg_out_cb_t out;
 	void *out_ctx;

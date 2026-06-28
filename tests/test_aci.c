@@ -28,13 +28,15 @@ queue_key(char c)
 static void
 queue_wozmon_command(const char *cmd)
 {
-	for (const char *p = cmd; *p; p++) {
+	const char *p;
+
+	for (p = cmd; *p; p++) {
 		queue_key(*p);
 	}
-	queue_key('\r'); // Apple-1 Return is CR
+	queue_key('\r'); /* Apple-1 Return is CR */
 }
 
-// IO Mock implementations
+/* IO Mock implementations */
 void
 io_init(void)
 {
@@ -113,6 +115,9 @@ run_roundtrip_test(const char *tape_path,
 	int slice_cycles;
 	uint32_t last_transition_count;
 	bool matched;
+	uint8_t c;
+	struct expansion_card *card;
+	uint32_t now;
 
 	printf("Running ACI roundtrip test for path: %s\n", tape_path);
 
@@ -163,11 +168,11 @@ run_roundtrip_test(const char *tape_path,
 		current_slice = 0;
 		while (current_slice < slice_cycles && cpu.halted == false) {
 			bus_update_keyboard(&bus);
-			uint8_t c = cpu_step(&cpu);
+			c = cpu_step(&cpu);
 			current_slice += c;
 
 			for (i = 0; i < bus.num_cards; i++) {
-				struct expansion_card *card = bus.cards[i];
+				card = bus.cards[i];
 				if (card->tick != NULL) {
 					card->tick(card->ctx, c);
 				}
@@ -175,7 +180,7 @@ run_roundtrip_test(const char *tape_path,
 		}
 		total_cycles += current_slice;
 
-		uint32_t now = aci_get_recorded_count(aci_card);
+		now = aci_get_recorded_count(aci_card);
 		if (now != last_transition_count) {
 			last_transition_count = now;
 			cycles_since_growth = 0;
@@ -272,11 +277,11 @@ run_roundtrip_test(const char *tape_path,
 		current_slice = 0;
 		while (current_slice < read_slice && read_cpu.halted == false) {
 			bus_update_keyboard(&read_bus);
-			uint8_t c = cpu_step(&read_cpu);
+			c = cpu_step(&read_cpu);
 			current_slice += c;
 
 			for (i = 0; i < read_bus.num_cards; i++) {
-				struct expansion_card *card = read_bus.cards[i];
+				card = read_bus.cards[i];
 				if (card->tick != NULL) {
 					card->tick(card->ctx, c);
 				}
@@ -316,14 +321,15 @@ main(void)
 	const uint16_t from = 0x0300;
 	const uint16_t to = 0x033F;
 	const int size = (to - from) + 1;
-
-	// Pattern that avoids trivial constant runs
+	int i;
 	uint8_t pattern[64];
-	for (int i = 0; i < size; i++) {
+
+	/* Pattern that avoids trivial constant runs */
+	for (i = 0; i < size; i++) {
 		pattern[i] = (uint8_t)((0xA5 ^ (i * 37)) & 0xFF);
 	}
 
-	// WAV roundtrip test (only supported format)
+	/* WAV roundtrip test (only supported format) */
 	if (run_roundtrip_test("/tmp/test_tape.wav", pattern, size, from, to) !=
 	    0) {
 		return (1);
