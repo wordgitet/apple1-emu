@@ -13,7 +13,8 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 static bool reset_pending = false;
 
-uint32_t opt_baud = 0;
+/* Shared global authentic speed setting - defined in main.c */
+extern uint32_t opt_baud;
 
 static uint32_t last_write_us = 0;
 

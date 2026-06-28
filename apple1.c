@@ -7563,8 +7563,8 @@ static int cursor_y = 0;
 static bool raw_mode_active = false;
 static bool reset_pending = false;
 
-/* Shared global authentic speed setting */
-uint32_t opt_baud = 0;
+/* Shared global authentic speed setting - defined in main.c */
+extern uint32_t opt_baud;
 
 /*
  * Timestamp of the most recent character written to the display, in
@@ -7899,7 +7899,8 @@ debugger_t *g_dbg = NULL;
 char *g_argv0 = NULL;
 bool g_debug_enabled = false;
 
-extern uint32_t opt_baud;
+/* Shared global authentic speed setting */
+uint32_t opt_baud = 0;
 
 /* ------------------------------------------------------------------ */
 /*  Signal handler                                                      */
@@ -8262,7 +8263,6 @@ main(int argc, char *argv[])
 	wozmon_txt_path = NULL;
 	bin_address = 0;
 	ram_size = 8 * 1024; /* 8 KB default */
-	opt_baud = 0;
 	opt_debug = false;
 	opt_emulate_bounce = false;
 	opt_emulate_dram = false;
