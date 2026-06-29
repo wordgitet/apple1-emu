@@ -24,7 +24,7 @@ CORE_SRC       = cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
 CORE_NO_IO_SRC = cpu.c bus.c aci.c krusader.c disasm.c dbg.c
 
 # Object files for the main executable
-OBJ = main.o cpu.o bus.o io.o aci.o krusader.o disasm.o dbg.o term.o port.o
+OBJ = main.o cli_config.o cpu.o bus.o io.o aci.o krusader.o disasm.o dbg.o term.o port.o
 
 all: apple1
 
@@ -43,7 +43,7 @@ term.o: term.c term_ansi.c term_dos.c term_apple1.h
 	$(CC) $(BASE_CFLAGS) -DAPPLE1_OMIT_CHARMAP -c -o $@ $<
 
 # Test targets
-TESTS = test_cpu test_aci test_dualram test_bus test_tomharte test_interrupts
+TESTS = test_cpu test_aci test_dualram test_bus test_tomharte test_interrupts test_vfs test_config
 
 check: $(TESTS)
 	@passed=0; failed=0; \
@@ -77,6 +77,12 @@ test_tomharte: tests/test_tomharte.c tests/term_dummy.c $(CORE_SRC) port.c
 
 test_interrupts: tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC) port.c
 	$(CC) $(BASE_CFLAGS) -o test_interrupts tests/test_interrupts.c tests/term_dummy.c $(CORE_SRC) port.c
+
+test_vfs: tests/test_vfs.c tests/term_dummy.c bus.c io.c port.c
+	$(CC) $(BASE_CFLAGS) -o test_vfs tests/test_vfs.c tests/term_dummy.c bus.c io.c port.c
+
+test_config: tests/test_config.c cli_config.c port.c
+	$(CC) $(BASE_CFLAGS) -o test_config tests/test_config.c cli_config.c port.c
 
 6502_functional_test.bin:
 	curl -L -o 6502_functional_test.bin https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master/bin_files/6502_functional_test.bin
