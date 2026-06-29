@@ -1,11 +1,10 @@
+#include "../bus.h"
+#include "../cpu.h"
 #include "../port.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "../bus.h"
-#include "../cpu.h"
 
 /*
  * Interrupt Test Suite
@@ -45,7 +44,7 @@ setup(void)
 		exit(1);
 	}
 	bus.opts.randomize_cold_boot = false;
-	bus.opts.throttle_pia        = false;
+	bus.opts.throttle_pia = false;
 
 	/* Reset vector -> $1000 */
 	bus.rom[0xFC] = 0x00;
@@ -85,15 +84,15 @@ test_irq_basic(void)
 	uint8_t cycles;
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
+	cpu.s = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT; /* I=0: IRQ unmasked */
 	cpu_irq(&cpu, true);
 
 	cycles = cpu_step(&cpu);
 
-	assert(cycles == 7);           /* IRQ/NMI always 7 cycles */
-	assert(cpu.pc == 0x1200);      /* jumped to IRQ handler   */
-	assert(cpu.p & FLAG_INTERRUPT);/* I set by sequence        */
+	assert(cycles == 7);		/* IRQ/NMI always 7 cycles */
+	assert(cpu.pc == 0x1200);	/* jumped to IRQ handler   */
+	assert(cpu.p & FLAG_INTERRUPT); /* I set by sequence        */
 
 	cpu_irq(&cpu, false);
 	printf("PASS: IRQ basic (vector jump, 7 cycles, I flag)\n");
@@ -115,7 +114,7 @@ test_irq_pc_held(void)
 	uint16_t stk_pc;
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
+	cpu.s = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT;
 	cpu_irq(&cpu, true);
 
@@ -140,7 +139,7 @@ test_irq_b_flag(void)
 	uint8_t stk_p;
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
+	cpu.s = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT;
 	cpu_irq(&cpu, true);
 
@@ -148,7 +147,7 @@ test_irq_b_flag(void)
 
 	stk_p = bus.ram[0x01FB];
 	assert(!(stk_p & FLAG_BREAK)); /* B=0 for hardware IRQ */
-	assert(stk_p   & FLAG_UNUSED); /* bit 5 always 1 on push */
+	assert(stk_p & FLAG_UNUSED);   /* bit 5 always 1 on push */
 
 	cpu_irq(&cpu, false);
 	printf("PASS: IRQ B=0, UNUSED=1 in pushed P\n");
@@ -167,14 +166,14 @@ test_irq_masked(void)
 	uint8_t cycles;
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
+	cpu.s = 0xFD;
 	cpu.p |= FLAG_INTERRUPT; /* I=1: IRQ masked */
 	cpu_irq(&cpu, true);
 
 	cycles = cpu_step(&cpu); /* must run NOP, not IRQ */
 
-	assert(cycles == 2);        /* NOP = 2 cycles; 7 means IRQ fired (bug) */
-	assert(cpu.pc == 0x1001);   /* advanced past NOP */
+	assert(cycles == 2);	  /* NOP = 2 cycles; 7 means IRQ fired (bug) */
+	assert(cpu.pc == 0x1001); /* advanced past NOP */
 
 	cpu_irq(&cpu, false);
 	printf("PASS: IRQ masked by I=1 (NOP executed instead)\n");
@@ -192,7 +191,7 @@ test_nmi_nonmaskable(void)
 	uint16_t stk_pc;
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
+	cpu.s = 0xFD;
 	cpu.p |= FLAG_INTERRUPT; /* I=1 — would suppress IRQ, not NMI */
 	cpu_nmi(&cpu);
 
@@ -201,12 +200,12 @@ test_nmi_nonmaskable(void)
 	assert(cycles == 7);
 	assert(cpu.pc == 0x1300); /* NMI handler */
 
-	stk_p  = bus.ram[0x01FB];
+	stk_p = bus.ram[0x01FB];
 	stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
 
 	assert(!(stk_p & FLAG_BREAK)); /* B=0 for NMI */
-	assert(stk_p   & FLAG_UNUSED);
-	assert(stk_pc  == 0x1000);    /* PC held */
+	assert(stk_p & FLAG_UNUSED);
+	assert(stk_pc == 0x1000); /* PC held */
 
 	printf("PASS: NMI non-maskable (fires with I=1, PC held, B=0)\n");
 }
@@ -227,10 +226,11 @@ test_brk_b_flag_and_return_addr(void)
 	uint8_t stk_p;
 
 	bus.ram[0x1000] = 0x00; /* BRK opcode */
-	bus.ram[0x1001] = 0x42; /* padding byte (signature; discarded by struct cpu) */
+	bus.ram[0x1001] =
+	    0x42; /* padding byte (signature; discarded by struct cpu) */
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
+	cpu.s = 0xFD;
 	cpu.p &= ~FLAG_INTERRUPT;
 
 	cycles = cpu_step(&cpu);
@@ -239,11 +239,11 @@ test_brk_b_flag_and_return_addr(void)
 	assert(cpu.pc == 0x1200); /* IRQ/BRK shared vector */
 
 	stk_pc = ((uint16_t)bus.ram[0x01FD] << 8) | bus.ram[0x01FC];
-	stk_p  = bus.ram[0x01FB];
+	stk_p = bus.ram[0x01FB];
 
-	assert(stk_pc == 0x1002);      /* BRK+2: past opcode AND padding byte */
-	assert(stk_p  & FLAG_BREAK);   /* B=1 for BRK */
-	assert(stk_p  & FLAG_UNUSED);  /* bit 5 always 1 */
+	assert(stk_pc == 0x1002);    /* BRK+2: past opcode AND padding byte */
+	assert(stk_p & FLAG_BREAK);  /* B=1 for BRK */
+	assert(stk_p & FLAG_UNUSED); /* bit 5 always 1 */
 
 	/* restore NOP for subsequent tests */
 	bus.ram[0x1000] = 0xEA;
@@ -266,8 +266,8 @@ test_rti_roundtrip(void)
 	uint8_t cycles;
 
 	cpu.pc = 0x1000;
-	cpu.s  = 0xFD;
-	cpu.p  = FLAG_UNUSED; /* I=0, all other flags clear */
+	cpu.s = 0xFD;
+	cpu.p = FLAG_UNUSED; /* I=0, all other flags clear */
 	cpu_irq(&cpu, true);
 
 	/* Step 1: IRQ fires, jumps to $1200 */
@@ -278,8 +278,8 @@ test_rti_roundtrip(void)
 
 	/* Step 2: RTI at $1200 restores P (I=0) and pops return PC */
 	cycles = cpu_step(&cpu);
-	assert(cycles == 6);       /* RTI = 6 cycles */
-	assert(cpu.pc == 0x1000);  /* back at the preempted NOP */
+	assert(cycles == 6);	  /* RTI = 6 cycles */
+	assert(cpu.pc == 0x1000); /* back at the preempted NOP */
 
 	printf("PASS: RTI round-trip (IRQ -> ISR -> RTI -> preempted addr)\n");
 }

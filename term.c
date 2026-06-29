@@ -13,10 +13,10 @@
 #include "term_ansi.c"
 #else
 /* Auto-detect */
-#  if defined(__MSDOS__) || defined(MSDOS) || defined(__dos__) || \
-	(defined(__WATCOMC__) && defined(__DOS__))
-#    include "term_dos.c"
-#  else
-#    include "term_ansi.c"
-#  endif
+#if defined(__MSDOS__) || defined(MSDOS) || defined(__dos__) || \
+    (defined(__WATCOMC__) && defined(__DOS__))
+#include "term_dos.c"
+#else
+#include "term_ansi.c"
+#endif
 #endif

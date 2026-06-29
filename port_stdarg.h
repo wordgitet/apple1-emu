@@ -29,14 +29,16 @@ typedef struct {
 
 typedef __va_list_struct va_list[1];
 
-void *port_tcc_va_arg(__va_list_struct *ap, int arg_type, int size, int align);
+void *
+port_tcc_va_arg(__va_list_struct *ap, int arg_type, int size, int align);
 
-#define va_start(ap, last)                                               \
-	(*(ap) = *(__va_list_struct *)((char *)__builtin_frame_address(0) - \
-	    24))
-#define va_arg(ap, type)                                                   \
-	(*(type *)(port_tcc_va_arg((ap), __builtin_va_arg_types(type),       \
-	    (int)sizeof(type), (int)__alignof__(type))))
+#define va_start(ap, last) \
+	(*(ap) = *(__va_list_struct *)((char *)__builtin_frame_address(0) - 24))
+#define va_arg(ap, type)                  \
+	(*(type *)(port_tcc_va_arg((ap),  \
+	    __builtin_va_arg_types(type), \
+	    (int)sizeof(type),            \
+	    (int)__alignof__(type))))
 #define va_copy(dest, src) (*(dest) = *(src))
 #define va_end(ap)
 

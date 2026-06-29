@@ -1,8 +1,7 @@
-#include "../port.h"
-#include <stddef.h>
-
 #include "../bus.h"
+#include "../port.h"
 #include "../term_apple1.h"
+#include <stddef.h>
 
 struct bus *g_bus = NULL;
 port_sig_flag g_quit_flag = 0;

@@ -325,9 +325,11 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 		if (port_strcmp(bus->cards[i]->name, "ACI") == 0) {
 			if (save_tape_path != NULL) {
 				port_result_t rc;
-				rc = aci_save_tape(bus->cards[i], save_tape_path);
+				rc = aci_save_tape(bus->cards[i],
+				    save_tape_path);
 				if (rc != PORT_OK) {
-					cli_error("Error: aci_save_tape failed: %s\n",
+					cli_error("Error: aci_save_tape "
+						  "failed: %s\n",
 					    port_error_string(rc));
 				}
 			}
@@ -695,9 +697,9 @@ main(int argc, char *argv[])
 		has_run_addr = false;
 		run_addr = 0;
 		rc = bus_load_wozmon_txt(&bus,
-			wozmon_txt_path,
-			&run_addr,
-			&has_run_addr);
+		    wozmon_txt_path,
+		    &run_addr,
+		    &has_run_addr);
 		if (rc != PORT_OK) {
 			cli_error("Error: bus_load_wozmon_txt failed: %s\n",
 			    port_error_string(rc));
@@ -722,7 +724,8 @@ main(int argc, char *argv[])
 				port_result_t rc;
 				rc = aci_load_tape(aci_card, tape_path);
 				if (rc != PORT_OK) {
-					cli_error("Error: aci_load_tape failed: %s\n",
+					cli_error("Error: aci_load_tape "
+						  "failed: %s\n",
 					    port_error_string(rc));
 					aci_free(aci_card);
 					bus_free(&bus);

@@ -1,13 +1,12 @@
+#include "../bus.h"
+#include "../cpu.h"
+#include "../dbg.h"
+#include "../disasm.h"
 #include "../port.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "../bus.h"
-#include "../cpu.h"
-#include "../dbg.h"
-#include "../disasm.h"
 
 static uint8_t test_ram[65536];
 
@@ -358,8 +357,6 @@ test_interrupts(struct cpu *cpu, struct bus *bus)
 	/* All interrupt tests are in the test_interrupts binary. */
 }
 
-
-
 static uint8_t mock_read_val = 0;
 static uint16_t mock_last_read_addr = 0;
 static bool mock_last_read_is_dummy = false;
@@ -521,7 +518,8 @@ test_reset_vectors(void)
 
 	/* 2. Read and verify authentic vectors */
 	nmi = bus_read(&bus, 0xFFFA) | (bus_read(&bus, 0xFFFB) << 8);
-	res = bus_read(&bus, RESET_VECTOR) | (bus_read(&bus, RESET_VECTOR + 1) << 8);
+	res = bus_read(&bus, RESET_VECTOR) |
+	    (bus_read(&bus, RESET_VECTOR + 1) << 8);
 	irq = bus_read(&bus, 0xFFFE) | (bus_read(&bus, 0xFFFF) << 8);
 
 	assert(res == 0xFF00);
@@ -827,12 +825,14 @@ test_bruce_clark_decimal(void)
 	uint8_t error;
 
 	if (bus_init(&bus, test_ram, 65536) != PORT_OK) {
-		fprintf(stderr, "Failed to init 64KB bus for Bruce Clark Decimal Test\n");
+		fprintf(stderr,
+		    "Failed to init 64KB bus for Bruce Clark Decimal Test\n");
 		exit(1);
 	}
 	bus.opts.flat_bus = true;
 
-	if (bus_load_bin(&bus, "tests/6502_decimal_test.bin", 0x0400) != PORT_OK) {
+	if (bus_load_bin(&bus, "tests/6502_decimal_test.bin", 0x0400) !=
+	    PORT_OK) {
 		fprintf(stderr, "Failed to load tests/6502_decimal_test.bin\n");
 		exit(1);
 	}
@@ -855,9 +855,15 @@ test_bruce_clark_decimal(void)
 
 	error = bus.ram[0x000B];
 	if (error != 0) {
-		fprintf(stderr, "Bruce Clark Decimal Test FAILED: ERROR = %d\n", error);
-		fprintf(stderr, "N1=%02X, N2=%02X, actual=%02X, predicted=%02X\n",
-		    bus.ram[0x0000], bus.ram[0x0001], bus.ram[0x0004], bus.ram[0x0006]);
+		fprintf(stderr,
+		    "Bruce Clark Decimal Test FAILED: ERROR = %d\n",
+		    error);
+		fprintf(stderr,
+		    "N1=%02X, N2=%02X, actual=%02X, predicted=%02X\n",
+		    bus.ram[0x0000],
+		    bus.ram[0x0001],
+		    bus.ram[0x0004],
+		    bus.ram[0x0006]);
 		exit(1);
 	}
 

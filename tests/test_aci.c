@@ -1,15 +1,14 @@
+#include "../aci.h"
+#include "../bus.h"
+#include "../cpu.h"
+#include "../dbg.h"
+#include "../io.h"
 #include "../port.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "../aci.h"
-#include "../bus.h"
-#include "../cpu.h"
-#include "../dbg.h"
-#include "../io.h"
 
 static uint8_t test_ram[65536];
 
@@ -224,7 +223,8 @@ run_roundtrip_test(const char *tape_path,
 	/* -------------------------------------------------------------
 	 * PHASE 3: Read back the tape in a fresh system
 	 * ------------------------------------------------------------- */
-	printf("  Phase 3: Restoring tape in a fresh struct cpu/struct bus instance...\n");
+	printf("  Phase 3: Restoring tape in a fresh struct cpu/struct bus "
+	       "instance...\n");
 	if (bus_init(&read_bus, test_ram, 16 * 1024) != PORT_OK) {
 		fprintf(stderr, "Failed to init read bus\n");
 		unlink(tape_path);

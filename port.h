@@ -83,18 +83,18 @@ typedef signed int int32_t;
  */
 typedef int port_result_t;
 
-#define PORT_OK          0  /* Successful operation */
-#define PORT_ERROR       1  /* Generic error */
-#define PORT_NOMEM       2  /* Memory allocation failed */
-#define PORT_IO          3  /* I/O error */
-#define PORT_CORRUPT     4  /* Data corruption */
-#define PORT_FULL        5  /* Buffer/full condition */
-#define PORT_CANTOPEN    6  /* Unable to open file */
-#define PORT_PROTOCOL    7  /* Protocol/format error */
-#define PORT_INVALID     8  /* Invalid parameter */
-#define PORT_MISUSE      9  /* Library used incorrectly */
-#define PORT_RANGE      10  /* Out of range */
-#define PORT_NOTFOUND   11  /* Not found */
+#define PORT_OK	      0	 /* Successful operation */
+#define PORT_ERROR    1	 /* Generic error */
+#define PORT_NOMEM    2	 /* Memory allocation failed */
+#define PORT_IO	      3	 /* I/O error */
+#define PORT_CORRUPT  4	 /* Data corruption */
+#define PORT_FULL     5	 /* Buffer/full condition */
+#define PORT_CANTOPEN 6	 /* Unable to open file */
+#define PORT_PROTOCOL 7	 /* Protocol/format error */
+#define PORT_INVALID  8	 /* Invalid parameter */
+#define PORT_MISUSE   9	 /* Library used incorrectly */
+#define PORT_RANGE    10 /* Out of range */
+#define PORT_NOTFOUND 11 /* Not found */
 
 /*
  * port_error_string - Return human-readable error message for error code.

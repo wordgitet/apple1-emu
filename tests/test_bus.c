@@ -1,10 +1,9 @@
+#include "../bus.h"
 #include "../port.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "../bus.h"
 
 static uint8_t test_ram[65536];
 

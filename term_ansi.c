@@ -196,11 +196,13 @@ term_poll(void)
 			escape_seq_buf[escape_seq_pos++] = (char)ch;
 			if (escape_seq_pos >= 6) {
 				/* Check for bracketed paste start: ESC[200~ */
-				if (port_strcmp(escape_seq_buf, "\x1b[200~") == 0) {
+				if (port_strcmp(escape_seq_buf, "\x1b[200~") ==
+				    0) {
 					bracketed_paste_active = true;
 				}
 				/* Check for bracketed paste end: ESC[201~ */
-				if (port_strcmp(escape_seq_buf, "\x1b[201~") == 0) {
+				if (port_strcmp(escape_seq_buf, "\x1b[201~") ==
+				    0) {
 					bracketed_paste_active = false;
 				}
 				escape_seq_pos = 0;

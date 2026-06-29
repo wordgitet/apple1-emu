@@ -24,7 +24,8 @@ port_tcc_va_arg(__va_list_struct *ap, int arg_type, int size, int align)
 	case PORT_TCC_VA_GEN_REG:
 		if (ap->gp_offset + (unsigned)size <= 48U) {
 			ap->gp_offset += (unsigned)size;
-			return (ap->reg_save_area + ap->gp_offset - (unsigned)size);
+			return (
+			    ap->reg_save_area + ap->gp_offset - (unsigned)size);
 		}
 		goto use_overflow_area;
 
@@ -32,14 +33,17 @@ port_tcc_va_arg(__va_list_struct *ap, int arg_type, int size, int align)
 		if (ap->fp_offset < 128U + 48U) {
 			ap->fp_offset += 16U;
 			if (size == 8) {
-				return (ap->reg_save_area + ap->fp_offset - 16U);
+				return (
+				    ap->reg_save_area + ap->fp_offset - 16U);
 			}
 			if (ap->fp_offset < 128U + 48U) {
-				port_memmove(ap->reg_save_area + ap->fp_offset - 8U,
+				port_memmove(ap->reg_save_area + ap->fp_offset -
+					8U,
 				    ap->reg_save_area + ap->fp_offset,
 				    8);
 				ap->fp_offset += 16U;
-				return (ap->reg_save_area + ap->fp_offset - 32U);
+				return (
+				    ap->reg_save_area + ap->fp_offset - 32U);
 			}
 		}
 		goto use_overflow_area;
@@ -47,9 +51,9 @@ port_tcc_va_arg(__va_list_struct *ap, int arg_type, int size, int align)
 	case PORT_TCC_VA_STACK:
 	use_overflow_area:
 		ap->overflow_arg_area += size;
-		ap->overflow_arg_area = (char *)((long long)(ap->overflow_arg_area +
-							 align - 1) &
-		    -(long long)align);
+		ap->overflow_arg_area =
+		    (char *)((long long)(ap->overflow_arg_area + align - 1) &
+			-(long long)align);
 		return (ap->overflow_arg_area - size);
 
 	default:

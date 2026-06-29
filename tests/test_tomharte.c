@@ -1,10 +1,9 @@
+#include "../bus.h"
+#include "../cpu.h"
 #include "../port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "../bus.h"
-#include "../cpu.h"
 
 /*
  * test_tomharte.c -- Cycle-exact Tom Harte test runner using binary fixture.
