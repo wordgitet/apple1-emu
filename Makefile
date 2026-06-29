@@ -5,7 +5,8 @@
 # USAGE:
 #   make                  Build apple1 TUI target
 #   make check            Build and run all unit tests
-#   make clean            Remove all build artefacts
+#   make clean            Remove build artefacts
+#   make distclean        clean + cross-build outputs and downloaded files
 #
 # ===========================================================================
 
@@ -159,3 +160,12 @@ test-official: apple1 6502_functional_test.bin
 clean:
 	rm -f apple1 $(TESTS) apple1_test apple1_amal_test
 	rm -f *.o tests/*.o 6502_functional_test.bin cwsdpmi.exe apple1.c apple1.h
+
+distclean: clean
+	rm -f apple1.exe dos_smoke.exe cwsdpmi.zip
+	rm -f *.map apple1.err
+	rm -f *-*.o.tmp
+
+.PHONY: all check clean distclean tcc amalgamation amalgamation-dos dos-djgpp dos-watcom \
+	apple1-watcom.exe apple1-djgpp.exe apple1.exe cwsdpmi.exe test-official \
+	$(TESTS) 6502_functional_test.bin
