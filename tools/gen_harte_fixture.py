@@ -8,8 +8,8 @@ Inspired by and credited to the POM1 emulator's tools/gen_harte_fixture.py.
 This script reads local JSON test files for all 244 non-JAM opcodes, extracts
 up to K cases of each, and writes a single compact binary file.
 
-Usage:
-  python3 tests/gen_harte_fixture.py [--cases 10000] [--in-dir tests/tomharte/v1] [--out tests/harte_6502.bin]
+Usage (from repository root):
+  python3 tools/gen_harte_fixture.py [--cases 10000] [--in-dir tests/tomharte/v1] [--out tests/harte_6502.bin]
 """
 import argparse
 import json
