@@ -23,16 +23,26 @@ DEFS    = -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
 BASE_CFLAGS = $(CFLAGS) $(WFLAGS) $(STDFLAG) $(DEFS) $(EXTRA_CFLAGS)
 
 # Platform port selection (one port_*.c + shared port_string.c)
-ifeq ($(OS),Windows_NT)
-    PORT_SRC = port_win.c
-else
-    UNAME := $(shell uname -s)
-    ifeq ($(UNAME),Haiku)
-        PORT_SRC = port_posix.c
-    else ifeq ($(UNAME),OS/2)
-        PORT_SRC = port_os2.c
+# Override with: make PORT_SRC=port_bare.c
+ifeq ($(PORT_SRC),)
+    ifeq ($(OS),Windows_NT)
+        PORT_SRC = port_win.c
+        TERM_SRC = term_ansi.c
     else
-        PORT_SRC = port_posix.c
+        UNAME := $(shell uname -s)
+        ifeq ($(UNAME),Haiku)
+            PORT_SRC = port_posix.c
+            TERM_SRC = term_ansi.c
+        else ifeq ($(UNAME),OS/2)
+            PORT_SRC = port_os2.c
+            TERM_SRC = term_ansi.c
+        else ifeq ($(UNAME),Plan 9)
+            PORT_SRC = port_plan9.c
+            TERM_SRC = term_ansi.c
+        else
+            PORT_SRC = port_posix.c
+            TERM_SRC = term_ansi.c
+        endif
     endif
 endif
 

@@ -9,6 +9,19 @@ port file and links `port_string.c` with one `port_*.c`.
 - Python 3 (for amalgamation and `make dos` only)
 - POSIX-like shell for `make check`
 
+## Build-time configuration
+
+Build-time options are set via `apple1limit.h` or `-D` flags:
+
+| Flag | Purpose |
+|------|---------|
+| `-DAPPLE1_OMIT_DEBUGGER` | Remove debugger |
+| `-DAPPLE1_OMIT_ACI` | Remove cassette interface |
+| `-DAPPLE1_OMIT_KRUSADER` | Remove Krusader ROM |
+| `-DAPPLE1_STATIC_RAM_SIZE=4096` | Set max RAM size (embedded) |
+
+See `apple1limit.h` for all available options and limits.
+
 ## Standard build (Unix / macOS / Linux)
 
 ```bash
@@ -136,25 +149,24 @@ make clean    # removes apple1, test binaries, *.o, port_*.o
 Build artefacts **`apple1.exe`**, **`CWSDPMI.EXE`**, and generated **`apple1.c`**
 from amalgamation are not removed by `make clean` if they exist as untracked files.
 
-## Autotools (multi-target builds)
+## Autotools (POSIX only)
 
-For cross-compilation to non-POSIX targets, use the autotools build system:
+`configure.ac` and `Makefile.am` exist for autotools builds on POSIX systems (Linux, macOS, *BSD). The autotools build is POSIX-only and uses `port_posix.c`.
 
+For non-POSIX platforms, use the alternatives below.
+
+### Non-POSIX platform alternatives
+
+**Windows (MSVC):**
 ```bash
-./configure --with-target=dos    # or windows, freertos, bare, elks, os2, plan9, vxworks, zephyr
-make
+nmake -f Makefile.msc
 ```
+- Use the top-level Makefile with MinGW
+- Use amalgamation: `python3 tools/amalgamate.py --port port_win.c`
 
-Available targets:
-- `posix` (default): Unix, macOS, Linux, *BSD, Haiku
-- `dos`: MS-DOS (DJGPP)
-- `windows`: Windows (MinGW/MSVC)
-- `freertos`: FreeRTOS
-- `bare`: Bare metal
-- `elks`: ELKS
-- `os2`: OS/2
-- `plan9`: Plan 9
-- `vxworks`: VxWorks
-- `zephyr`: Zephyr
+**MS-DOS (DJGPP):**
+- Use `make dos` (amalgamation + cross-compile)
 
-The autotools build automatically selects the appropriate `port_*.c` and terminal backend for each target.
+**Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr):**
+- Use the top-level Makefile with manual port selection: `make PORT_SRC=port_plan9.c`
+- Use amalgamation: `python3 tools/amalgamate.py --port port_plan9.c`

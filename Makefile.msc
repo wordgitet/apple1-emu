@@ -1,0 +1,63 @@
+# Microsoft NMAKE makefile for apple1-emu
+# Usage: nmake -f Makefile.msc
+
+CC = cl
+CFLAGS = -O2 -W3 -nologo -TC -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
+CFLAGS = $(CFLAGS) -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600 -DAPPLE1_OMIT_CHARMAP
+
+# Platform-specific files for Windows
+PORT_SRC = port_win.c
+PORT_STRING = port_string.c
+
+# Core source files
+CORE_SRC = cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
+HEADERS = cpu.h bus.h io.h aci.h krusader.h disasm.h dbg.h term_apple1.h \
+          embedded_roms.h port.h
+
+# Object files
+CORE_OBJ = cpu.obj bus.obj io.obj aci.obj krusader.obj disasm.obj dbg.obj
+PORT_OBJ = $(PORT_STRING:.c=.obj) $(PORT_SRC:.c=.obj)
+OBJ = main.obj $(CORE_OBJ) term_ansi.obj $(PORT_OBJ)
+
+all: apple1.exe
+
+apple1.exe: $(OBJ)
+	$(CC) $(CFLAGS) -Fe$@ $(OBJ)
+
+main.obj: main.c $(HEADERS)
+	$(CC) $(CFLAGS) -c main.c
+
+cpu.obj: cpu.c cpu.h bus.h port.h
+	$(CC) $(CFLAGS) -c cpu.c
+
+bus.obj: bus.c bus.h cpu.h port.h
+	$(CC) $(CFLAGS) -c bus.c
+
+io.obj: io.c io.h port.h
+	$(CC) $(CFLAGS) -c io.c
+
+aci.obj: aci.c aci.h port.h
+	$(CC) $(CFLAGS) -c aci.c
+
+krusader.obj: krusader.c krusader.h port.h
+	$(CC) $(CFLAGS) -c krusader.c
+
+disasm.obj: disasm.c disasm.h cpu.h port.h
+	$(CC) $(CFLAGS) -c disasm.c
+
+dbg.obj: dbg.c dbg.h cpu.h bus.h port.h
+	$(CC) $(CFLAGS) -c dbg.c
+
+term_ansi.obj: term_ansi.c term_apple1.h port.h
+	$(CC) $(CFLAGS) -c term_ansi.c
+
+port_string.obj: $(PORT_STRING) port.h
+	$(CC) $(CFLAGS) -c $(PORT_STRING)
+
+port_win.obj: $(PORT_SRC) port.h
+	$(CC) $(CFLAGS) -c $(PORT_SRC)
+
+clean:
+	-del /Q *.obj apple1.exe 2>NUL
+
+.PHONY: all clean
