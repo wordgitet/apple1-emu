@@ -844,21 +844,14 @@ port_term_read_line_dbg(char *buf, port_size_t size, port_sig_flag *quit_flag)
 }
 /* ======== end port_string.c ======== */
 
-/* ======== begin port_posix.c ======== */
+/* ======== begin port_msdos.c ======== */
 /* amalgamation: omit #include "port.h" */
-#include <errno.h>
-#include <signal.h>
+#include <conio.h>
+#include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/select.h>
-#include <termios.h>
 #include <time.h>
-#include <unistd.h>
-
-/* ================================================================== */
-/* Memory allocation shims                                            */
-/* ================================================================== */
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
 void *
@@ -897,120 +890,55 @@ port_strdup(const char *str)
 	return (dup);
 }
 
-/* ================================================================== */
-/* Timing shims                                                       */
-/* ================================================================== */
-
 uint32_t
 port_gettime_us(void)
 {
-	struct timespec ts;
-
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-		return ((uint32_t)ts.tv_sec * 1000000 +
-		    (uint32_t)(ts.tv_nsec / 1000));
-	}
-	return (0);
+	return ((uint32_t)(clock() * (1000000 / CLOCKS_PER_SEC)));
 }
 
 void
 port_sleep_us(uint32_t us)
 {
-	struct timespec req;
-
-	req.tv_sec = (time_t)(us / 1000000);
-	req.tv_nsec = (long)((us % 1000000) * 1000);
-	nanosleep(&req, NULL);
+	delay((unsigned int)((us + 999) / 1000));
 }
-
-/* ================================================================== */
-/* Terminal I/O shims                                                 */
-/* ================================================================== */
-
-static struct termios orig_termios;
-static struct termios dbg_termios;
-static int posix_raw_mode_active = 0;
-static int posix_dbg_mode_active = 0;
 
 void
 port_term_raw_enable(void)
 {
-	struct termios raw;
-
-	if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
-		raw = orig_termios;
-		raw.c_lflag &= ~(ICANON | ECHO | ISIG);
-		raw.c_iflag &= ~(IXON | ICRNL);
-		raw.c_cc[VMIN] = 0;
-		raw.c_cc[VTIME] = 0;
-		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 0) {
-			posix_raw_mode_active = 1;
-			/* Enable bracketed paste mode */
-			port_term_write_buf("\x1b[?2004h", 8);
-		}
-	}
 }
 
 void
 port_term_raw_disable(void)
 {
-	if (posix_raw_mode_active != 0) {
-		/* Disable bracketed paste mode */
-		port_term_write_buf("\x1b[?2004l", 8);
-		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-		posix_raw_mode_active = 0;
-	}
 }
 
 void
 port_term_dbg_enable(void)
 {
-	struct termios t;
-
-	if (tcgetattr(STDIN_FILENO, &dbg_termios) == 0) {
-		t = dbg_termios;
-		t.c_lflag &= ~(ICANON | ECHO);
-		t.c_iflag &= ~(IXON | ICRNL);
-		t.c_cc[VMIN] = 1;
-		t.c_cc[VTIME] = 0;
-		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &t) == 0) {
-			posix_dbg_mode_active = 1;
-		}
-	}
 }
 
 void
 port_term_dbg_disable(void)
 {
-	if (posix_dbg_mode_active != 0) {
-		tcsetattr(STDIN_FILENO, TCSAFLUSH, &dbg_termios);
-		posix_dbg_mode_active = 0;
-	}
 }
 
 int
 port_term_read_char(void)
 {
-	char c;
-	ssize_t r;
-
-	r = read(STDIN_FILENO, &c, 1);
-	if (r == 1) {
-		return ((int)(unsigned char)c);
+	if (kbhit() != 0) {
+		return (getch());
 	}
-	if (r == 0) {
-		return (PORT_TERM_EOF);
-	}
-	if (r < 0 && errno == EINTR) {
-		return (PORT_TERM_NODATA);
-	}
-	return (PORT_TERM_NODATA);
+	return (-1);
 }
 
 void
 port_term_write_buf(const char *buf, port_size_t n)
 {
-	(void)write(STDOUT_FILENO, buf, n);
+	port_size_t i;
+
+	for (i = 0; i < n; i++) {
+		putchar(buf[i]);
+	}
 }
 
 char *
@@ -1019,32 +947,12 @@ port_term_read_line(char *buf, port_size_t size)
 	return (fgets(buf, (int)size, stdin));
 }
 
-/* ================================================================== */
-/* Signal handling shim                                               */
-/* ================================================================== */
-
 static port_sig_flag *g_sig_flag = NULL;
-
-static void
-handle_sigint(int sig)
-{
-	(void)sig;
-	if (g_sig_flag != NULL) {
-		*g_sig_flag = 1;
-	}
-}
 
 void
 port_signal_setup(port_sig_flag *flag)
 {
-	struct sigaction sa;
-
 	g_sig_flag = flag;
-	port_memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = handle_sigint;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0; /* Don't restart fgets — Ctrl-C reaches dbg prompt */
-	sigaction(SIGINT, &sa, NULL);
 }
 
 void
@@ -1055,40 +963,38 @@ port_signal_quit(void)
 	}
 }
 
-/* ================================================================== */
-/* POSIX Virtual File System (VFS)                                    */
-/*                                                                    */
-/* QNX and Haiku are fully POSIX-certified; no proprietary headers    */
-/* are needed.  Both are covered by the platform guard in port_posix  */
-/* and share this implementation without modification.                */
-/* ================================================================== */
+PORT_NORETURN void
+port_exit(int code)
+{
+	exit(code);
+}
 
-static port_file_t
-posix_vfs_open(const char *path, int flags)
+static void *
+msdos_xOpen(const char *path, int flags)
 {
 	const char *mode;
 
 	mode = (flags == PORT_VFS_WRITE) ? "w+b" : "rb";
-	return ((port_file_t)fopen(path, mode));
+	return ((void *)fopen(path, mode));
 }
 
 static void
-posix_vfs_close(port_file_t f)
+msdos_xClose(void *file)
 {
-	if (f != PORT_FILE_INVALID) {
-		fclose((FILE *)f);
+	if (file != NULL) {
+		fclose((FILE *)file);
 	}
 }
 
 static int
-posix_vfs_read(port_file_t f, void *buf, port_size_t sz, port_size_t *nread)
+msdos_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
 {
 	size_t r;
 
-	if (f == PORT_FILE_INVALID) {
+	if (file == NULL) {
 		return (-1);
 	}
-	r = fread(buf, 1, sz, (FILE *)f);
+	r = fread(buf, 1, sz, (FILE *)file);
 	if (nread != NULL) {
 		*nread = (port_size_t)r;
 	}
@@ -1096,36 +1002,36 @@ posix_vfs_read(port_file_t f, void *buf, port_size_t sz, port_size_t *nread)
 }
 
 static long
-posix_vfs_size(port_file_t f)
+msdos_xSize(void *file)
 {
 	long current;
-	long sz;
-	FILE *fp;
+	long size;
+	FILE *f;
 
-	if (f == PORT_FILE_INVALID) {
+	if (file == NULL) {
 		return (-1);
 	}
-	fp = (FILE *)f;
-	current = ftell(fp);
+	f = (FILE *)file;
+	current = ftell(f);
 	if (current < 0) {
 		return (-1);
 	}
-	if (fseek(fp, 0, SEEK_END) != 0) {
+	if (fseek(f, 0, SEEK_END) != 0) {
 		return (-1);
 	}
-	sz = ftell(fp);
-	if (fseek(fp, current, SEEK_SET) != 0) {
+	size = ftell(f);
+	if (fseek(f, current, SEEK_SET) != 0) {
 		return (-1);
 	}
-	return (sz);
+	return (size);
 }
 
 static int
-posix_vfs_seek(port_file_t f, long offset, int whence)
+msdos_xSeek(void *file, long offset, int whence)
 {
 	int w;
 
-	if (f == PORT_FILE_INVALID) {
+	if (file == NULL) {
 		return (-1);
 	}
 	switch (whence) {
@@ -1141,50 +1047,40 @@ posix_vfs_seek(port_file_t f, long offset, int whence)
 	default:
 		return (-1);
 	}
-	return (fseek((FILE *)f, offset, w) == 0 ? 0 : -1);
+	return (fseek((FILE *)file, offset, w) == 0 ? 0 : -1);
 }
 
 static long
-posix_vfs_write(port_file_t f, const void *buf, port_size_t sz)
+msdos_xWrite(void *file, const void *buf, port_size_t sz)
 {
-	if (f == PORT_FILE_INVALID) {
+	if (file == NULL) {
 		return (-1);
 	}
-	return ((long)fwrite(buf, 1, sz, (FILE *)f));
+	return ((long)fwrite(buf, 1, sz, (FILE *)file));
 }
 
 static int
-posix_vfs_read_line(port_file_t f, char *buf, port_size_t size)
+msdos_xReadLine(void *file, char *buf, port_size_t size)
 {
-	if (f == PORT_FILE_INVALID || size == 0) {
+	if (file == NULL || size == 0) {
 		return (0);
 	}
-	if (fgets(buf, (int)size, (FILE *)f) == NULL) {
+	if (fgets(buf, (int)size, (FILE *)file) == NULL) {
 		return (0);
 	}
 	return (1);
 }
 
-static struct port_vfs posix_vfs = { posix_vfs_open,
-	posix_vfs_close,
-	posix_vfs_read,
-	posix_vfs_size,
-	posix_vfs_seek,
-	posix_vfs_write,
-	posix_vfs_read_line };
+static struct port_vfs msdos_vfs = { msdos_xOpen,
+	msdos_xClose,
+	msdos_xRead,
+	msdos_xSize,
+	msdos_xSeek,
+	msdos_xWrite,
+	msdos_xReadLine };
 
-struct port_vfs *g_port_vfs = &posix_vfs;
-
-/* ================================================================== */
-/* Process exit                                                       */
-/* ================================================================== */
-
-PORT_NORETURN void
-port_exit(int code)
-{
-	exit(code);
-}
-/* ======== end port_posix.c ======== */
+struct port_vfs *g_port_vfs = &msdos_vfs;
+/* ======== end port_msdos.c ======== */
 
 /* ======== begin bus.c ======== */
 /* amalgamation: omit #include "bus.h" */
@@ -7571,30 +7467,25 @@ io_has_buffered_key(void)
 }
 /* ======== end io.c ======== */
 
-/* ======== begin term_ansi.c ======== */
+/* ======== begin term_dos.c ======== */
+/*
+ * term_dos.c - MS-DOS / DJGPP terminal backend (conio, no ANSI escapes).
+ *
+ * Renders the 40x24 Apple-1 screen with BIOS/conio calls so plain DOS
+ * consoles and DOSBox work without ANSI.SYS.
+ */
 /* amalgamation: omit #include "port.h" */
 /* amalgamation: omit #include "term_apple1.h" */
-
-#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#include <conio.h>
 
 static uint8_t vram[24][40];
 static int cursor_x = 0;
 static int cursor_y = 0;
-static bool raw_mode_active = false;
 static bool reset_pending = false;
-static bool bracketed_paste_active = false;
-static int escape_seq_pos = 0;
-static char escape_seq_buf[32];
 
 /* Shared global authentic speed setting - defined in main.c */
 extern uint32_t opt_baud;
 
-/*
- * Timestamp of the most recent character written to the display, in
- * microseconds.  Used by term_dsp_ready() to implement a non-blocking
- * baud-rate delay: the DSP "busy" window expires naturally as the CPU
- * continues to execute, so the main loop never sleeps.
- */
 static uint32_t last_write_us = 0;
 
 static void
@@ -7609,15 +7500,15 @@ scroll_up(void)
 }
 
 static void
-ansi_out(const char *buf, port_size_t len)
+dos_goto(int x, int y)
 {
-	port_term_write_buf(buf, len);
+	gotoxy(x + 1, y + 1);
 }
 
 static void
-ansi_out_char(char c)
+dos_out_char(char c)
 {
-	ansi_out(&c, 1);
+	putch(c);
 }
 
 void
@@ -7634,22 +7525,16 @@ term_init(void)
 	cursor_y = 0;
 
 	port_term_raw_enable();
-	raw_mode_active = true;
-
-	/* Hide cursor and clear physical screen */
-	ansi_out("\x1b[?25l\x1b[2J\x1b[H", 12);
+	clrscr();
+	_setcursortype(_NOCURSOR);
 }
 
 void
 term_shutdown(void)
 {
-	/* Show cursor, clear screen, reset attributes */
-	ansi_out("\x1b[?25h\x1b[0m\x1b[2J\x1b[H", 16);
-
-	if (raw_mode_active == true) {
-		port_term_raw_disable();
-		raw_mode_active = false;
-	}
+	_setcursortype(_NORMALCURSOR);
+	clrscr();
+	port_term_raw_disable();
 }
 
 void
@@ -7670,6 +7555,7 @@ term_write(uint8_t val)
 		}
 	} else if (val >= 0x20 && val <= 0x7E) {
 		uint8_t glyph = val;
+
 		if (glyph >= 'a' && glyph <= 'z') {
 			glyph -= 32;
 		}
@@ -7686,16 +7572,9 @@ term_write(uint8_t val)
 		vram[cursor_y][cursor_x] = 0x00;
 	} else if (val == 0x08 || val == 0x7F || val == 0x5F) {
 		/* Backspace - pass through to emulator, don't display locally */
-		/* The Apple-1 software will handle backspace */
 	}
 
 	if (opt_baud > 0) {
-		/*
-		 * Record the time of this write.  The baud-rate delay is
-		 * enforced non-blocking via term_dsp_ready(): the PIA busy
-		 * bit stays clear until the window expires, letting the CPU
-		 * keep running and polling without freezing the main loop.
-		 */
 		last_write_us = port_gettime_us();
 	}
 }
@@ -7706,11 +7585,11 @@ term_dsp_ready(void)
 	uint32_t now;
 	uint32_t window_us;
 
-	if (opt_baud == 0)
+	if (opt_baud == 0) {
 		return (true);
-
+	}
 	now = port_gettime_us();
-	window_us = 10000000UL / opt_baud; /* 10 bits per character */
+	window_us = 10000000UL / opt_baud;
 	return ((now - last_write_us) >= window_us);
 }
 
@@ -7721,29 +7600,24 @@ term_update(void)
 	uint32_t now;
 	bool blink_on;
 
-	/* Skip display updates during bracketed paste to prevent interference */
-	if (bracketed_paste_active != 0) {
-		return;
-	}
-
 	now = port_gettime_us();
 	blink_on = ((now / 250000UL) & 1) != 0;
 
-	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
+		dos_goto(0, y);
 		for (x = 0; x < 40; x++) {
 			uint8_t c = vram[y][x];
+
 			if (c == 0x00) {
 				if (blink_on != 0) {
-					ansi_out_char('@');
+					dos_out_char('@');
 				} else {
-					ansi_out_char(' ');
+					dos_out_char(' ');
 				}
 			} else {
-				ansi_out_char((char)c);
+				dos_out_char((char)c);
 			}
 		}
-		ansi_out_char('\n');
 	}
 }
 
@@ -7760,36 +7634,12 @@ term_poll(void)
 	}
 
 	if (ch != 0) {
-		/* Handle escape sequences for bracketed paste mode */
-		if (ch == 0x1B) {
-			escape_seq_pos = 0;
-			escape_seq_buf[escape_seq_pos++] = (char)ch;
-			return (0);
-		}
-		if (escape_seq_pos > 0) {
-			escape_seq_buf[escape_seq_pos++] = (char)ch;
-			if (escape_seq_pos >= 6) {
-				/* Check for bracketed paste start: ESC[200~ */
-				if (port_strcmp(escape_seq_buf, "\x1b[200~") == 0) {
-					bracketed_paste_active = true;
-				}
-				/* Check for bracketed paste end: ESC[201~ */
-				if (port_strcmp(escape_seq_buf, "\x1b[201~") == 0) {
-					bracketed_paste_active = false;
-				}
-				escape_seq_pos = 0;
-			}
-			return (0);
-		}
-
 		if (ch == 0x03) {
-			/* Ctrl-C: quit */
 			port_signal_quit();
 			term_shutdown();
 			return (0);
 		}
 		if (ch == 0x0C) {
-			/* Ctrl-L (clear screen) */
 			port_memset(vram, 0x20, sizeof(vram));
 			cursor_x = 0;
 			cursor_y = 0;
@@ -7797,7 +7647,6 @@ term_poll(void)
 			return (0);
 		}
 		if (ch == 0x12) {
-			/* Ctrl-R (Reset) */
 			reset_pending = true;
 			return (0);
 		}
@@ -7875,7 +7724,7 @@ void
 term_open_debugger(void)
 {
 }
-/* ======== end term_ansi.c ======== */
+/* ======== end term_dos.c ======== */
 
 /* ======== begin main.c ======== */
 /*
