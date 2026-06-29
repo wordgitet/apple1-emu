@@ -113,6 +113,10 @@ port_error_string(port_result_t rc);
 #define false 0
 #endif
 
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+
 /*
  * inline is C99; use plain static helpers on strict C89 compilers.
  */

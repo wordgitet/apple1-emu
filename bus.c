@@ -88,7 +88,7 @@ bus_free(struct bus *bus)
 port_result_t
 bus_load_bin_buf(struct bus *bus,
     const uint8_t *data,
-    size_t len,
+    port_size_t len,
     uint16_t address)
 {
 	uint32_t addr;
@@ -161,19 +161,19 @@ hex_val(char c)
 port_result_t
 bus_load_wozmon_txt_buf(struct bus *bus,
     const char *text,
-    size_t len,
+    port_size_t len,
     uint16_t *run_address,
     bool *has_run_address)
 {
 	char *cleaned;
-	size_t addr_digits;
-	size_t data_len;
-	size_t hex_len;
-	size_t hex_start;
-	size_t i;
-	size_t j;
-	size_t peek;
-	size_t w;
+	port_size_t addr_digits;
+	port_size_t data_len;
+	port_size_t hex_len;
+	port_size_t hex_start;
+	port_size_t i;
+	port_size_t j;
+	port_size_t peek;
+	port_size_t w;
 	char addr_str[5];
 	bool first_addr;
 	bool in_comment;

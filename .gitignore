@@ -75,3 +75,8 @@ POM1/
 /sqlite/
 /style.9
 
+# Amalgamation
+/apple1.c
+/apple1.h
+
+

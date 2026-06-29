@@ -7,7 +7,6 @@
 
 #include "apple1limit.h"
 #include "port.h"
-#include <stddef.h>
 
 /* Log severity levels */
 #define BUS_LOG_INFO  0
@@ -101,14 +100,14 @@ bus_free(struct bus *bus);
 port_result_t
 bus_load_bin_buf(struct bus *bus,
     const uint8_t *data,
-    size_t len,
+    port_size_t len,
     uint16_t address);
 
 /* Load Woz Monitor formatted text from a buffer. */
 port_result_t
 bus_load_wozmon_txt_buf(struct bus *bus,
     const char *text,
-    size_t len,
+    port_size_t len,
     uint16_t *run_address,
     bool *has_run_address);
 
@@ -157,6 +156,6 @@ bus_add_card(struct bus *bus, struct expansion_card *card);
 
 /* Resolve relative data file paths using CWD and XDG share paths */
 void
-resolve_data_path(const char *rel_path, char *out_path, size_t max_len);
+resolve_data_path(const char *rel_path, char *out_path, port_size_t max_len);
 
 #endif /* BUS_H */

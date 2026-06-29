@@ -6,7 +6,7 @@ port file and links `port_string.c` with one `port_*.c`.
 ## Requirements
 
 - C89 compiler (`cc`, `gcc`, or `clang`)
-- Python 3 (for amalgamation and `make dos` only)
+- Python 3 (for amalgamation and `make dos-djgpp` / `make dos-watcom`)
 - POSIX-like shell for `make check`
 
 ## Build-time configuration
@@ -85,22 +85,69 @@ cc -O2 -DAPPLE1_OMIT_CHARMAP apple1.c -o apple1
 | `--srcdir` | repo root | Source directory |
 | `--outdir` | repo root | Output directory |
 
-## MS-DOS cross-build (DJGPP)
+## MS-DOS cross-build
 
-Requires **`i586-pc-msdosdjgpp-gcc`** on `PATH` (DJGPP toolchain).
+Two toolchains are supported. Both use the same DOS amalgamation
+(`port_msdos.c` + `term_dos.c`).
+
+| Target | Toolchain | Output | DPMI host |
+|--------|-----------|--------|-----------|
+| `make dos-djgpp` | DJGPP (`i586-pc-msdosdjgpp-gcc`) | `apple1.exe` | **CWSDPMI.EXE** required |
+| `make dos-watcom` | Open Watcom (`wcl386` or `owcc`) | `apple1.exe` | none (CauseWay stub embedded) |
+
+### DJGPP
+
+Requires **`i586-pc-msdosdjgpp-gcc`** on `PATH`.
 
 ```bash
 export PATH="$HOME/djgpp/bin:$PATH"
-make dos          # writes apple1.exe via amalgamation + cross-compile
+make dos-djgpp
 ```
 
-This uses `port_msdos.c` + `term_dos.c` (conio/BIOS — no ANSI.SYS required).
+### Open Watcom
+
+Install [Open Watcom](https://github.com/open-watcom/open-watcom-v2). The Makefile
+defaults to **`$HOME/watcom`** with host tools from **`bino64`** (macOS) or
+**`binl64`** (Linux):
+
+```bash
+make dos-watcom
+```
+
+Custom install path:
+
+```bash
+make dos-watcom WATCOM=$HOME/watcom WATCOM_BINDIR=$HOME/watcom/bino64
+```
+
+The Makefile sets `INCLUDE=$WATCOM/h` and `LIB=$WATCOM/lib386/dos` automatically.
+It also puts **`$WATCOM/binw`** on `PATH` during the link step so **`cwstub.exe`**
+(the CauseWay stub) is found. Without it the linker warns `cannot open cwstub.exe`
+and the resulting `apple1.exe` exits immediately after the CauseWay banner.
+Open Watcom’s 32-bit `conio.h` lacks DJGPP’s `gotoxy`/`clrscr`; the DOS terminal
+backend uses BIOS int 10h instead (`int386` under Watcom, `int86` under DJGPP).
+
+The default driver is **`wcl386`** with the **CauseWay** extender (`-l=causeway`), so
+the resulting `apple1.exe` is self-contained — no **DOS4GW.EXE** or **CWSDPMI.EXE**
+needed in DOSBox. If your install exposes **`owcc`** instead:
+
+```bash
+make dos-watcom WATCOM_CC=owcc WATCOM_CFLAGS="-bdos -ox -zq -fe=apple1.exe -bcauseway"
+```
+
+To use classic DOS/4GW instead (requires **DOS4GW.EXE** alongside the app):
+
+```bash
+make dos-watcom WATCOM_CFLAGS="-bt=dos -ox -zq -w3 -fe=apple1.exe -l=dos4g"
+```
+
+Both targets use `port_msdos.c` + `term_dos.c` (conio/BIOS — no ANSI.SYS required).
 
 ### Running in DOSBox
 
 1. Copy to the same directory:
-   - `APPLE1.EXE`
-   - `CWSDPMI.EXE` (DPMI host — from [csdpmi7b.zip](https://www.mirrorservice.org/sites/ftp.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip))
+   - `APPLE1.EXE` (Watcom/CauseWay build needs nothing else)
+   - For **DJGPP** builds only: `CWSDPMI.EXE` (from [csdpmi7b.zip](https://www.mirrorservice.org/sites/ftp.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip))
    - Your ROM/files (8.3 names are safest: `WOZMON.BIN`)
 2. Run:
    ```dos
@@ -164,8 +211,9 @@ nmake -f Makefile.msc
 - Use the top-level Makefile with MinGW
 - Use amalgamation: `python3 tools/amalgamate.py --port port_win.c`
 
-**MS-DOS (DJGPP):**
-- Use `make dos` (amalgamation + cross-compile)
+**MS-DOS (DJGPP or Open Watcom):**
+- DJGPP: `make dos-djgpp` (needs `CWSDPMI.EXE` in DOSBox)
+- Open Watcom: `make dos-watcom` (CauseWay stub embedded; no extra EXE in DOSBox)
 
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr):**
 - Use the top-level Makefile with manual port selection: `make PORT_SRC=port_plan9.c`

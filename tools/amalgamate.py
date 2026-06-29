@@ -35,8 +35,7 @@ import sys
 #   * SDL3 / GUI files are excluded.
 # ---------------------------------------------------------------------------
 PORT_SOURCES = [
-    "port_string.c",
-    "port_posix.c",
+    "port.c",
 ]
 
 C_SOURCES = [
@@ -47,7 +46,7 @@ C_SOURCES = [
     "krusader.c",
     "dbg.c",
     "io.c",
-    "term_ansi.c",
+    "term.c",
     "main.c",
 ]
 
@@ -72,6 +71,19 @@ INTERNAL_HEADERS = {
     "term_internal.h",
     "term_config.h",
     "term_debug.h",
+    "port_string.c",
+    "port_posix.c",
+    "port_win.c",
+    "port_msdos.c",
+    "port_plan9.c",
+    "port_freertos.c",
+    "port_zephyr.c",
+    "port_bare.c",
+    "port_os2.c",
+    "port_elks.c",
+    "port_vxworks.c",
+    "term_ansi.c",
+    "term_dos.c",
 }
 
 # ---------------------------------------------------------------------------
@@ -88,6 +100,7 @@ BANNER = """\
 ** Single-file build:
 **   cc -DAPPLE1_OMIT_DEBUGGER apple1.c -o apple1
 **   cl /DAPPLE1_OMIT_DEBUGGER apple1.c /Fe:apple1.exe
+**   wcl386 -bt=dos -ox -fe=apple1.exe -dAPPLE1_OMIT_CHARMAP apple1.c
 */
 """
 
@@ -238,17 +251,20 @@ def main():
                     help="Repository root (default: parent of tools/)")
     ap.add_argument("--outdir", default=default_src,
                     help="Output directory (default: same as srcdir)")
-    ap.add_argument("--port", default="port_posix.c",
-                    help="Platform port file to inline (default: port_posix.c)")
-    ap.add_argument("--term", default="term_ansi.c",
-                    help="Terminal backend to inline (default: term_ansi.c; use term_dos.c for MS-DOS)")
+    ap.add_argument("--port", default="port.c",
+                    help="Platform port file to inline (default: port.c)")
+    ap.add_argument("--term", default="term.c",
+                    help="Terminal backend to inline (default: term.c)")
     args = ap.parse_args()
 
     srcdir = os.path.abspath(args.srcdir)
     outdir = os.path.abspath(args.outdir)
     os.makedirs(outdir, exist_ok=True)
 
-    port_sources = ["port_string.c", args.port]
+    if args.port == "port.c":
+        port_sources = ["port.c"]
+    else:
+        port_sources = ["port_string.c", args.port]
     build(srcdir, outdir, port_sources, args.term)
 
 

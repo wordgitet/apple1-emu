@@ -45,6 +45,7 @@ test_pia_mirroring(void)
 	}
 
 	/* 1. Write to D011 (KBDCR) and read from mirrors */
+	bus_read(&bus, 0xD000); /* Clear KBDCR bit 7 strobe */
 	bus_write(&bus, 0xD011, 0x55);
 	assert(bus_read(&bus, 0xD011) == 0x55);
 	assert(bus_read(&bus, 0xD0F1) == 0x55);

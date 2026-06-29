@@ -1,6 +1,10 @@
 #include "port.h"
 #include <conio.h>
+#if defined(__WATCOMC__)
+#include <i86.h>
+#else
 #include <dos.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,13 +88,31 @@ port_term_read_char(void)
 	return (-1);
 }
 
+#if defined(__WATCOMC__) && !defined(_M_I86)
+static void
+msdos_putc(char c)
+{
+	union REGS regs;
+
+	port_memset(&regs, 0, sizeof(regs));
+	regs.h.ah = 0x0E;
+	regs.h.al = (unsigned char)c;
+	regs.h.bh = 0;
+	int386(0x10, &regs, &regs);
+}
+#endif
+
 void
 port_term_write_buf(const char *buf, port_size_t n)
 {
 	port_size_t i;
 
 	for (i = 0; i < n; i++) {
-		putchar(buf[i]);
+#if defined(__WATCOMC__) && !defined(_M_I86)
+		msdos_putc(buf[i]);
+#else
+		putch(buf[i]);
+#endif
 	}
 }
 
@@ -142,7 +164,7 @@ msdos_xClose(void *file)
 static int
 msdos_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
 {
-	size_t r;
+	port_size_t r;
 
 	if (file == NULL) {
 		return (-1);

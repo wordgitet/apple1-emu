@@ -1,12 +1,17 @@
 /*
- * term_dos.c - MS-DOS / DJGPP terminal backend (conio, no ANSI escapes).
+ * term_dos.c - MS-DOS terminal backend (conio / BIOS, no ANSI escapes).
  *
  * Renders the 40x24 Apple-1 screen with BIOS/conio calls so plain DOS
- * consoles and DOSBox work without ANSI.SYS.
+ * consoles and DOSBox work without ANSI.SYS.  Works with DJGPP and Open Watcom.
  */
 #include "port.h"
 #include "term_apple1.h"
 #include <conio.h>
+#if defined(__WATCOMC__)
+#include <i86.h>
+#else
+#include <dos.h>
+#endif
 
 static uint8_t vram[24][40];
 static int cursor_x = 0;
@@ -17,6 +22,12 @@ static bool reset_pending = false;
 extern uint32_t opt_baud;
 
 static uint32_t last_write_us = 0;
+
+#if defined(__WATCOMC__) && !defined(_M_I86)
+#define dos_int86(num, in, out) int386((num), (in), (out))
+#else
+#define dos_int86(num, in, out) int86((num), (in), (out))
+#endif
 
 static void
 scroll_up(void)
@@ -30,15 +41,62 @@ scroll_up(void)
 }
 
 static void
+dos_set_cursor_visible(int visible)
+{
+	union REGS regs;
+
+	port_memset(&regs, 0, sizeof(regs));
+	regs.h.ah = 0x01;
+	if (visible != 0) {
+		regs.h.ch = 0x06;
+		regs.h.cl = 0x07;
+	} else {
+		regs.h.ch = 0x20;
+		regs.h.cl = 0x00;
+	}
+	dos_int86(0x10, &regs, &regs);
+}
+
+static void
 dos_goto(int x, int y)
 {
-	gotoxy(x + 1, y + 1);
+	union REGS regs;
+
+	port_memset(&regs, 0, sizeof(regs));
+	regs.h.ah = 0x02;
+	regs.h.bh = 0;
+	regs.h.dh = (unsigned char)y;
+	regs.h.dl = (unsigned char)x;
+	dos_int86(0x10, &regs, &regs);
+}
+
+static void
+dos_clrscr(void)
+{
+	union REGS regs;
+
+	port_memset(&regs, 0, sizeof(regs));
+	regs.h.ah = 0x06;
+	regs.h.al = 0;
+	regs.h.bh = 0x07;
+	regs.h.ch = 0;
+	regs.h.cl = 0;
+	regs.h.dh = 24;
+	regs.h.dl = 79;
+	dos_int86(0x10, &regs, &regs);
+	dos_goto(0, 0);
 }
 
 static void
 dos_out_char(char c)
 {
-	putch(c);
+	union REGS regs;
+
+	port_memset(&regs, 0, sizeof(regs));
+	regs.h.ah = 0x0E;
+	regs.h.al = (unsigned char)c;
+	regs.h.bh = 0;
+	dos_int86(0x10, &regs, &regs);
 }
 
 void
@@ -55,15 +113,15 @@ term_init(void)
 	cursor_y = 0;
 
 	port_term_raw_enable();
-	clrscr();
-	_setcursortype(_NOCURSOR);
+	dos_clrscr();
+	dos_set_cursor_visible(0);
 }
 
 void
 term_shutdown(void)
 {
-	_setcursortype(_NORMALCURSOR);
-	clrscr();
+	dos_set_cursor_visible(1);
+	dos_clrscr();
 	port_term_raw_disable();
 }
 

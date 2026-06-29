@@ -189,7 +189,7 @@ load_config_file(const char *path,
 		char *ptr;
 		char *val;
 		bool has_val;
-		size_t len;
+		port_size_t len;
 		char flag;
 
 		len = port_strlen(line);
@@ -354,7 +354,8 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 int
 main(int argc, char *argv[])
 {
-	uint8_t static_ram[APPLE1_STATIC_RAM_SIZE];
+	/* Static RAM buffer — must not live on the stack (DOS extenders use ~8 KB). */
+	static uint8_t static_ram[APPLE1_STATIC_RAM_SIZE];
 	struct bus bus;
 #ifndef APPLE1_OMIT_DEBUGGER
 	debugger_t dbg;

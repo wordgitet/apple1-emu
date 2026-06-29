@@ -119,7 +119,7 @@ blobs) on bare-metal targets.
 | File | Use when |
 |------|----------|
 | `term_ansi.c` | ANSI terminal (macOS Terminal, Linux, iTerm) |
-| `term_dos.c` | MS-DOS / DJGPP (`make dos`) |
+| `term_dos.c` | MS-DOS (`make dos-djgpp` or `make dos-watcom`) |
 
 ### Platform port files
 
