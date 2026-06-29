@@ -141,11 +141,11 @@ maintained paths.
 
 | Setting | Where |
 |---------|-------|
-| RAM size 4–64 KB | `-m` CLI or config file (≤ `APPLE1_STATIC_RAM_SIZE`) |
-| Flat 64 KB bus | `-F` or positional flat binary argument |
-| Speed cap (~1.023 MHz) | `-c` |
-| Headless | `-H` |
-| Debugger | `-g` (must not define `APPLE1_OMIT_DEBUGGER`) |
-| Baud rate | `-B 1200` |
+| RAM size 4–64 KB | `-m` CLI or `ram_kb` in `.conf` (≤ `APPLE1_STATIC_RAM_SIZE`) |
+| Flat 64 KB bus | `-F` or `flat_bin` / positional flat binary |
+| Speed cap (~1.023 MHz) | `-c` or `speed_cap` in `.conf` |
+| Headless | `-H` (CLI only) |
+| Debugger | `-g` (CLI only; must not define `APPLE1_OMIT_DEBUGGER`) |
+| Baud rate | `-B 1200` or `baud` in `.conf` |
 
 See [usage.md](usage.md) for the full runtime reference.

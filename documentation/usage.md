@@ -6,18 +6,23 @@ keyboard input through the PIA.
 
 ```bash
 ./apple1 [options] [flat_binary]
+./apple1 [-H] [-g] config.conf
 ```
 
-Run `./apple1 -h` for a summary. Options can also be placed in a **config file**
-loaded with `-f`.
+Run `./apple1 -h` for a summary.
+
+**Two modes:**
+
+- **Switch mode** — no `.conf` file; use command-line options below.
+- **Config mode** — pass a `.conf` file as a positional argument. Only `-H`
+  and `-g` may appear on the command line with it (not in the file).
 
 ---
 
-## Command-line options
+## Command-line options (switch mode)
 
 | Option | Description |
 |--------|-------------|
-| `-f <file>` | Load options from a config file (see below). Processed first; CLI overrides. |
 | `-r <rom>` | Path to 256-byte Woz Monitor ROM (default: embedded ROM if compiled in) |
 | `-m <kb>` | RAM size in kilobytes (4–64, default 8). Cannot exceed `APPLE1_STATIC_RAM_SIZE`. |
 | `-l <file>@<hex>` | Load binary at hex address (e.g. `-l program.bin@0300`) |
@@ -53,35 +58,70 @@ Example — Klaus Dormann functional test:
 
 ## Config file format
 
-A config file is a line-oriented list of the same single-letter flags used on the
-command line. Lines starting with `#` are comments.
+See **`apple1.conf.example`** in the repository root for a fully commented
+template listing every key, its default when omitted, and copy-paste examples.
+
+Config files use the `.conf` suffix and **`key = value`** lines (ASCII only,
+portable across all platforms). Lines starting with `#` are comments. Boolean
+settings accept `yes`/`no`, `true`/`false`, `on`/`off`, or `1`/`0`.
+
+**Every key is optional.** Comment out or delete any line you do not need; the
+emulator uses the same defaults as switch mode (see `apple1.conf.example`). A
+file that contains only comments, or is empty, is valid.
+
+**Invalid config:** parsing stops on the first bad line. The emulator prints
+`Error: config '<path>': <reason>` (for example `line 5: unknown key 'foo'`,
+`ram_kb must be 4-64`, or `'headless' is CLI-only; use -H or -g'`) and exits
+with code **1**. No settings from that file are applied after an error. If the
+file cannot be opened, a warning is printed and the emulator also exits with
+code **1**.
 
 Example `apple1.conf`:
 
 ```
-# Woz Monitor and 8 KB RAM
--r wozmon.bin
--m 8
+# Woz Monitor and 16 KB RAM
+rom = wozmon.bin
+ram_kb = 16
 
-# Load a program
--l myprog.bin@0300
+# Load a program at $0300
+load = myprog.bin @ 0300
 
-# Authentic speed
--c
+# Authentic ~1.023 MHz cap
+speed_cap = yes
 
 # Optional ACI
--a aci_rom.bin
--e tape.wav
+aci_rom = aci_rom.bin
+tape_in = tape.wav
+tape_out = recorded.wav
 ```
 
-Rules:
+| Key | Description |
+|-----|-------------|
+| `rom` | Woz Monitor ROM path |
+| `ram_kb` | RAM size 4–64 |
+| `load` | Binary load: `file @ hexaddr` |
+| `wozmon_txt` | Woz Monitor hex text dump |
+| `flat_bin` | Flat binary at `$0000` (enables flat bus) |
+| `aci_rom` | ACI card ROM |
+| `tape_in` | ACI playback WAV |
+| `tape_out` | ACI record WAV on exit |
+| `krusader` | Krusader ROM |
+| `baud` | Terminal baud limit |
+| `speed_cap` | Cap CPU to authentic speed |
+| `flat_bus` | Linear 64 KB map |
+| `throttle_pia` | PIA I/O timing |
+| `dram_refresh` | DRAM refresh steal |
+| `keyboard_bounce` | Keyboard bounce |
+| `randomize_ram` | Randomise cold-boot RAM |
+| `trace` | Instruction trace |
 
-- Each option is `-` followed by a flag letter, optional whitespace, then a value
-  (for flags that take arguments).
-- Boolean flags (`-c`, `-H`, `-g`, …) appear alone on a line.
-- Load with: `./apple1 -f apple1.conf`
+**Not valid in config files:** `headless`, `debugger` — use `-H` and `-g` on
+the command line only.
 
-There is no automatic search path — you must pass `-f` explicitly.
+```bash
+./apple1 apple1.conf
+./apple1 -H apple1.conf -g
+```
 
 ---
 

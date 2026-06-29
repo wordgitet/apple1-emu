@@ -10,6 +10,7 @@ Quick start
 
     make                  # build ./apple1
     make check            # run unit tests
+    cp apple1.conf.example apple1.conf   # optional: edit and run with config
     ./apple1 -r wozmon.bin
 
 Headless CPU test (no terminal UI):

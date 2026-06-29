@@ -1,5 +1,7 @@
 #include "cli_config.h"
 
+#include "apple1limit.h"
+
 static void
 config_warn(const char *fmt, ...)
 {
@@ -13,164 +15,440 @@ config_warn(const char *fmt, ...)
 }
 
 void
-load_config_file(const char *path,
-    char **rom_path,
-    uint32_t *ram_size,
+cli_config_init_defaults(struct cli_config_opts *opts)
+{
+	if (opts == NULL) {
+		return;
+	}
+	opts->rom_path = NULL;
+	opts->ram_size = (uint32_t)(APPLE1_DEFAULT_RAM_KB * 1024);
+	opts->bin_path = NULL;
+	opts->bin_address = 0;
+	opts->wozmon_txt_path = NULL;
+	opts->flat_bin_path = NULL;
+	opts->aci_path = NULL;
+	opts->tape_path = NULL;
+	opts->save_tape_path = NULL;
+	opts->krusader_path = NULL;
+	opts->baud = 0;
+	opts->opt_uncapped = true;
+	opts->opt_throttle_pia = true;
+	opts->opt_emulate_dram = false;
+	opts->opt_emulate_bounce = false;
+	opts->opt_randomize_cold = true;
+	opts->opt_flat_bus = false;
+	opts->opt_trace = false;
+}
+
+void
+cli_config_free_strings(struct cli_config_opts *opts)
+{
+	if (opts == NULL) {
+		return;
+	}
+	if (opts->rom_path != NULL) {
+		port_free(opts->rom_path);
+		opts->rom_path = NULL;
+	}
+	if (opts->bin_path != NULL) {
+		port_free(opts->bin_path);
+		opts->bin_path = NULL;
+	}
+	if (opts->wozmon_txt_path != NULL) {
+		port_free(opts->wozmon_txt_path);
+		opts->wozmon_txt_path = NULL;
+	}
+	if (opts->flat_bin_path != NULL) {
+		port_free(opts->flat_bin_path);
+		opts->flat_bin_path = NULL;
+	}
+	if (opts->aci_path != NULL) {
+		port_free(opts->aci_path);
+		opts->aci_path = NULL;
+	}
+	if (opts->tape_path != NULL) {
+		port_free(opts->tape_path);
+		opts->tape_path = NULL;
+	}
+	if (opts->save_tape_path != NULL) {
+		port_free(opts->save_tape_path);
+		opts->save_tape_path = NULL;
+	}
+	if (opts->krusader_path != NULL) {
+		port_free(opts->krusader_path);
+		opts->krusader_path = NULL;
+	}
+}
+
+int
+cli_path_is_config_file(const char *path)
+{
+	port_size_t len;
+	const char *suf;
+
+	if (path == NULL) {
+		return (0);
+	}
+	len = port_strlen(path);
+	if (len < 5) {
+		return (0);
+	}
+	suf = path + len - 5;
+	if (port_tolower((unsigned char)suf[0]) == '.' &&
+	    port_tolower((unsigned char)suf[1]) == 'c' &&
+	    port_tolower((unsigned char)suf[2]) == 'o' &&
+	    port_tolower((unsigned char)suf[3]) == 'n' &&
+	    port_tolower((unsigned char)suf[4]) == 'f') {
+		return (1);
+	}
+	return (0);
+}
+
+static void
+trim_line(char *line)
+{
+	port_size_t len;
+	char *start;
+
+	len = port_strlen(line);
+	while (len > 0 &&
+	    (line[len - 1] == '\r' || line[len - 1] == '\n' ||
+		line[len - 1] == ' ' || line[len - 1] == '\t')) {
+		line[--len] = '\0';
+	}
+	start = line;
+	while (*start == ' ' || *start == '\t') {
+		start++;
+	}
+	if (start != line) {
+		port_memmove(line, start, port_strlen(start) + 1);
+	}
+}
+
+static int
+key_eq(const char *key, const char *name)
+{
+	const char *a;
+	const char *b;
+
+	a = key;
+	b = name;
+	while (*a != '\0' && *b != '\0') {
+		if (port_tolower((unsigned char)*a) !=
+		    port_tolower((unsigned char)*b)) {
+			return (0);
+		}
+		a++;
+		b++;
+	}
+	if (*a == '\0' && *b == '\0') {
+		return (1);
+	}
+	return (0);
+}
+
+static int
+parse_bool(const char *val, bool *out)
+{
+	if (key_eq(val, "1") || key_eq(val, "yes") || key_eq(val, "true") ||
+	    key_eq(val, "on")) {
+		*out = true;
+		return (1);
+	}
+	if (key_eq(val, "0") || key_eq(val, "no") || key_eq(val, "false") ||
+	    key_eq(val, "off")) {
+		*out = false;
+		return (1);
+	}
+	return (0);
+}
+
+static void
+trim_trailing(char *s)
+{
+	port_size_t len;
+
+	len = port_strlen(s);
+	while (len > 0 && (s[len - 1] == ' ' || s[len - 1] == '\t')) {
+		s[--len] = '\0';
+	}
+}
+
+static int
+parse_load_value(const char *val,
     char **bin_path,
     uint16_t *bin_address,
-    bool *opt_uncapped,
-    bool *opt_throttle_pia,
-    bool *opt_emulate_dram,
-    bool *opt_emulate_bounce,
-    bool *opt_randomize_cold,
-    bool *opt_flat_bus,
-    bool *opt_headless,
-    bool *opt_debug,
-    bool *opt_trace,
-    char **aci_path,
-    char **tape_path,
-    char **save_tape_path,
-    char **krusader_path)
+    char *errbuf,
+    port_size_t errbuf_sz)
+{
+	char *dup;
+	char *at;
+	char *path_part;
+	char *addr_part;
+
+	dup = port_strdup(val);
+	if (dup == NULL) {
+		return (0);
+	}
+	at = port_strchr(dup, '@');
+	if (at == NULL) {
+		port_free(dup);
+		if (errbuf_sz > 0) {
+			port_snprintf(errbuf,
+			    errbuf_sz,
+			    "load expects 'file @ address'");
+		}
+		return (0);
+	}
+	*at = '\0';
+	path_part = dup;
+	addr_part = at + 1;
+	while (*path_part == ' ' || *path_part == '\t') {
+		path_part++;
+	}
+	while (*addr_part == ' ' || *addr_part == '\t') {
+		addr_part++;
+	}
+	trim_trailing(path_part);
+	if (*path_part == '\0' || *addr_part == '\0') {
+		port_free(dup);
+		if (errbuf_sz > 0) {
+			port_snprintf(errbuf,
+			    errbuf_sz,
+			    "load expects 'file @ address'");
+		}
+		return (0);
+	}
+	if (*bin_path != NULL) {
+		port_free(*bin_path);
+	}
+	*bin_path = port_strdup(path_part);
+	*bin_address = (uint16_t)port_strtol(addr_part, NULL, 16);
+	port_free(dup);
+	if (*bin_path == NULL) {
+		return (0);
+	}
+	return (1);
+}
+
+static int
+set_string(char **dst, const char *val)
+{
+	if (*dst != NULL) {
+		port_free(*dst);
+	}
+	*dst = port_strdup(val);
+	if (*dst == NULL) {
+		return (0);
+	}
+	return (1);
+}
+
+static int
+apply_key(const char *key,
+    const char *val,
+    struct cli_config_opts *opts,
+    char *errbuf,
+    port_size_t errbuf_sz)
+{
+	int kb;
+	bool bval;
+
+	if (key_eq(key, "rom")) {
+		return (set_string(&opts->rom_path, val));
+	}
+	if (key_eq(key, "ram_kb")) {
+		kb = (int)port_strtoul(val, NULL, 10);
+		if (kb >= 4 && kb <= 64) {
+			opts->ram_size = (uint32_t)(kb * 1024);
+			return (1);
+		}
+		if (errbuf_sz > 0) {
+			port_snprintf(errbuf, errbuf_sz, "ram_kb must be 4-64");
+		}
+		return (0);
+	}
+	if (key_eq(key, "load")) {
+		return (parse_load_value(val,
+		    &opts->bin_path,
+		    &opts->bin_address,
+		    errbuf,
+		    errbuf_sz));
+	}
+	if (key_eq(key, "wozmon_txt")) {
+		return (set_string(&opts->wozmon_txt_path, val));
+	}
+	if (key_eq(key, "flat_bin")) {
+		opts->opt_flat_bus = true;
+		return (set_string(&opts->flat_bin_path, val));
+	}
+	if (key_eq(key, "aci_rom")) {
+		return (set_string(&opts->aci_path, val));
+	}
+	if (key_eq(key, "tape_in")) {
+		return (set_string(&opts->tape_path, val));
+	}
+	if (key_eq(key, "tape_out")) {
+		return (set_string(&opts->save_tape_path, val));
+	}
+	if (key_eq(key, "krusader")) {
+		return (set_string(&opts->krusader_path, val));
+	}
+	if (key_eq(key, "baud")) {
+		kb = (int)port_strtoul(val, NULL, 10);
+		if (kb > 0) {
+			opts->baud = (uint32_t)kb;
+			return (1);
+		}
+		if (errbuf_sz > 0) {
+			port_snprintf(errbuf, errbuf_sz, "baud must be > 0");
+		}
+		return (0);
+	}
+	if (key_eq(key, "speed_cap")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_uncapped = (bval != 0) ? false : true;
+		return (1);
+	}
+	if (key_eq(key, "flat_bus")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_flat_bus = bval;
+		return (1);
+	}
+	if (key_eq(key, "throttle_pia")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_throttle_pia = bval;
+		return (1);
+	}
+	if (key_eq(key, "dram_refresh")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_emulate_dram = bval;
+		return (1);
+	}
+	if (key_eq(key, "keyboard_bounce")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_emulate_bounce = bval;
+		return (1);
+	}
+	if (key_eq(key, "randomize_ram")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_randomize_cold = bval;
+		return (1);
+	}
+	if (key_eq(key, "trace")) {
+		if (parse_bool(val, &bval) == 0) {
+			goto bad_bool;
+		}
+		opts->opt_trace = bval;
+		return (1);
+	}
+	if (key_eq(key, "headless") || key_eq(key, "debugger")) {
+		if (errbuf_sz > 0) {
+			port_snprintf(errbuf,
+			    errbuf_sz,
+			    "'%s' is CLI-only; use -H or -g'",
+			    key);
+		}
+		return (0);
+	}
+	if (errbuf_sz > 0) {
+		port_snprintf(errbuf, errbuf_sz, "unknown key '%s'", key);
+	}
+	return (0);
+
+bad_bool:
+	if (errbuf_sz > 0) {
+		port_snprintf(errbuf,
+		    errbuf_sz,
+		    "boolean value for '%s' must be yes/no",
+		    key);
+	}
+	return (0);
+}
+
+int
+load_config_file(const char *path,
+    struct cli_config_opts *opts,
+    char *errbuf,
+    port_size_t errbuf_sz)
 {
 	port_file_t fp;
 	char line[1024];
+	int line_no;
+
+	if (opts == NULL) {
+		return (CLI_CONFIG_PARSE);
+	}
+	if (errbuf_sz > 0) {
+		errbuf[0] = '\0';
+	}
 
 	fp = port_vfs_default.open(path, PORT_VFS_READ);
 	if (fp == PORT_FILE_INVALID) {
 		config_warn("Warning: cannot open config '%s'\n", path);
-		return;
+		return (CLI_CONFIG_CANTOPEN);
 	}
 
+	line_no = 0;
 	while (port_vfs_default.read_line(fp, line, sizeof(line)) != 0) {
-		char *ptr;
+		char *eq;
+		char *key;
 		char *val;
-		bool has_val;
-		port_size_t len;
-		char flag;
 
-		len = port_strlen(line);
-		while (len > 0 &&
-		    (line[len - 1] == '\r' || line[len - 1] == '\n' ||
-			line[len - 1] == ' ' || line[len - 1] == '\t')) {
-			line[--len] = '\0';
-		}
-		ptr = line;
-		while (*ptr == ' ' || *ptr == '\t') {
-			ptr++;
-		}
-		if (*ptr == '#' || *ptr == '\0') {
+		line_no++;
+		trim_line(line);
+		if (line[0] == '#' || line[0] == '\0') {
 			continue;
 		}
-		if (ptr[0] != '-' || ptr[1] == '\0') {
-			continue;
+		eq = port_strchr(line, '=');
+		if (eq == NULL) {
+			if (errbuf_sz > 0) {
+				port_snprintf(errbuf,
+				    errbuf_sz,
+				    "line %d: expected key = value",
+				    line_no);
+			}
+			port_vfs_default.close(fp);
+			return (CLI_CONFIG_PARSE);
 		}
-		flag = ptr[1];
-		val = ptr + 2;
-		while (*val == ' ' || *val == '\t') {
-			val++;
+		*eq = '\0';
+		key = line;
+		val = eq + 1;
+		trim_line(key);
+		trim_line(val);
+		if (key[0] == '\0' || val[0] == '\0') {
+			if (errbuf_sz > 0) {
+				port_snprintf(errbuf,
+				    errbuf_sz,
+				    "line %d: empty key or value",
+				    line_no);
+			}
+			port_vfs_default.close(fp);
+			return (CLI_CONFIG_PARSE);
 		}
-		has_val = (*val != '\0');
-
-		switch (flag) {
-		case 'r':
-			if (has_val != 0) {
-				if (*rom_path != NULL) {
-					port_free(*rom_path);
-				}
-				*rom_path = port_strdup(val);
+		if (apply_key(key, val, opts, errbuf, errbuf_sz) == 0) {
+			if (errbuf_sz > 0 && errbuf[0] == '\0') {
+				port_snprintf(errbuf,
+				    errbuf_sz,
+				    "line %d: invalid setting",
+				    line_no);
 			}
-			break;
-		case 'm':
-			if (has_val != 0) {
-				int kb;
-
-				kb = (int)port_strtoul(val, (void *)0, 10);
-				if (kb >= 4 && kb <= 64) {
-					*ram_size = (uint32_t)(kb * 1024);
-				}
-			}
-			break;
-		case 'l':
-			if (has_val != 0) {
-				char *dup;
-				char *at;
-
-				dup = port_strdup(val);
-				at = port_strchr(dup, '@');
-				if (at != NULL) {
-					*at = '\0';
-					if (*bin_path != NULL) {
-						port_free(*bin_path);
-					}
-					*bin_path = port_strdup(dup);
-					*bin_address = (uint16_t)
-					    port_strtol(at + 1, NULL, 16);
-				}
-				port_free(dup);
-			}
-			break;
-		case 'c':
-			*opt_uncapped = false;
-			break;
-		case 'p':
-			*opt_throttle_pia = false;
-			break;
-		case 'd':
-			*opt_emulate_dram = true;
-			break;
-		case 'b':
-			*opt_emulate_bounce = true;
-			break;
-		case 's':
-			*opt_randomize_cold = false;
-			break;
-		case 'F':
-			*opt_flat_bus = true;
-			break;
-		case 'H':
-			*opt_headless = true;
-			break;
-		case 'g':
-			*opt_debug = true;
-			break;
-		case 't':
-			*opt_trace = true;
-			break;
-		case 'a':
-			if (has_val != 0) {
-				if (*aci_path != NULL) {
-					port_free(*aci_path);
-				}
-				*aci_path = port_strdup(val);
-			}
-			break;
-		case 'e':
-			if (has_val != 0) {
-				if (*tape_path != NULL) {
-					port_free(*tape_path);
-				}
-				*tape_path = port_strdup(val);
-			}
-			break;
-		case 'E':
-			if (has_val != 0) {
-				if (*save_tape_path != NULL) {
-					port_free(*save_tape_path);
-				}
-				*save_tape_path = port_strdup(val);
-			}
-			break;
-		case 'k':
-			if (has_val != 0) {
-				if (*krusader_path != NULL) {
-					port_free(*krusader_path);
-				}
-				*krusader_path = port_strdup(val);
-			}
-			break;
-		default:
-			break;
+			port_vfs_default.close(fp);
+			return (CLI_CONFIG_PARSE);
 		}
 	}
 	port_vfs_default.close(fp);
+	return (CLI_CONFIG_OK);
 }

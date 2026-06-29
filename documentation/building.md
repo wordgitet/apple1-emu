@@ -28,7 +28,7 @@ See `apple1limit.h` for all available options and limits.
 ```bash
 make clean
 make              # produces ./apple1
-make check        # build and run six unit tests
+make check        # build and run eight unit tests
 ```
 
 The Makefile sets:
@@ -182,7 +182,7 @@ xattr -dr com.apple.quarantine ~/djgpp
 
 | Target | Description |
 |--------|-------------|
-| `make check` | All six unit tests (pass/fail summary) |
+| `make check` | All eight unit tests (pass/fail summary) |
 | `make test-official` | Klaus Dormann 6502 functional test (headless) |
 
 Individual test binaries (not installed — built in repo root):
@@ -212,6 +212,8 @@ Verify: `file tests/harte_6502.bin` must report `data` and start with `HRT1`, no
 a 134-byte `version https://git-lfs...` pointer.
 
 - `test_interrupts` — IRQ/NMI/BRK behaviour
+- `test_vfs` — `port_vfs` swap and Woz monitor text load via VFS
+- `test_config` — human-readable `.conf` parsing
 
 Functional test (downloads test ROM):
 

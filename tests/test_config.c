@@ -1,15 +1,16 @@
 #include "../cli_config.h"
 #include "../port.h"
+#include "../apple1limit.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 /*
- * test_config.c -- load_config_file() via in-memory VFS (cli_config.c).
+ * test_config.c -- human-readable .conf parsing via port_vfs.
  */
 
 #define MOCK_CFG_PATH "ram:apple1.conf"
-#define MOCK_MAX_DATA 1024
+#define MOCK_MAX_DATA 2048
 
 struct mock_cfg_file {
 	char data[MOCK_MAX_DATA];
@@ -132,109 +133,102 @@ mock_restore(void)
 }
 
 static void
+test_empty_config(void)
+{
+	struct cli_config_opts opts;
+	char errbuf[128];
+	int rc;
+
+	cli_config_init_defaults(&opts);
+	mock_install("# only comments\n\n# rom = wozmon.bin\n");
+	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
+	assert(rc == CLI_CONFIG_OK);
+	assert(opts.rom_path == NULL);
+	assert(opts.ram_size == (uint32_t)(APPLE1_DEFAULT_RAM_KB * 1024));
+	assert(opts.opt_uncapped == true);
+
+	cli_config_free_strings(&opts);
+	mock_restore();
+}
+
+static void
 test_sample_config(void)
 {
-	char *rom_path;
-	uint32_t ram_size;
-	char *bin_path;
-	uint16_t bin_address;
-	bool opt_uncapped;
-	bool opt_throttle_pia;
-	bool opt_emulate_dram;
-	bool opt_emulate_bounce;
-	bool opt_randomize_cold;
-	bool opt_flat_bus;
-	bool opt_headless;
-	bool opt_debug;
-	bool opt_trace;
-	char *aci_path;
-	char *tape_path;
-	char *save_tape_path;
-	char *krusader_path;
+	struct cli_config_opts opts;
+	char errbuf[128];
+	int rc;
 
-	rom_path = NULL;
-	ram_size = 8 * 1024;
-	bin_path = NULL;
-	bin_address = 0;
-	opt_uncapped = true;
-	opt_throttle_pia = true;
-	opt_emulate_dram = false;
-	opt_emulate_bounce = false;
-	opt_randomize_cold = true;
-	opt_flat_bus = false;
-	opt_headless = false;
-	opt_debug = false;
-	opt_trace = false;
-	aci_path = NULL;
-	tape_path = NULL;
-	save_tape_path = NULL;
-	krusader_path = NULL;
+	cli_config_init_defaults(&opts);
 
 	mock_install(
 	    "# comment\n"
-	    "-r wozmon.bin\n"
-	    "-m 16\n"
-	    "-l myprog.bin@0300\n"
-	    "-c\n"
-	    "-F\n"
-	    "-H\n"
-	    "-d\n"
-	    "-a aci_rom.bin\n"
-	    "-e tape.wav\n"
-	    "-E out.wav\n"
-	    "-k krusader.bin\n");
+	    "rom = wozmon.bin\n"
+	    "ram_kb = 16\n"
+	    "load = myprog.bin @ 0300\n"
+	    "speed_cap = yes\n"
+	    "flat_bus = true\n"
+	    "dram_refresh = on\n"
+	    "keyboard_bounce = off\n"
+	    "aci_rom = aci.bin\n"
+	    "tape_in = in.wav\n"
+	    "tape_out = out.wav\n"
+	    "krusader = k.rom\n"
+	    "baud = 1200\n"
+	    "trace = 0\n");
 
-	load_config_file(MOCK_CFG_PATH,
-	    &rom_path,
-	    &ram_size,
-	    &bin_path,
-	    &bin_address,
-	    &opt_uncapped,
-	    &opt_throttle_pia,
-	    &opt_emulate_dram,
-	    &opt_emulate_bounce,
-	    &opt_randomize_cold,
-	    &opt_flat_bus,
-	    &opt_headless,
-	    &opt_debug,
-	    &opt_trace,
-	    &aci_path,
-	    &tape_path,
-	    &save_tape_path,
-	    &krusader_path);
+	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
+	assert(rc == CLI_CONFIG_OK);
+	assert(port_strcmp(opts.rom_path, "wozmon.bin") == 0);
+	assert(opts.ram_size == 16U * 1024U);
+	assert(port_strcmp(opts.bin_path, "myprog.bin") == 0);
+	assert(opts.bin_address == 0x0300);
+	assert(opts.opt_uncapped == false);
+	assert(opts.opt_flat_bus == true);
+	assert(opts.opt_emulate_dram == true);
+	assert(opts.opt_emulate_bounce == false);
+	assert(opts.opt_trace == false);
+	assert(opts.baud == 1200U);
 
-	assert(rom_path != NULL);
-	assert(port_strcmp(rom_path, "wozmon.bin") == 0);
-	assert(ram_size == 16U * 1024U);
-	assert(bin_path != NULL);
-	assert(port_strcmp(bin_path, "myprog.bin") == 0);
-	assert(bin_address == 0x0300);
-	assert(opt_uncapped == false);
-	assert(opt_flat_bus == true);
-	assert(opt_headless == true);
-	assert(opt_emulate_dram == true);
-	assert(aci_path != NULL);
-	assert(port_strcmp(aci_path, "aci_rom.bin") == 0);
-	assert(tape_path != NULL);
-	assert(port_strcmp(tape_path, "tape.wav") == 0);
-	assert(save_tape_path != NULL);
-	assert(port_strcmp(save_tape_path, "out.wav") == 0);
-	assert(krusader_path != NULL);
-	assert(port_strcmp(krusader_path, "krusader.bin") == 0);
-
-	port_free(rom_path);
-	port_free(bin_path);
-	port_free(aci_path);
-	port_free(tape_path);
-	port_free(save_tape_path);
-	port_free(krusader_path);
+	cli_config_free_strings(&opts);
 	mock_restore();
+}
+
+static void
+test_reject_cli_only_keys(void)
+{
+	struct cli_config_opts opts;
+	char errbuf[128];
+	int rc;
+
+	cli_config_init_defaults(&opts);
+	mock_install("headless = yes\n");
+	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
+	assert(rc == CLI_CONFIG_PARSE);
+
+	cli_config_init_defaults(&opts);
+	mock_install("debugger = yes\n");
+	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
+	assert(rc == CLI_CONFIG_PARSE);
+
+	cli_config_free_strings(&opts);
+	mock_restore();
+}
+
+static void
+test_path_suffix(void)
+{
+	assert(cli_path_is_config_file("apple1.conf") != 0);
+	assert(cli_path_is_config_file("APPLE1.CONF") != 0);
+	assert(cli_path_is_config_file("prog.bin") == 0);
 }
 
 int
 main(void)
 {
+	test_path_suffix();
+	test_empty_config();
 	test_sample_config();
+	test_reject_cli_only_keys();
 	printf("test_config passed.\n");
 	return (0);
 }

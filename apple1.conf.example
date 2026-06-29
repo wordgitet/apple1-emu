@@ -1,0 +1,143 @@
+# apple1.conf.example — Apple-1 emulator configuration
+#
+# Copy and rename to apple1.conf (or any path ending in .conf), then uncomment
+# and edit the lines you need:
+#
+#     cp apple1.conf.example apple1.conf
+#     ./apple1 apple1.conf
+#
+# Syntax (portable ASCII, all platforms):
+#     key = value
+# Lines starting with # are comments. Blank lines are ignored.
+#
+# Every setting below is OPTIONAL. You may comment out or delete any line; keys
+# that are absent use the defaults described in each block. A file containing
+# only comments (or nothing at all) is valid and runs with those defaults.
+#
+# Boolean values accept: yes/no, true/false, on/off, 1/0 (case insensitive).
+#
+# Errors: if any line is invalid, the emulator prints a message such as
+#     Error: config 'apple1.conf': line 12: unknown key 'foo'
+# and exits with code 1. Nothing from the file is applied after an error.
+# If the file cannot be opened, a warning is printed and the emulator exits
+# with code 1.
+#
+# NOT allowed in this file (CLI only — use -H and -g on the command line):
+#     headless, debugger
+#
+# Example with runtime flags:
+#     ./apple1 apple1.conf -g
+#     ./apple1 -H apple1.conf
+
+
+# ---------------------------------------------------------------------------
+# ROM and RAM
+# ---------------------------------------------------------------------------
+
+# rom = wozmon.bin
+#   Path to an external 256-byte Woz Monitor ROM image.
+#   Default: built-in embedded ROM when the binary was compiled with one;
+#   otherwise you must supply a ROM via this setting or -r on the CLI.
+
+# ram_kb = 8
+#   Main RAM size in kilobytes (integer 4–64).
+#   Default: 8 (or the compile-time APPLE1_DEFAULT_RAM_KB value).
+#   Cannot exceed APPLE1_STATIC_RAM_SIZE from the build.
+
+
+# ---------------------------------------------------------------------------
+# Program loading
+# ---------------------------------------------------------------------------
+
+# load = myprog.bin @ 0300
+#   Load a binary into RAM at a hex address. Format: path @ address
+#   Whitespace around @ is optional. Address is hexadecimal (0300 = $0300).
+#   Default: no binary loaded (Woz Monitor only unless you load elsewhere).
+
+# wozmon_txt = wozmon_dump.txt
+#   Load Woz Monitor ROM contents from a hex text dump instead of a .bin file.
+#   Default: not used.
+
+# flat_bin = test.rom
+#   Load a flat binary image at address $0000 and enable flat bus mode
+#   (linear 64 KB map — same idea as -F with a positional file in switch mode).
+#   Default: not used; flat bus off unless flat_bin is set or flat_bus = yes.
+
+
+# ---------------------------------------------------------------------------
+# Expansion cards (optional)
+# ---------------------------------------------------------------------------
+
+# aci_rom = aci_rom.bin
+#   Apple Cassette Interface: path to the ACI 256-byte ROM image.
+#   Default: ACI not installed.
+
+# tape_in = recording.wav
+#   WAV file for ACI cassette playback (mono PCM; see usage.md).
+#   Default: no tape loaded.
+
+# tape_out = out.wav
+#   On exit, write ACI-recorded audio to this WAV path.
+#   Default: no recording saved.
+
+# krusader = krusader.bin
+#   Krusader assembler ROM (1–4096 bytes).
+#   Default: Krusader not installed.
+
+
+# ---------------------------------------------------------------------------
+# Terminal and timing
+# ---------------------------------------------------------------------------
+
+# baud = 1200
+#   Limit terminal output to simulate serial speed (characters per second).
+#   Use 0 or omit for no limit (full-speed terminal).
+#   Default: 0 (no baud limit).
+
+# speed_cap = yes
+#   When yes: cap CPU to authentic Apple-1 speed (~1.023 MHz).
+#   When no: run as fast as the host allows (same as omitting this/b on CLI).
+#   Default: no (uncapped).
+
+# throttle_pia = yes
+#   When yes: emulate PIA I/O timing (keyboard/display strobe delays).
+#   When no: PIA accesses are instantaneous (same as -p on the CLI).
+#   Default: yes.
+
+# dram_refresh = yes
+#   When yes: steal CPU cycles for DRAM refresh emulation (same as -d).
+#   Default: no.
+
+# keyboard_bounce = yes
+#   When yes: emulate keyboard bounce/debounce (same as -b).
+#   Default: no.
+
+# randomize_ram = yes
+#   When yes: fill RAM with random data on cold boot (realistic power-on).
+#   When no: zero-fill RAM (same as -s on the CLI).
+#   Default: yes.
+
+# trace = no
+#   When yes: print each executed instruction (disassembly to the terminal).
+#   Default: no.
+
+
+# ---------------------------------------------------------------------------
+# Bus layout
+# ---------------------------------------------------------------------------
+
+# flat_bus = yes
+#   Use a linear 64 KB address map ($0000–$FFFF). Requires enough static RAM
+#   in the build (typically 64 KB). Often used with flat_bin or test ROMs.
+#   Setting flat_bin = path also turns flat bus on.
+#   Default: no (standard Apple-1 memory map).
+
+
+# ---------------------------------------------------------------------------
+# Minimal working example (uncomment and adjust paths):
+# ---------------------------------------------------------------------------
+#
+# rom = wozmon.bin
+# ram_kb = 8
+# load = hello.bin @ 0300
+# speed_cap = yes

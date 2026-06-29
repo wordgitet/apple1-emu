@@ -46,6 +46,7 @@ C_SOURCES = [
     "krusader.c",
     "dbg.c",
     "io.c",
+    "cli_config.c",
     "term.c",
     "main.c",
 ]
@@ -61,6 +62,7 @@ PUBLIC_HEADERS = [
     "aci.h",
     "krusader.h",
     "io.h",
+    "cli_config.h",
     "term_apple1.h",
 ]
 

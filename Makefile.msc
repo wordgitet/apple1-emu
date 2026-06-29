@@ -12,12 +12,12 @@ PORT_STRING = port_string.c
 # Core source files
 CORE_SRC = cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
 HEADERS = cpu.h bus.h io.h aci.h krusader.h disasm.h dbg.h term_apple1.h \
-          embedded_roms.h port.h
+          cli_config.h embedded_roms.h port.h
 
 # Object files
 CORE_OBJ = cpu.obj bus.obj io.obj aci.obj krusader.obj disasm.obj dbg.obj
 PORT_OBJ = $(PORT_STRING:.c=.obj) $(PORT_SRC:.c=.obj)
-OBJ = main.obj $(CORE_OBJ) term_ansi.obj $(PORT_OBJ)
+OBJ = main.obj cli_config.obj $(CORE_OBJ) term_ansi.obj $(PORT_OBJ)
 
 all: apple1.exe
 
@@ -26,6 +26,9 @@ apple1.exe: $(OBJ)
 
 main.obj: main.c $(HEADERS)
 	$(CC) $(CFLAGS) -c main.c
+
+cli_config.obj: cli_config.c cli_config.h port.h apple1limit.h
+	$(CC) $(CFLAGS) -c cli_config.c
 
 cpu.obj: cpu.c cpu.h bus.h port.h
 	$(CC) $(CFLAGS) -c cpu.c

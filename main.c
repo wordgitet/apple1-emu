@@ -122,14 +122,18 @@ print_usage(const char *prog)
 #ifndef APPLE1_OMIT_STDIO
 	cli_error("Apple 1 Emulator (portable CLI build)\n"
 		  "Usage: %s [options] [flat_binary]\n"
+		  "       %s [-H] [-g] config.conf\n"
+		  "\n"
+		  "Config file mode: pass a .conf file (see usage.md).  Only "
+		  "-H and -g may accompany it.\n"
+		  "Switch mode: use options below without a .conf file.\n"
 		  "\n"
 		  "Options:\n"
-		  "  -f <file>            Load configuration from <file>\n"
 		  "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
 		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 		  "  -l <file>@<hex>      Load binary at hex address\n"
 		  "  -c                   Cap emulation speed to 1.023 MHz\n",
-	    prog);
+	    prog, prog);
 	cli_error("  -p                   Disable PIA I/O throttling\n"
 		  "  -d                   Emulate DRAM refresh cycle stealing\n"
 		  "  -b                   Emulate keyboard bounce\n"
@@ -151,6 +155,78 @@ print_usage(const char *prog)
 #else
 	(void)prog;
 #endif
+}
+
+/* ------------------------------------------------------------------ */
+/*  CLI / config file mode                                              */
+/* ------------------------------------------------------------------ */
+
+static int
+cli_arg_is_runtime_only(const char *arg)
+{
+	if (arg == NULL || arg[0] != '-') {
+		return (0);
+	}
+	if (port_strcmp(arg, "-H") == 0) {
+		return (1);
+	}
+	if (port_strcmp(arg, "-g") == 0) {
+		return (1);
+	}
+	if (port_strcmp(arg, "-h") == 0) {
+		return (1);
+	}
+	return (0);
+}
+
+static int
+apply_loaded_config(struct cli_config_opts *cfg,
+    char **rom_path,
+    uint32_t *ram_size,
+    char **bin_path,
+    uint16_t *bin_address,
+    char **wozmon_txt_path,
+    char **flat_bin_path,
+    bool *opt_uncapped,
+    bool *opt_throttle_pia,
+    bool *opt_emulate_dram,
+    bool *opt_emulate_bounce,
+    bool *opt_randomize_cold,
+    bool *opt_flat_bus,
+    bool *opt_trace,
+    char **aci_path,
+    char **tape_path,
+    char **save_tape_path,
+    char **krusader_path,
+    uint32_t *baud)
+{
+	*rom_path = cfg->rom_path;
+	cfg->rom_path = NULL;
+	*ram_size = cfg->ram_size;
+	*bin_path = cfg->bin_path;
+	cfg->bin_path = NULL;
+	*bin_address = cfg->bin_address;
+	*wozmon_txt_path = cfg->wozmon_txt_path;
+	cfg->wozmon_txt_path = NULL;
+	*flat_bin_path = cfg->flat_bin_path;
+	cfg->flat_bin_path = NULL;
+	*aci_path = cfg->aci_path;
+	cfg->aci_path = NULL;
+	*tape_path = cfg->tape_path;
+	cfg->tape_path = NULL;
+	*save_tape_path = cfg->save_tape_path;
+	cfg->save_tape_path = NULL;
+	*krusader_path = cfg->krusader_path;
+	cfg->krusader_path = NULL;
+	*baud = cfg->baud;
+	*opt_uncapped = cfg->opt_uncapped;
+	*opt_throttle_pia = cfg->opt_throttle_pia;
+	*opt_emulate_dram = cfg->opt_emulate_dram;
+	*opt_emulate_bounce = cfg->opt_emulate_bounce;
+	*opt_randomize_cold = cfg->opt_randomize_cold;
+	*opt_flat_bus = cfg->opt_flat_bus;
+	*opt_trace = cfg->opt_trace;
+	return (0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -292,144 +368,204 @@ main(int argc, char *argv[])
 	opt_trace = false;
 	opt_uncapped = true;
 
-	/*
-	 * First pass: pick up -f <config> so it is loaded before other
-	 * switches, which can then override individual settings.
-	 */
+	/* Scan for .conf path, runtime flags (-H/-g/-h), and config mode. */
 	{
 		int ai;
-		for (ai = 1; ai < argc - 1; ai++) {
-			if (port_strcmp(argv[ai], "-f") == 0) {
-				config_path = argv[ai + 1];
-				break;
+
+		for (ai = 1; ai < argc; ai++) {
+			if (port_strcmp(argv[ai], "-h") == 0) {
+				print_usage(argv[0]);
+				return (0);
+			}
+			if (port_strcmp(argv[ai], "-H") == 0) {
+				opt_headless = true;
+			} else if (port_strcmp(argv[ai], "-g") == 0) {
+				opt_debug = true;
+			} else if (argv[ai][0] == '-') {
+				continue;
+			} else if (cli_path_is_config_file(argv[ai]) != 0) {
+				if (config_path != NULL) {
+					cli_error("Error: multiple config "
+						  "files specified\n");
+					return (1);
+				}
+				config_path = argv[ai];
 			}
 		}
 	}
 
 	if (config_path != NULL) {
-		load_config_file(config_path,
+		struct cli_config_opts cfg;
+		char errbuf[256];
+		int cfg_rc;
+		int ai;
+
+		for (ai = 1; ai < argc; ai++) {
+			if (argv[ai][0] == '-' &&
+			    cli_arg_is_runtime_only(argv[ai]) == 0) {
+				cli_error("Error: option '%s' cannot be used "
+					  "with a config file (only -H and -g "
+					  "are allowed)\n",
+				    argv[ai]);
+				return (1);
+			}
+		}
+
+		cli_config_init_defaults(&cfg);
+		cfg_rc = load_config_file(config_path,
+		    &cfg,
+		    errbuf,
+		    sizeof(errbuf));
+		if (cfg_rc == CLI_CONFIG_PARSE) {
+			cli_error("Error: config '%s': %s\n",
+			    config_path,
+			    errbuf);
+			cli_config_free_strings(&cfg);
+			return (1);
+		}
+		if (cfg_rc == CLI_CONFIG_CANTOPEN) {
+			cli_config_free_strings(&cfg);
+			return (1);
+		}
+		apply_loaded_config(&cfg,
 		    &rom_path,
 		    &ram_size,
 		    &bin_path,
 		    &bin_address,
+		    &wozmon_txt_path,
+		    &flat_bin_path,
 		    &opt_uncapped,
 		    &opt_throttle_pia,
 		    &opt_emulate_dram,
 		    &opt_emulate_bounce,
 		    &opt_randomize_cold,
 		    &opt_flat_bus,
-		    &opt_headless,
-		    &opt_debug,
 		    &opt_trace,
 		    &aci_path,
 		    &tape_path,
 		    &save_tape_path,
-		    &krusader_path);
-	}
+		    &krusader_path,
+		    &opt_baud);
+		cli_config_free_strings(&cfg);
+	} else {
+		while ((opt = port_getopt(argc,
+			    argv,
+			    "r:m:l:w:a:e:E:B:k:cFpdbsHgth")) != -1) {
+			switch (opt) {
+			case 'r':
+				if (rom_path != NULL) {
+					port_free(rom_path);
+				}
+				rom_path = port_strdup(port_optarg);
+				break;
+			case 'm': {
+				int kb;
 
-	/* Second pass: command-line overrides */
-	while (
-	    (opt = port_getopt(argc, argv, "f:r:m:l:w:a:e:E:B:k:cFpdbsHgth")) !=
-	    -1) {
-		switch (opt) {
-		case 'f':
-			/* Already handled */
-			break;
-		case 'r':
-			if (rom_path != NULL)
-				port_free(rom_path);
-			rom_path = port_strdup(port_optarg);
-			break;
-		case 'm': {
-			int kb = (int)port_strtoul(port_optarg, (void *)0, 10);
-			if (kb >= 4 && kb <= 64)
-				ram_size = (uint32_t)(kb * 1024);
-			break;
-		}
-		case 'l': {
-			char *dup = port_strdup(port_optarg);
-			char *at = port_strchr(dup, '@');
-			if (at != NULL) {
-				*at = '\0';
-				if (bin_path != NULL)
-					port_free(bin_path);
-				bin_path = port_strdup(dup);
-				bin_address =
-				    (uint16_t)port_strtol(at + 1, NULL, 16);
+				kb = (int)port_strtoul(port_optarg,
+				    (void *)0,
+				    10);
+				if (kb >= 4 && kb <= 64) {
+					ram_size = (uint32_t)(kb * 1024);
+				}
+				break;
 			}
-			port_free(dup);
-			break;
-		}
-		case 'w':
-			wozmon_txt_path = port_strdup(port_optarg);
-			break;
-		case 'a':
-			if (aci_path != NULL)
-				port_free(aci_path);
-			aci_path = port_strdup(port_optarg);
-			break;
-		case 'e':
-			if (tape_path != NULL)
-				port_free(tape_path);
-			tape_path = port_strdup(port_optarg);
-			break;
-		case 'E':
-			if (save_tape_path != NULL)
-				port_free(save_tape_path);
-			save_tape_path = port_strdup(port_optarg);
-			break;
-		case 'B': {
-			int baud =
-			    (int)port_strtoul(port_optarg, (void *)0, 10);
-			if (baud > 0)
-				opt_baud = (uint32_t)baud;
-			break;
-		}
-		case 'k':
-			if (krusader_path != NULL)
-				port_free(krusader_path);
-			krusader_path = port_strdup(port_optarg);
-			break;
-		case 'c':
-			opt_uncapped = false;
-			break;
-		case 'F':
-			opt_flat_bus = true;
-			break;
-		case 'p':
-			opt_throttle_pia = false;
-			break;
-		case 'd':
-			opt_emulate_dram = true;
-			break;
-		case 'b':
-			opt_emulate_bounce = true;
-			break;
-		case 's':
-			opt_randomize_cold = false;
-			break;
-		case 'H':
-			opt_headless = true;
-			break;
-		case 'g':
-			opt_debug = true;
-			break;
-		case 't':
-			opt_trace = true;
-			break;
-		case 'h':
-			print_usage(argv[0]);
-			return (0);
-		default:
-			print_usage(argv[0]);
-			return (1);
-		}
-	}
+			case 'l': {
+				char *dup;
+				char *at;
 
-	/* Positional arg = flat binary */
-	if (port_optind < argc) {
-		flat_bin_path = argv[port_optind];
-		opt_flat_bus = true;
+				dup = port_strdup(port_optarg);
+				at = port_strchr(dup, '@');
+				if (at != NULL) {
+					*at = '\0';
+					if (bin_path != NULL) {
+						port_free(bin_path);
+					}
+					bin_path = port_strdup(dup);
+					bin_address = (uint16_t)
+					    port_strtol(at + 1, NULL, 16);
+				}
+				port_free(dup);
+				break;
+			}
+			case 'w':
+				wozmon_txt_path = port_strdup(port_optarg);
+				break;
+			case 'a':
+				if (aci_path != NULL) {
+					port_free(aci_path);
+				}
+				aci_path = port_strdup(port_optarg);
+				break;
+			case 'e':
+				if (tape_path != NULL) {
+					port_free(tape_path);
+				}
+				tape_path = port_strdup(port_optarg);
+				break;
+			case 'E':
+				if (save_tape_path != NULL) {
+					port_free(save_tape_path);
+				}
+				save_tape_path = port_strdup(port_optarg);
+				break;
+			case 'B': {
+				int baud;
+
+				baud = (int)port_strtoul(port_optarg,
+				    (void *)0,
+				    10);
+				if (baud > 0) {
+					opt_baud = (uint32_t)baud;
+				}
+				break;
+			}
+			case 'k':
+				if (krusader_path != NULL) {
+					port_free(krusader_path);
+				}
+				krusader_path = port_strdup(port_optarg);
+				break;
+			case 'c':
+				opt_uncapped = false;
+				break;
+			case 'F':
+				opt_flat_bus = true;
+				break;
+			case 'p':
+				opt_throttle_pia = false;
+				break;
+			case 'd':
+				opt_emulate_dram = true;
+				break;
+			case 'b':
+				opt_emulate_bounce = true;
+				break;
+			case 's':
+				opt_randomize_cold = false;
+				break;
+			case 'H':
+				opt_headless = true;
+				break;
+			case 'g':
+				opt_debug = true;
+				break;
+			case 't':
+				opt_trace = true;
+				break;
+			case 'h':
+				print_usage(argv[0]);
+				return (0);
+			default:
+				print_usage(argv[0]);
+				return (1);
+			}
+		}
+
+		/* Positional arg = flat binary (switch mode only) */
+		if (port_optind < argc) {
+			flat_bin_path = argv[port_optind];
+			opt_flat_bus = true;
+		}
 	}
 
 	/* Validate RAM size */
