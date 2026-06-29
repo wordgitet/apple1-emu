@@ -5,7 +5,7 @@ port file and links `port_string.c` with one `port_*.c`.
 
 ## Requirements
 
-- C99 compiler (`cc`, `gcc`, or `clang`)
+- C89 compiler (`cc`, `gcc`, or `clang`)
 - Python 3 (for amalgamation and `make dos` only)
 - POSIX-like shell for `make check`
 
@@ -24,7 +24,7 @@ The Makefile sets:
 | `CC` | `cc` | C compiler |
 | `CFLAGS` | `-O2 -g` | Optimisation / debug |
 | `WFLAGS` | `-Wall -Wextra` | Warnings |
-| `STDFLAG` | `-std=c99` | Language standard |
+| `STDFLAG` | `-std=c89` | Language standard |
 | `EXTRA_CFLAGS` | (empty) | **Your compile-time `-D` flags go here** |
 
 Example minimal build (no debugger, smaller binary):
@@ -136,8 +136,25 @@ make clean    # removes apple1, test binaries, *.o, port_*.o
 Build artefacts **`apple1.exe`**, **`CWSDPMI.EXE`**, and generated **`apple1.c`**
 from amalgamation are not removed by `make clean` if they exist as untracked files.
 
-## Autotools note
+## Autotools (multi-target builds)
 
-`Makefile.am` exists for autoconf/automake workflows but is **out of date**
-(it predates the port layer split). Prefer the top-level **Makefile** unless you
-update `Makefile.am` to match.
+For cross-compilation to non-POSIX targets, use the autotools build system:
+
+```bash
+./configure --with-target=dos    # or windows, freertos, bare, elks, os2, plan9, vxworks, zephyr
+make
+```
+
+Available targets:
+- `posix` (default): Unix, macOS, Linux, *BSD, Haiku
+- `dos`: MS-DOS (DJGPP)
+- `windows`: Windows (MinGW/MSVC)
+- `freertos`: FreeRTOS
+- `bare`: Bare metal
+- `elks`: ELKS
+- `os2`: OS/2
+- `plan9`: Plan 9
+- `vxworks`: VxWorks
+- `zephyr`: Zephyr
+
+The autotools build automatically selects the appropriate `port_*.c` and terminal backend for each target.
