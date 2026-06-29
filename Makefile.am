@@ -1,4 +1,4 @@
-AM_CFLAGS = -Wall -Wextra -std=c89 -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
+AM_CFLAGS = -Wall -Wextra -std=c89
 
 bin_PROGRAMS = apple1
 

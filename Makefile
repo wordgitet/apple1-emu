@@ -14,7 +14,7 @@ CC      = cc
 CFLAGS  = -O2 -g
 WFLAGS  = -Wall -Wextra
 STDFLAG = -std=c89
-DEFS    = -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
+DEFS    =
 
 # Combined flags used for every translation unit
 BASE_CFLAGS = $(CFLAGS) $(WFLAGS) $(STDFLAG) $(DEFS) $(EXTRA_CFLAGS)
@@ -31,9 +31,9 @@ all: apple1
 apple1: $(OBJ)
 	$(CC) $(BASE_CFLAGS) -o apple1 $(OBJ)
 
-port.o: port.c port.h port_string.c port_posix.c port_win.c port_msdos.c \
-        port_plan9.c port_freertos.c port_zephyr.c port_bare.c port_os2.c \
-        port_elks.c port_vxworks.c port_tcc_va.c port_stdarg.h
+port.o: port.c port.h port_string.c port_posix.c port_posix_inc.h port_win.c \
+        port_msdos.c port_plan9.c port_freertos.c port_zephyr.c port_bare.c \
+        port_os2.c port_elks.c port_vxworks.c port_tcc_va.c port_stdarg.h
 	$(CC) $(BASE_CFLAGS) -DAPPLE1_OMIT_CHARMAP -c -o port.o port.c
 
 term.o: term.c term_ansi.c term_dos.c term_apple1.h

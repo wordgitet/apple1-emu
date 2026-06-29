@@ -75,12 +75,11 @@ Pair **`APPLE1_ACI_MAX_TAPE_PULSES`** with zero/custom malloc for fully static A
 
 ## Makefile built-in defines
 
-The Makefile always passes:
-
-```
--D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
--DAPPLE1_OMIT_CHARMAP          # per-object rule on core .c files
-```
+The Makefile passes `-DAPPLE1_OMIT_CHARMAP` on core object builds.
+POSIX feature-test macros (`_POSIX_C_SOURCE`) are set in `port_posix_inc.h`
+and included only by the POSIX port layer (`port_posix.c`, `port_elks.c`).
+Core sources do not include system headers and do not need libc feature
+macros on the compiler command line.
 
 MS-DOS cross-build adds:
 

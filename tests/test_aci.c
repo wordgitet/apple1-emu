@@ -4,6 +4,7 @@
 #include "../dbg.h"
 #include "../io.h"
 #include "../port.h"
+#include "../port_posix_inc.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -107,8 +108,8 @@ run_roundtrip_test(const char *tape_path,
 	char cmd_buf[64];
 	struct expansion_card *aci_card;
 	struct expansion_card *read_aci_card;
-	int64_t cycles_since_growth;
-	int64_t total_cycles;
+	long cycles_since_growth;
+	long total_cycles;
 	int current_slice;
 	int i;
 	int read_slice;
@@ -164,7 +165,7 @@ run_roundtrip_test(const char *tape_path,
 	total_cycles = 0;
 	slice_cycles = 50000;
 
-	while (total_cycles < 200000000LL) {
+	while (total_cycles < 200000000L) {
 		current_slice = 0;
 		while (current_slice < slice_cycles && cpu.halted == false) {
 			bus_update_keyboard(&bus);
@@ -192,9 +193,9 @@ run_roundtrip_test(const char *tape_path,
 		}
 	}
 
-	printf("  Phase 1 Complete: Ran %lld cycles, captured %u "
+	printf("  Phase 1 Complete: Ran %ld cycles, captured %u "
 	       "transitions.\n",
-	    (long long)total_cycles,
+	    total_cycles,
 	    last_transition_count);
 
 	if (last_transition_count < 100) {
@@ -274,7 +275,7 @@ run_roundtrip_test(const char *tape_path,
 	matched = false;
 	read_slice = 50000;
 
-	while (total_cycles < 200000000LL) {
+	while (total_cycles < 200000000L) {
 		current_slice = 0;
 		while (current_slice < read_slice && read_cpu.halted == false) {
 			bus_update_keyboard(&read_bus);
@@ -296,8 +297,8 @@ run_roundtrip_test(const char *tape_path,
 		}
 	}
 
-	printf("  Phase 3 Complete: Ran %lld cycles, matched=%s\n",
-	    (long long)total_cycles,
+	printf("  Phase 3 Complete: Ran %ld cycles, matched=%s\n",
+	    total_cycles,
 	    matched ? "yes" : "no");
 
 	if (matched == false) {
