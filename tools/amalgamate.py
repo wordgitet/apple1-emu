@@ -53,6 +53,7 @@ C_SOURCES = [
 # Public headers that go into apple1.h (order matters for deps)
 PUBLIC_HEADERS = [
     "port.h",
+    "port_stdarg.h",
     "bus.h",
     "cpu.h",
     "dbg.h",
@@ -82,6 +83,7 @@ INTERNAL_HEADERS = {
     "port_os2.c",
     "port_elks.c",
     "port_vxworks.c",
+    "port_tcc_va.c",
     "term_ansi.c",
     "term_dos.c",
 }

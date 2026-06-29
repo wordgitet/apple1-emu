@@ -32,7 +32,7 @@ apple1: $(OBJ)
 
 port.o: port.c port.h port_string.c port_posix.c port_win.c port_msdos.c \
         port_plan9.c port_freertos.c port_zephyr.c port_bare.c port_os2.c \
-        port_elks.c port_vxworks.c
+        port_elks.c port_vxworks.c port_tcc_va.c port_stdarg.h
 	$(CC) $(BASE_CFLAGS) -DAPPLE1_OMIT_CHARMAP -c -o port.o port.c
 
 term.o: term.c term_ansi.c term_dos.c term_apple1.h
@@ -139,6 +139,12 @@ dos-watcom: amalgamation-dos
 apple1-watcom.exe: dos-watcom
 
 apple1-djgpp.exe: dos-djgpp
+
+# TinyCC (hosted POSIX build; no autotools required)
+tcc:
+	$(MAKE) clean
+	$(MAKE) CC=tcc WFLAGS= STDFLAG= DEFS=
+	$(MAKE) check CC=tcc WFLAGS= STDFLAG= DEFS=
 
 cwsdpmi.exe:
 	curl -L -o cwsdpmi.zip https://www.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip

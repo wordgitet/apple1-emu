@@ -5,6 +5,11 @@
  */
 
 #include "port.h"
+
+#if defined(__TINYC__) && defined(__x86_64__) && !defined(_WIN64)
+#include "port_tcc_va.c"
+#endif
+
 #include "port_string.c"
 
 #if defined(APPLE1_PORT_BARE)

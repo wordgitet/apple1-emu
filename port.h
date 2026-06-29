@@ -5,16 +5,15 @@
  * port.h -- Apple-1 emulator portability interface
  *
  * This header contains ONLY type definitions, struct declarations,
- * and function prototypes.  It includes exactly one standard header:
- * <stdarg.h>, which is a compiler intrinsic available in all C89
- * environments including freestanding implementations.
+ * and function prototypes.  Variadic support comes from port_stdarg.h
+ * (system <stdarg.h> on hosted toolchains; a TinyCC-safe shim otherwise).
  *
  * All implementations live in a single platform-specific port_*.c
  * file selected at compile time (port_posix.c, port_win.c, etc.).
  * Core source files must include only this header, never any system
  * headers directly.
  */
-#include <stdarg.h>
+#include "port_stdarg.h"
 
 /* ================================================================== */
 /* Integer type definitions -- zero dependency on <stdint.h>          */

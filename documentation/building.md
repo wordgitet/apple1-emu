@@ -40,6 +40,10 @@ The Makefile sets:
 | `STDFLAG` | `-std=c89` | Language standard |
 | `EXTRA_CFLAGS` | (empty) | **Your compile-time `-D` flags go here** |
 
+[TinyCC](https://bellard.org/tcc/) on **x86_64** (non-Windows): `make tcc` or
+`make CC=tcc WFLAGS= STDFLAG= DEFS=`.  Only that target needs `port_stdarg.h` /
+`port_tcc_va.c`; other CPUs and compilers use normal `<stdarg.h>`.
+
 Example minimal build (no debugger, smaller binary):
 
 ```bash
