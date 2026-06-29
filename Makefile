@@ -5,6 +5,8 @@
 # USAGE:
 #   make                  Build apple1 TUI target
 #   make check            Build and run all unit tests
+#   make tcc              Build with TinyCC (x86_64)
+#   make pcc              Build with PCC
 #   make clean            Remove build artefacts
 #   make distclean        clean + cross-build outputs and downloaded files
 #
@@ -151,7 +153,11 @@ apple1-djgpp.exe: dos-djgpp
 tcc:
 	$(MAKE) clean
 	$(MAKE) CC=tcc WFLAGS= STDFLAG= DEFS=
-	$(MAKE) check CC=tcc WFLAGS= STDFLAG= DEFS=
+
+# PCC (hosted POSIX build)
+pcc:
+	$(MAKE) clean
+	$(MAKE) CC=pcc
 
 cwsdpmi.exe:
 	curl -L -o cwsdpmi.zip https://www.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip
@@ -172,6 +178,6 @@ distclean: clean
 	rm -f *.map apple1.err
 	rm -f *-*.o.tmp
 
-.PHONY: all check clean distclean tcc amalgamation amalgamation-dos dos-djgpp dos-watcom \
+.PHONY: all check clean distclean tcc pcc amalgamation amalgamation-dos dos-djgpp dos-watcom \
 	apple1-watcom.exe apple1-djgpp.exe apple1.exe cwsdpmi.exe test-official \
 	$(TESTS) 6502_functional_test.bin

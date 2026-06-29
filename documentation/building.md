@@ -49,12 +49,14 @@ include.  See `documentation/configuration.md`.
 
 [TinyCC](https://bellard.org/tcc/) on **x86_64** (non-Windows): `make tcc` or
 `make CC=tcc WFLAGS= STDFLAG=`.  Only that target needs `port_stdarg.h` /
-`port_tcc_va.c`; other CPUs and compilers use normal `<stdarg.h>`.
+`port_tcc_va.c`; other CPUs and compilers use normal `<stdarg.h>`.  To run the
+unit tests under TinyCC: `make check CC=tcc WFLAGS= STDFLAG= DEFS=`.
 
 Other hosted C89 compilers on Linux (smoke-tested):
 
 ```bash
-make clean && make CC=pcc
+make pcc
+make tcc
 make clean && make CC=lacc
 ```
 
