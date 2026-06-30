@@ -41,19 +41,12 @@ recorded_tape.aci
 
 POM1/
 
-# Autotools / build filth
-# /Makefile
-/Makefile.in
+# Autotools — generated locally by ./configure (do not commit)
+/Makefile
 /aclocal.m4
-/autom4te.cache/
-/configure
-/compile
-/depcomp
-/install-sh
-/missing
-/test-driver
 /config.status
 /config.log
+/autom4te.cache/
 .deps/
 .dirstamp
 *.log

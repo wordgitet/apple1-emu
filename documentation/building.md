@@ -1,21 +1,32 @@
 # Building
 
 The primary build system is **GNU autotools** (`configure.ac` + `Makefile.am`).
-After cloning, generate the Makefile once, then use plain `make`:
+After cloning:
 
 ```bash
-autoreconf -fi
 ./configure
 make              # produces ./apple1
 make check        # eight unit tests
 make check-single # verify amalgamation links (posix)
 ```
 
+`configure` and `Makefile.in` are committed; `Makefile` is generated locally by
+`./configure` and is not in git.
+
+After editing `Makefile.am` or `configure.ac`, maintainers regenerate and commit
+the autotools outputs:
+
+```bash
+autoreconf -fi
+./configure
+# commit Makefile.in, configure, and aux scripts if they changed
+```
+
 ## Requirements
 
 - C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [lacc](https://github.com/larme/lacc), …)
 - Python 3 (for amalgamation / `make single`)
-- GNU autotools (`autoconf`, `automake`) for the first `./configure` only
+- GNU autotools (`autoconf`, `automake`) only when changing `configure.ac` / `Makefile.am`
 - POSIX-like shell for `make check`
 - [Git LFS](https://git-lfs.com/) for `tests/harte_6502.bin` (Tom Harte opcode suite), or fetch the blob from Codeberg (see [Test targets](#test-targets))
 
@@ -35,12 +46,14 @@ See `apple1limit.h` for all available options and limits.
 ## Standard build (Unix / macOS / Linux)
 
 ```bash
-autoreconf -fi    # once, or after pulling Makefile.am / configure.ac changes
 ./configure
 make clean
 make              # produces ./apple1
 make check        # build and run eight unit tests
 ```
+
+If you changed `Makefile.am` or `configure.ac`, run `autoreconf -fi` first, then
+re-commit `Makefile.in` and `configure`.
 
 Pass extra compile-time flags at configure time:
 
