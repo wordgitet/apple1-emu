@@ -742,10 +742,15 @@ main(int argc, char *argv[])
 	cpu_init(&cpu, &bus);
 	/* Headless runs immediately; -g should break at the Woz Monitor
 	 * entry point, not power-on garbage at $0000.  Interactive play
-	 * still waits for Ctrl+R (authentic no-reset power-on). */
+	 * still waits for Ctrl+R (authentic no-reset power-on), except on
+	 * Plan 9 where /dev/cons line buffering would block before reset. */
+#ifdef APPLE1_PORT_PLAN9
+	cpu_reset(&cpu);
+#else
 	if (opt_headless != false || opt_debug != false) {
 		cpu_reset(&cpu);
 	}
+#endif
 #ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
 	g_dbg = &dbg;

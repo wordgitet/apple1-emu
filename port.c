@@ -6,8 +6,10 @@
 
 #include "port.h"
 
+#ifndef APPLE1_PORT_PLAN9
 #if defined(__TINYC__) && defined(__x86_64__) && !defined(_WIN64)
 #include "port_tcc_va.c"
+#endif
 #endif
 
 #include "port_string.c"

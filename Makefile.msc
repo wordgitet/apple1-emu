@@ -3,7 +3,7 @@
 
 CC = cl
 CFLAGS = -O2 -W3 -nologo -TC -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-CFLAGS = $(CFLAGS) -DAPPLE1_OMIT_CHARMAP
+CFLAGS = $(CFLAGS) -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_WIN -DAPPLE1_TERM_ANSI
 
 # Platform-specific files for Windows
 PORT_SRC = port_win.c
@@ -17,7 +17,7 @@ HEADERS = cpu.h bus.h io.h aci.h krusader.h disasm.h dbg.h term_apple1.h \
 # Object files
 CORE_OBJ = cpu.obj bus.obj io.obj aci.obj krusader.obj disasm.obj dbg.obj
 PORT_OBJ = $(PORT_STRING:.c=.obj) $(PORT_SRC:.c=.obj)
-OBJ = main.obj cli_config.obj $(CORE_OBJ) term_ansi.obj $(PORT_OBJ)
+OBJ = main.obj cli_config.obj $(CORE_OBJ) term.obj $(PORT_OBJ)
 
 all: apple1.exe
 
@@ -51,8 +51,8 @@ disasm.obj: disasm.c disasm.h cpu.h port.h
 dbg.obj: dbg.c dbg.h cpu.h bus.h port.h
 	$(CC) $(CFLAGS) -c dbg.c
 
-term_ansi.obj: term_ansi.c term_apple1.h port.h
-	$(CC) $(CFLAGS) -c term_ansi.c
+term.obj: term.c term_ansi.c term_dos.c term_vt100.c term_apple1.h port.h
+	$(CC) $(CFLAGS) -c term.c
 
 port_string.obj: $(PORT_STRING) port.h
 	$(CC) $(CFLAGS) -c $(PORT_STRING)

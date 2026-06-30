@@ -16,7 +16,7 @@ CC      = cc
 CFLAGS  = -O2 -g
 WFLAGS  = -Wall -Wextra
 STDFLAG = -std=c89
-DEFS    =
+DEFS    = -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI
 
 # Combined flags used for every translation unit
 BASE_CFLAGS = $(CFLAGS) $(WFLAGS) $(STDFLAG) $(DEFS) $(EXTRA_CFLAGS)
@@ -38,7 +38,7 @@ port.o: port.c port.h port_string.c port_posix.c port_posix_inc.h port_win.c \
         port_os2.c port_elks.c port_vxworks.c port_tcc_va.c port_stdarg.h
 	$(CC) $(BASE_CFLAGS) -DAPPLE1_OMIT_CHARMAP -c -o port.o port.c
 
-term.o: term.c term_ansi.c term_dos.c term_apple1.h
+term.o: term.c term_ansi.c term_dos.c term_vt100.c term_apple1.h
 	$(CC) $(BASE_CFLAGS) -DAPPLE1_OMIT_CHARMAP -c -o term.o term.c
 
 .c.o:

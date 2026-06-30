@@ -7,7 +7,9 @@
 #include "port.h"
 #include "term_apple1.h"
 
-#if defined(APPLE1_TERM_DOS)
+#if defined(APPLE1_TERM_VT100)
+#include "term_vt100.c"
+#elif defined(APPLE1_TERM_DOS)
 #include "term_dos.c"
 #elif defined(APPLE1_TERM_ANSI)
 #include "term_ansi.c"
@@ -16,6 +18,8 @@
 #if defined(__MSDOS__) || defined(MSDOS) || defined(__dos__) || \
     (defined(__WATCOMC__) && defined(__DOS__))
 #include "term_dos.c"
+#elif defined(__PLAN9__) || defined(__plan9__)
+#include "term_vt100.c"
 #else
 #include "term_ansi.c"
 #endif

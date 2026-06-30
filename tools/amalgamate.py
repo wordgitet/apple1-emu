@@ -14,10 +14,18 @@ Default outdir is the repository root.
 
 The amalgamation targets the *portable CLI* build only (no SDL3,
 no term_sdl3.c, no term_config.c, no term_debug.c).
-Single-file compile example:
+Single-file compile examples:
 
-  cc -DAPPLE1_OMIT_DEBUGGER apple1.c -o apple1
-  cl  /DAPPLE1_OMIT_DEBUGGER apple1.c /Fe:apple1.exe
+  cc -DAPPLE1_OMIT_DEBUGGER -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI apple1.c -o apple1
+  cl  /DAPPLE1_OMIT_DEBUGGER /DAPPLE1_PORT_WIN /DAPPLE1_TERM_ANSI apple1.c /Fe:apple1.exe
+
+Explicit port/term (required when not relying on auto-detect in port.c/term.c):
+
+  python3 tools/amalgamate.py --port port_freertos.c
+  cc -DAPPLE1_PORT_FREERTOS -DAPPLE1_TERM_ANSI apple1.c -o apple1
+
+  python3 tools/amalgamate.py --port port_elks.c --term term_ansi.c
+  cc -DAPPLE1_PORT_ELKS -DAPPLE1_TERM_ANSI apple1.c -o apple1
 """
 
 import argparse
