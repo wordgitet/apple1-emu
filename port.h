@@ -13,6 +13,13 @@
  * Core source files must include only this header, never any system
  * headers directly.
  */
+#ifdef APPLE1_PORT_PLAN9
+#ifndef APPLE1_PORT_PLAN9_APE
+#include <u.h>
+#include <libc.h>
+#endif
+#endif
+
 #include "port_stdarg.h"
 
 /* ================================================================== */
@@ -116,64 +123,25 @@ port_error_string(port_result_t rc);
 #define NULL ((void *)0)
 #endif
 
-/*
- * inline is C99; use plain static helpers on strict C89 compilers.
- */
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define PORT_STATIC_INLINE static inline
-#else
+#ifdef APPLE1_PORT_PLAN9
 #define PORT_STATIC_INLINE static
-#endif
-
-/*
- * port_size_t -- a type large enough to hold the size of any object
- * on the host platform.  We cannot rely on <stddef.h> in freestanding
- * builds, so we derive the type from ABI characteristics:
- *
- *  LP64  (64-bit Linux/macOS/Android, *BSD, AIX):
- *      sizeof(void*) = 8, sizeof(long) = 8 → unsigned long (8 bytes)
- *  LLP64 (64-bit Windows):
- *      sizeof(void*) = 8, sizeof(long) = 4.
- *      C89 has no 'unsigned long long', so we use unsigned long.
- *      Objects in this emulator never exceed 4 GB, so this is safe.
- *  ILP32 (32-bit Unix / embedded / DOS / Haiku):
- *      sizeof(void*) = 4, sizeof(long) = 4 → unsigned long (4 bytes)
- *  16-bit (ELKS / MS-DOS near model):
- *      sizeof(void*) = 2, sizeof(int) = 2 → unsigned int (2 bytes)
- */
-#if defined(__x86_64__) || defined(__aarch64__) || defined(__mips64) || \
-    defined(__riscv) || defined(__powerpc64__) || defined(__s390x__) || \
-    defined(__ia64__) || defined(_M_X64) || defined(_M_AMD64) ||        \
-    defined(__LP64__) || defined(_LP64)
 typedef unsigned long port_size_t;
-#elif defined(__ELKS__) || \
-    (defined(__MSDOS__) || defined(MSDOS) || defined(__dos__))
-typedef unsigned int port_size_t;
-#else
-typedef unsigned long port_size_t;
-#endif
-
-/* ================================================================== */
-/* Compiler portability helpers                                        */
-/* ================================================================== */
-
-#if defined(__GNUC__) || defined(__clang__)
-#define PORT_UNUSED   __attribute__((unused))
-#define PORT_NORETURN __attribute__((noreturn))
-#else
 #define PORT_UNUSED
 #define PORT_NORETURN
+#else
+#include "port_host.h"
 #endif
 
 /* ================================================================== */
 /* Memory allocation shims                                            */
 /* ================================================================== */
 
-#if defined(APPLE1_ZERO_MALLOC)
+#ifdef APPLE1_ZERO_MALLOC
 #define port_malloc(sz)	      ((void *)0)
 #define port_free(ptr)	      ((void)(ptr))
 #define port_realloc(ptr, sz) ((void *)0)
-#elif defined(APPLE1_CUSTOM_MALLOC)
+#else
+#ifdef APPLE1_CUSTOM_MALLOC
 extern void *
 port_malloc(port_size_t sz);
 extern void
@@ -187,6 +155,7 @@ void
 port_free(void *ptr);
 void *
 port_realloc(void *ptr, port_size_t sz);
+#endif
 #endif
 
 char *

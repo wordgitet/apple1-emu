@@ -1,10 +1,7 @@
-#include "port.h"
-#include <libc.h>
-#include <u.h>
-
 /* Plan 9 uses standard memory allocators and functions */
 
-#if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
+#ifndef APPLE1_ZERO_MALLOC
+#ifndef APPLE1_CUSTOM_MALLOC
 void *
 port_malloc(port_size_t sz)
 {
@@ -22,6 +19,7 @@ port_realloc(void *ptr, port_size_t sz)
 {
 	return (realloc(ptr, sz));
 }
+#endif
 #endif
 
 char *
@@ -53,36 +51,154 @@ port_sleep_us(uint32_t us)
 	sleep((long)((us + 999) / 1000));
 }
 
+#define PLAN9_KBD_QUEUE_SIZE 256
+
+static int plan9_consctl_fd = -1;
+static int plan9_kbd_rd;
+static int plan9_kbd_wr;
+static char plan9_kbd_queue[PLAN9_KBD_QUEUE_SIZE];
+static int plan9_kbd_reader_started;
+
+static void
+plan9_kbd_reader(void *arg)
+{
+	char c;
+	int next;
+	long n;
+
+	(void)arg;
+
+	for (;;) {
+		n = read(0, &c, 1);
+		if (n != 1) {
+			continue;
+		}
+		next = (plan9_kbd_wr + 1) % PLAN9_KBD_QUEUE_SIZE;
+		if (next == plan9_kbd_rd) {
+			continue;
+		}
+		plan9_kbd_queue[plan9_kbd_wr] = c;
+		plan9_kbd_wr = next;
+	}
+}
+
+static void
+plan9_kbd_reader_start(void)
+{
+	int pid;
+
+	if (plan9_kbd_reader_started != 0) {
+		return;
+	}
+	pid = rfork(RFPROC | RFMEM | RFNOWAIT | RFFDG);
+	if (pid == 0) {
+		plan9_kbd_reader(nil);
+		exits(nil);
+	}
+	if (pid > 0) {
+		plan9_kbd_reader_started = 1;
+	}
+}
+
 void
 port_term_raw_enable(void)
 {
-	/* Plan 9 raw terminal stub */
+	if (plan9_consctl_fd < 0) {
+		plan9_consctl_fd = open("/dev/consctl", OWRITE);
+		if (plan9_consctl_fd >= 0) {
+			write(plan9_consctl_fd, "rawon", 5);
+		}
+	}
+	plan9_kbd_reader_start();
 }
 
 void
 port_term_raw_disable(void)
 {
-	/* Plan 9 raw terminal stub */
+	if (plan9_consctl_fd >= 0) {
+		write(plan9_consctl_fd, "rawoff", 6);
+		close(plan9_consctl_fd);
+		plan9_consctl_fd = -1;
+	}
 }
 
 int
 port_term_read_char(void)
 {
-	/* Plan 9 input stub */
-	return (-1);
+	char c;
+	int rd;
+
+	rd = plan9_kbd_rd;
+	if (rd == plan9_kbd_wr) {
+		return (PORT_TERM_NODATA);
+	}
+	c = plan9_kbd_queue[rd];
+	plan9_kbd_rd = (rd + 1) % PLAN9_KBD_QUEUE_SIZE;
+	return ((int)(unsigned char)c);
+}
+
+void
+port_term_dbg_enable(void)
+{
+}
+
+void
+port_term_dbg_disable(void)
+{
 }
 
 void
 port_term_write_buf(const char *buf, port_size_t n)
 {
-	write(1, buf, n);
+	write(1, buf, (long)n);
+}
+
+char *
+port_term_read_line(char *buf, port_size_t size)
+{
+	port_size_t i;
+	int ch;
+
+	if (buf == NULL || size == 0) {
+		return (NULL);
+	}
+	for (i = 0; i < size - 1; i++) {
+		ch = port_term_read_char();
+		if (ch == PORT_TERM_EOF || ch == PORT_TERM_NODATA) {
+			if (i == 0) {
+				return (NULL);
+			}
+			break;
+		}
+		buf[i] = (char)ch;
+		if (ch == '\n' || ch == '\r') {
+			i++;
+			break;
+		}
+	}
+	buf[i] = '\0';
+	return (buf);
 }
 
 void
 port_signal_setup(port_sig_flag *flag)
 {
 	(void)flag;
-	/* Plan 9 signal handler stub */
+	/* Plan 9 note handler could be wired here later */
+}
+
+void
+port_signal_quit(void)
+{
+}
+
+PORT_NORETURN void
+port_exit(int code)
+{
+	if (code != 0) {
+		exits("error");
+	}
+	exits(nil);
 }
 
 /* VFS using Plan 9 libc */
