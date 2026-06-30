@@ -16,16 +16,15 @@ The amalgamation targets the *portable CLI* build only (no SDL3,
 no term_sdl3.c, no term_config.c, no term_debug.c).
 Single-file compile examples:
 
-  cc -DAPPLE1_OMIT_DEBUGGER -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI apple1.c -o apple1
-  cl  /DAPPLE1_OMIT_DEBUGGER /DAPPLE1_PORT_WIN /DAPPLE1_TERM_ANSI apple1.c /Fe:apple1.exe
+  make single                  # HOST=posix (default)
+  make single HOST=dos         # MS-DOS via DJGPP
+  make single HOST=watcom      # MS-DOS via Open Watcom
+  make single HOST=win         # Windows via MinGW cross-compiler
+  make check-single            # link-test amalgamation (posix)
 
-Explicit port/term (required when not relying on auto-detect in port.c/term.c):
+Manual:
 
-  python3 tools/amalgamate.py --port port_freertos.c
-  cc -DAPPLE1_PORT_FREERTOS -DAPPLE1_TERM_ANSI apple1.c -o apple1
-
-  python3 tools/amalgamate.py --port port_elks.c --term term_ansi.c
-  cc -DAPPLE1_PORT_ELKS -DAPPLE1_TERM_ANSI apple1.c -o apple1
+  cc -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI apple1.c -o apple1
 """
 
 import argparse
@@ -96,6 +95,7 @@ INTERNAL_HEADERS = {
     "port_tcc_va.c",
     "term_ansi.c",
     "term_dos.c",
+    "term_vt100.c",
 }
 
 # ---------------------------------------------------------------------------
@@ -222,17 +222,12 @@ def build(srcdir, outdir, port_sources, term_src):
     already_included.add("apple1.h")
     already_included.add("port.h")
 
-    c_sources = port_sources + [
-        "bus.c",
-        "cpu.c",
-        "disasm.c",
-        "aci.c",
-        "krusader.c",
-        "dbg.c",
-        "io.c",
-        term_src,
-        "main.c",
-    ]
+    c_sources = list(port_sources)
+    for src in C_SOURCES:
+        if src == "term.c":
+            c_sources.append(term_src)
+        else:
+            c_sources.append(src)
 
     for src in c_sources:
         path = os.path.join(srcdir, src)

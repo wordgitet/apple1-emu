@@ -1,12 +1,21 @@
 # Building
 
-The primary build system is the top-level **Makefile**. It auto-selects a platform
-port file and links `port_string.c` with one `port_*.c`.
+The primary build system is **GNU autotools** (`configure.ac` + `Makefile.am`).
+After cloning, generate the Makefile once, then use plain `make`:
+
+```bash
+autoreconf -fi
+./configure
+make              # produces ./apple1
+make check        # eight unit tests
+make check-single # verify amalgamation links (posix)
+```
 
 ## Requirements
 
-- C89 compiler (`cc`, `gcc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [lacc](https://github.com/larme/lacc), …)
-- Python 3 (for amalgamation and `make dos-djgpp` / `make dos-watcom`)
+- C89 compiler (`cc`, `gcc`, `clang`, …)
+- Python 3 (for amalgamation / `make single`)
+- GNU autotools (`autoconf`, `automake`) for the first `./configure` only
 - POSIX-like shell for `make check`
 - [Git LFS](https://git-lfs.com/) for `tests/harte_6502.bin` (Tom Harte opcode suite), or fetch the blob from Codeberg (see [Test targets](#test-targets))
 
@@ -26,45 +35,27 @@ See `apple1limit.h` for all available options and limits.
 ## Standard build (Unix / macOS / Linux)
 
 ```bash
+autoreconf -fi    # once, or after pulling Makefile.am / configure.ac changes
+./configure
 make clean
 make              # produces ./apple1
 make check        # build and run eight unit tests
 ```
 
-The Makefile sets:
+Pass extra compile-time flags at configure time:
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `CC` | `cc` | C compiler |
-| `CFLAGS` | `-O2 -g` | Optimisation / debug |
-| `WFLAGS` | `-Wall -Wextra` | Warnings |
-| `STDFLAG` | `-std=c89` | Language standard |
-| `DEFS` | `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` | Platform and terminal backends |
-| `EXTRA_CFLAGS` | (empty) | **Your compile-time `-D` flags go here** |
+```bash
+./configure CFLAGS="-O2 -g -DAPPLE1_OMIT_DEBUGGER"
+make
+```
 
-Core sources include only `port.h` — no system headers — so the Makefile does **not**
+The generated Makefile sets `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` via `AM_CPPFLAGS`
+and `-DAPPLE1_OMIT_CHARMAP` on the `apple1` target.
+
+Core sources include only `port.h` — no system headers — so the build does **not**
 pass libc feature macros (`_XOPEN_SOURCE`, `_DEFAULT_SOURCE`, …).  The POSIX port
 sets `_POSIX_C_SOURCE` in `port_posix_inc.h` before any `<signal.h>` / `<unistd.h>`
 include.  See `documentation/configuration.md`.
-
-[TinyCC](https://bellard.org/tcc/) on **x86_64** (non-Windows): `make tcc` or
-`make CC=tcc WFLAGS= STDFLAG=`.  Only that target needs `port_stdarg.h` /
-`port_tcc_va.c`; other CPUs and compilers use normal `<stdarg.h>`.  To run the
-unit tests under TinyCC: `make check CC=tcc WFLAGS= STDFLAG= DEFS=`.
-
-Other hosted C89 compilers on Linux (smoke-tested):
-
-```bash
-make pcc
-make tcc
-make clean && make CC=lacc
-```
-
-Example minimal build (no debugger, smaller binary):
-
-```bash
-make EXTRA_CFLAGS='-DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI -DAPPLE1_OMIT_KRUSADER'
-```
 
 ### Platform port selection
 
@@ -84,41 +75,59 @@ Every build also links **`port_string.c`** (freestanding string/format/getopt sh
 Override manually for experiments:
 
 ```bash
-make EXTRA_CFLAGS='-DAPPLE1_PORT_BARE -DAPPLE1_CUSTOM_MALLOC'
+./configure CFLAGS="-O2 -DAPPLE1_PORT_BARE -DAPPLE1_CUSTOM_MALLOC"
+make
 ```
 
 See [configuration.md](configuration.md) for the full `APPLE1_PORT_*` and
 `APPLE1_TERM_*` registry.
 
-## Single-file amalgamation
+## Single-file amalgamation (`make single`)
 
-`tools/amalgamate.py` concatenates sources into `apple1.c` + `apple1.h` for
-single-translation-unit builds (embedded targets, odd cross-compilers).
+`tools/amalgamate.py` concatenates sources into `apple1.c` + `apple1.h`.
+**`make single`** amalgamates and compiles in one step. Set **`HOST`** for the
+target platform (build host must be POSIX — Linux, macOS, or *BSD with `make`):
+
+| Command | Output | Toolchain |
+|---------|--------|-----------|
+| `make single` | `./apple1` | host `$(CC)`, POSIX port |
+| `make single HOST=dos` | `apple1.exe` | DJGPP cross-compiler |
+| `make single HOST=watcom` | `apple1.exe` | Open Watcom |
+| `make single HOST=win` | `apple1.exe` | MinGW cross-compiler (`WIN_CC`) |
+
+Plan 9 / 9front uses **`mkfile`** (native multi-file build) — not amalgamation.
+
+Verify the amalgamation links without running the emulator:
+
+```bash
+make check-single
+```
+
+Manual amalgamation (if you need custom flags):
 
 ```bash
 python3 tools/amalgamate.py
-# default: port_posix.c + term_ansi.c
-
-python3 tools/amalgamate.py --port port_msdos.c --term term_dos.c
-cc -O2 -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_MSDOS -DAPPLE1_TERM_DOS apple1.c -o apple1
+cc -std=c89 -O2 -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
+   apple1.c -o apple1
 ```
 
-| Flag | Default | Purpose |
-|------|---------|---------|
-| `--port` | `port_posix.c` | Platform shim file to inline |
-| `--term` | `term_ansi.c` | Terminal backend to inline |
-| `--srcdir` | repo root | Source directory |
-| `--outdir` | repo root | Output directory |
+| `HOST` | `--port` / `--term` used internally |
+|--------|--------------------------------------|
+| `posix` | `port.c` / `term.c` (auto-detect or `AM_CPPFLAGS`) |
+| `dos`, `watcom` | `port_msdos.c` / `term_dos.c` |
+| `win` | `port_win.c` / `term_ansi.c` |
+
+Override cross-compilers: `make single HOST=win WIN_CC=x86_64-w64-mingw32-gcc`
 
 ## MS-DOS cross-build
 
 Two toolchains are supported. Both use the same DOS amalgamation
 (`port_msdos.c` + `term_dos.c`).
 
-| Target | Toolchain | Output | DPMI host |
-|--------|-----------|--------|-----------|
-| `make dos-djgpp` | DJGPP (`i586-pc-msdosdjgpp-gcc`) | `apple1.exe` | **CWSDPMI.EXE** required |
-| `make dos-watcom` | Open Watcom (`wcl386` or `owcc`) | `apple1.exe` | none (CauseWay stub embedded) |
+| Target | Toolchain | Output | Notes |
+|--------|-----------|--------|-------|
+| `make dos-djgpp` | DJGPP | `apple1.exe` | same as `make single HOST=dos`; fetches `cwsdpmi.exe` |
+| `make dos-watcom` | Open Watcom | `apple1.exe` | same as `make single HOST=watcom`; CauseWay stub embedded |
 
 ### DJGPP
 
