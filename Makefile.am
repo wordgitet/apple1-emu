@@ -48,17 +48,6 @@ test_vfs_CFLAGS = $(AM_CFLAGS)
 test_config_SOURCES = tests/test_config.c cli_config.c port.c
 test_config_CFLAGS = $(AM_CFLAGS)
 
-# Rebuild port.o / term.o when an included shim changes.
-apple1-port.o: $(PORT_SHIM) port_attrs.h port_stdarg.h port_stdarg_libc.h \
-                port_stdarg_plan9.h apple1limit_checks.h port_posix_inc.h
-apple1-term.o: $(TERM_SHIM)
-
-TEST_PORT_OBJS = test_cpu-port.o test_aci-port.o test_dualram-port.o \
-                 test_bus-port.o test_tomharte-port.o test_interrupts-port.o \
-                 test_vfs-port.o test_config-port.o
-$(TEST_PORT_OBJS): $(PORT_SHIM) port_attrs.h port_stdarg.h port_stdarg_libc.h \
-                    port_stdarg_plan9.h apple1limit_checks.h port_posix_inc.h
-
 EXTRA_DIST = $(PORT_SHIM) $(TERM_SHIM) port_attrs.h port_stdarg.h \
              port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
              port_posix_inc.h mkfile Makefile.msc tools/amalgamate.py \
@@ -175,6 +164,24 @@ apple1.exe: dos-djgpp
 clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
+
+# port.c / term.c #include shim sources — explicit rules (automake cannot
+# express included-file dependencies without overriding its own recipes).
+apple1-port.o: port.c $(PORT_SHIM) port_attrs.h port_stdarg.h \
+                port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
+                port_posix_inc.h
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-port.o -MD -MP \
+	    -MF $(DEPDIR)/apple1-port.Tpo -c -o apple1-port.o \
+	    `test -f 'port.c' || echo '$(srcdir)/'`port.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-port.Tpo $(DEPDIR)/apple1-port.Po
+
+apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-term.o -MD -MP \
+	    -MF $(DEPDIR)/apple1-term.Tpo -c -o apple1-term.o \
+	    `test -f 'term.c' || echo '$(srcdir)/'`term.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-term.Tpo $(DEPDIR)/apple1-term.Po
 
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
         single single-posix single-dos single-watcom single-win check-single \
