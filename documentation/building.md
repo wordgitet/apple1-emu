@@ -39,7 +39,7 @@ The Makefile sets:
 | `CFLAGS` | `-O2 -g` | Optimisation / debug |
 | `WFLAGS` | `-Wall -Wextra` | Warnings |
 | `STDFLAG` | `-std=c89` | Language standard |
-| `DEFS` | (empty) | Extra global `-D` flags (usually leave empty) |
+| `DEFS` | `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` | Platform and terminal backends |
 | `EXTRA_CFLAGS` | (empty) | **Your compile-time `-D` flags go here** |
 
 Core sources include only `port.h` — no system headers — so the Makefile does **not**
@@ -68,22 +68,27 @@ make EXTRA_CFLAGS='-DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI -DAPPLE1_OMIT_KRUSAD
 
 ### Platform port selection
 
-| Host | Port object linked |
-|------|-------------------|
-| Windows (`OS=Windows_NT`) | `port_win.c` |
-| OS/2 | `port_os2.c` |
-| Haiku, Linux, macOS, *BSD, … | `port_posix.c` |
+The Makefile sets `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` by default (see `DEFS`).
+[`port.c`](../port.c) and [`term.c`](../term.c) select the implementation from these
+flags; if neither is set, they auto-detect from compiler predefined macros.
+
+| Host | Default port | Default terminal |
+|------|--------------|------------------|
+| Linux, macOS, *BSD, Haiku, … | `port_posix.c` | `term_ansi.c` |
+| Windows (`Makefile.msc`) | `port_win.c` | `term_ansi.c` |
+| Plan 9 / 9front (`mkfile`) | `port_plan9.c` | `term_vt100.c` |
+| MS-DOS (`make dos-*`) | `port_msdos.c` | `term_dos.c` |
 
 Every build also links **`port_string.c`** (freestanding string/format/getopt shims).
 
 Override manually for experiments:
 
 ```bash
-make PORT_SRC=port_bare.c EXTRA_CFLAGS='-DAPPLE1_CUSTOM_MALLOC'
+make EXTRA_CFLAGS='-DAPPLE1_PORT_BARE -DAPPLE1_CUSTOM_MALLOC'
 ```
 
-(`PORT_SRC` is a Makefile variable — set it on the command line; it is not exported
-by default.)
+See [configuration.md](configuration.md) for the full `APPLE1_PORT_*` and
+`APPLE1_TERM_*` registry.
 
 ## Single-file amalgamation
 
@@ -95,7 +100,7 @@ python3 tools/amalgamate.py
 # default: port_posix.c + term_ansi.c
 
 python3 tools/amalgamate.py --port port_msdos.c --term term_dos.c
-cc -O2 -DAPPLE1_OMIT_CHARMAP apple1.c -o apple1
+cc -O2 -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_MSDOS -DAPPLE1_TERM_DOS apple1.c -o apple1
 ```
 
 | Flag | Default | Purpose |
@@ -257,5 +262,5 @@ nmake -f Makefile.msc
 - Open Watcom: `make dos-watcom` (CauseWay stub embedded; no extra EXE in DOSBox)
 
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr):**
-- Use the top-level Makefile with manual port selection: `make PORT_SRC=port_plan9.c`
-- Use amalgamation: `python3 tools/amalgamate.py --port port_plan9.c`
+- **Plan 9 / 9front:** `dircp` tree to `$home`, `rm -f apple1`, then `mk all`. Run `./6.out` (no `vt` needed). Headless: `./6.out -H`. See `documentation/plan9-terminal.md`.
+- Other ports: amalgamation with explicit flags, e.g. `python3 tools/amalgamate.py --port port_plan9.c` and `-DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100`

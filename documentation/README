@@ -25,6 +25,7 @@ Documentation index
     usage.md          Command-line options, config files, keyboard shortcuts, examples
     debugger.md       Interactive debugger commands
     hardware.md       Memory map, PIA, expansion cards, timing
+    plan9-terminal.md Plan 9 / 9front console model (why ANSI display fails)
 
 Project layout (essentials)
 ---------------------------

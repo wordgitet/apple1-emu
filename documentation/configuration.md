@@ -75,8 +75,13 @@ Pair **`APPLE1_ACI_MAX_TAPE_PULSES`** with zero/custom malloc for fully static A
 
 ## Makefile built-in defines
 
-The Makefile passes `-DAPPLE1_OMIT_CHARMAP` on core object builds.
-POSIX feature-test macros (`_POSIX_C_SOURCE`) are set in `port_posix_inc.h`
+The Makefile passes `-DAPPLE1_OMIT_CHARMAP` on core object builds and sets:
+
+```
+-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI
+```
+
+via `DEFS`. POSIX feature-test macros (`_POSIX_C_SOURCE`) are set in `port_posix_inc.h`
 and included only by the POSIX port layer (`port_posix.c`, `port_elks.c`).
 Core sources do not include system headers and do not need libc feature
 macros on the compiler command line.
@@ -84,7 +89,62 @@ macros on the compiler command line.
 MS-DOS cross-build adds:
 
 ```
--D__MSDOS__ -DAPPLE1_OMIT_CHARMAP
+-D__MSDOS__ -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_MSDOS -DAPPLE1_TERM_DOS
+```
+
+Plan 9 [`mkfile`](../mkfile):
+
+```
+-DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100
+```
+
+(`mk pcc` also passes `-DAPPLE1_PORT_PLAN9_APE` for the APE libc path.)
+
+---
+
+## Platform selection (`APPLE1_PORT_*` / `APPLE1_TERM_*`)
+
+Build files set two orthogonal flags. [`port.c`](../port.c) and [`term.c`](../term.c)
+include the matching `port_*.c` / `term_*.c` implementation. If neither flag is set,
+they fall back to **auto-detect** from compiler predefined macros (amalgamation and
+casual `cc apple1.c` builds).
+
+### Port backends (`APPLE1_PORT_*`)
+
+| Macro | Source file | Auto-detect trigger |
+|-------|-------------|---------------------|
+| `APPLE1_PORT_POSIX` | `port_posix.c` | `__unix__`, `__linux__`, `__APPLE__`, *BSD, Haiku, QNX, RTEMS |
+| `APPLE1_PORT_WIN` | `port_win.c` | `_WIN32`, `_WIN64` |
+| `APPLE1_PORT_MSDOS` | `port_msdos.c` | `__MSDOS__`, `__dos__`, Watcom DOS |
+| `APPLE1_PORT_PLAN9` | `port_plan9.c` | `__PLAN9__`, `__plan9__` |
+| `APPLE1_PORT_OS2` | `port_os2.c` | `__OS2__`, `__os2__` |
+| `APPLE1_PORT_ELKS` | `port_elks.c` | `__ELKS__` |
+| `APPLE1_PORT_VXWORKS` | `port_vxworks.c` | `__RTP__`, `_WRS_KERNEL` |
+| `APPLE1_PORT_FREERTOS` | `port_freertos.c` | (none — explicit `-D` only) |
+| `APPLE1_PORT_ZEPHYR` | `port_zephyr.c` | (none — explicit `-D` only) |
+| `APPLE1_PORT_BARE` | `port_bare.c` | fallback when host is unknown |
+
+Sub-variant for Plan 9 APE/pcc builds: **`APPLE1_PORT_PLAN9_APE`** (affects
+`port.h` / `port_stdarg.h` only).
+
+Always linked: **`port_string.c`** (strings, format, getopt, RNG). Conditional:
+**`port_tcc_va.c`** (TinyCC x86_64 va_list shim; omitted when `APPLE1_PORT_PLAN9`).
+
+### Terminal backends (`APPLE1_TERM_*`)
+
+| Macro | Source file | Auto-detect trigger |
+|-------|-------------|---------------------|
+| `APPLE1_TERM_ANSI` | `term_ansi.c` | default (non-DOS, non-Plan 9) |
+| `APPLE1_TERM_DOS` | `term_dos.c` | MS-DOS |
+| `APPLE1_TERM_VT100` | `term_vt100.c` | Plan 9 / 9front |
+
+CI-maintained paths: **`port_posix.c`** + **`term_ansi.c`**, and **`port_msdos.c`**
++ **`term_dos.c`**. Other ports are experimental or stub implementations.
+
+Example — bare-metal with custom allocator:
+
+```bash
+make EXTRA_CFLAGS='-DAPPLE1_PORT_BARE -DAPPLE1_TERM_ANSI -DAPPLE1_CUSTOM_MALLOC'
 ```
 
 ---
@@ -115,22 +175,26 @@ blobs) on bare-metal targets.
 
 ### Terminal backends
 
-| File | Use when |
-|------|----------|
-| `term_ansi.c` | ANSI terminal (macOS Terminal, Linux, iTerm) |
-| `term_dos.c` | MS-DOS (`make dos-djgpp` or `make dos-watcom`) |
+| File | Macro | Use when |
+|------|-------|----------|
+| `term_ansi.c` | `APPLE1_TERM_ANSI` | ANSI terminal (macOS Terminal, Linux, iTerm, Windows) |
+| `term_dos.c` | `APPLE1_TERM_DOS` | MS-DOS (`make dos-djgpp` or `make dos-watcom`) |
+| `term_vt100.c` | `APPLE1_TERM_VT100` | Plan 9 teletype console — see `documentation/plan9-terminal.md` |
 
 ### Platform port files
 
-| File | Target |
-|------|--------|
-| `port_posix.c` | Linux, macOS, *BSD, Android, RTEMS-style POSIX |
-| `port_msdos.c` | MS-DOS / DJGPP |
-| `port_win.c` | Windows |
-| `port_os2.c` | OS/2 (includes POSIX subset) |
-| `port_elks.c`, `port_vxworks.c` | ELKS / VxWorks (timing overrides + POSIX) |
-| `port_plan9.c`, `port_zephyr.c`, `port_freertos.c` | Stubs / partial |
-| `port_bare.c` | Bare-metal fallback (no filesystem) |
+| File | Macro | Target |
+|------|-------|--------|
+| `port_posix.c` | `APPLE1_PORT_POSIX` | Linux, macOS, *BSD, Android, RTEMS-style POSIX |
+| `port_msdos.c` | `APPLE1_PORT_MSDOS` | MS-DOS / DJGPP |
+| `port_win.c` | `APPLE1_PORT_WIN` | Windows |
+| `port_plan9.c` | `APPLE1_PORT_PLAN9` | Plan 9 / 9front |
+| `port_os2.c` | `APPLE1_PORT_OS2` | OS/2 (includes POSIX subset) |
+| `port_elks.c` | `APPLE1_PORT_ELKS` | ELKS |
+| `port_vxworks.c` | `APPLE1_PORT_VXWORKS` | VxWorks RTP / kernel |
+| `port_freertos.c` | `APPLE1_PORT_FREERTOS` | FreeRTOS (stub) |
+| `port_zephyr.c` | `APPLE1_PORT_ZEPHYR` | Zephyr RTOS (stub) |
+| `port_bare.c` | `APPLE1_PORT_BARE` | Bare-metal fallback (no filesystem) |
 
 Not every port file is CI-tested; **`port_posix.c`** and **`port_msdos.c`** are the
 maintained paths.
