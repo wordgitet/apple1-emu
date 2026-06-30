@@ -57,9 +57,22 @@ pass libc feature macros (`_XOPEN_SOURCE`, `_DEFAULT_SOURCE`, …).  The POSIX p
 sets `_POSIX_C_SOURCE` in `port_posix_inc.h` before any `<signal.h>` / `<unistd.h>`
 include.  See `documentation/configuration.md`.
 
+### Alternate compilers
+
+Smoke-tested hosted builds with other C compilers:
+
+```bash
+make tcc    # TinyCC (x86_64); clears -Wall/-std=c89 (needs port_tcc_va.c)
+make pcc    # PCC
+make lacc   # lacc
+```
+
+Each target runs `make clean` first, then rebuilds `apple1` with `CC` set.
+To run unit tests under TinyCC: `make clean && make CC=tcc AM_CFLAGS= CFLAGS=-O2 check`
+
 ### Platform port selection
 
-The Makefile sets `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` by default (see `DEFS`).
+The Makefile sets `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` via `AM_CPPFLAGS`
 [`port.c`](../port.c) and [`term.c`](../term.c) select the implementation from these
 flags; if neither is set, they auto-detect from compiler predefined macros.
 

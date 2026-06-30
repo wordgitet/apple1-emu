@@ -161,6 +161,22 @@ cwsdpmi.exe:
 
 apple1.exe: dos-djgpp
 
+# ---------------------------------------------------------------------------
+# Alternate C compilers (hosted POSIX)
+# ---------------------------------------------------------------------------
+
+tcc:
+	$(MAKE) clean
+	$(MAKE) CC=tcc AM_CFLAGS= CFLAGS=-O2 apple1
+
+pcc:
+	$(MAKE) clean
+	$(MAKE) CC=pcc apple1
+
+lacc:
+	$(MAKE) clean
+	$(MAKE) CC=lacc apple1
+
 clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
@@ -186,4 +202,4 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
         single single-posix single-dos single-watcom single-win check-single \
         dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe apple1.exe \
-        cwsdpmi.exe
+        cwsdpmi.exe tcc pcc lacc
