@@ -553,7 +553,7 @@ AUTOHEADER = ${SHELL} '/home/mario/git/apple1-emu/missing' autoheader
 AUTOMAKE = ${SHELL} '/home/mario/git/apple1-emu/missing' automake-1.18
 AWK = gawk
 CC = gcc
-CCDEPMODE = depmode=gcc3
+CCDEPMODE = depmode=none
 CFLAGS = -g -O2
 CPPFLAGS = 
 CSCOPE = cscope
@@ -853,79 +853,79 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/apple1-aci.Po # am--include-marker
-include ./$(DEPDIR)/apple1-bus.Po # am--include-marker
-include ./$(DEPDIR)/apple1-cli_config.Po # am--include-marker
-include ./$(DEPDIR)/apple1-cpu.Po # am--include-marker
-include ./$(DEPDIR)/apple1-dbg.Po # am--include-marker
-include ./$(DEPDIR)/apple1-disasm.Po # am--include-marker
-include ./$(DEPDIR)/apple1-io.Po # am--include-marker
-include ./$(DEPDIR)/apple1-krusader.Po # am--include-marker
-include ./$(DEPDIR)/apple1-main.Po # am--include-marker
-include ./$(DEPDIR)/apple1-port.Po # am--include-marker
-include ./$(DEPDIR)/apple1-term.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-aci.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-cpu.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-dbg.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-disasm.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-krusader.Po # am--include-marker
-include ./$(DEPDIR)/test_aci-port.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-aci.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-cpu.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-dbg.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-disasm.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-io.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-krusader.Po # am--include-marker
-include ./$(DEPDIR)/test_bus-port.Po # am--include-marker
-include ./$(DEPDIR)/test_config-cli_config.Po # am--include-marker
-include ./$(DEPDIR)/test_config-port.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-aci.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-cpu.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-dbg.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-disasm.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-io.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-krusader.Po # am--include-marker
-include ./$(DEPDIR)/test_cpu-port.Po # am--include-marker
-include ./$(DEPDIR)/test_dualram-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_dualram-io.Po # am--include-marker
-include ./$(DEPDIR)/test_dualram-port.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-aci.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-cpu.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-dbg.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-disasm.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-io.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-krusader.Po # am--include-marker
-include ./$(DEPDIR)/test_interrupts-port.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-aci.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-cpu.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-dbg.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-disasm.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-io.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-krusader.Po # am--include-marker
-include ./$(DEPDIR)/test_tomharte-port.Po # am--include-marker
-include ./$(DEPDIR)/test_vfs-bus.Po # am--include-marker
-include ./$(DEPDIR)/test_vfs-io.Po # am--include-marker
-include ./$(DEPDIR)/test_vfs-port.Po # am--include-marker
-include tests/$(DEPDIR)/test_aci-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_aci-test_aci.Po # am--include-marker
-include tests/$(DEPDIR)/test_bus-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_bus-test_bus.Po # am--include-marker
-include tests/$(DEPDIR)/test_config-test_config.Po # am--include-marker
-include tests/$(DEPDIR)/test_cpu-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_cpu-test_cpu.Po # am--include-marker
-include tests/$(DEPDIR)/test_dualram-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_dualram-test_dualram.Po # am--include-marker
-include tests/$(DEPDIR)/test_interrupts-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_interrupts-test_interrupts.Po # am--include-marker
-include tests/$(DEPDIR)/test_tomharte-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_tomharte-test_tomharte.Po # am--include-marker
-include tests/$(DEPDIR)/test_vfs-term_dummy.Po # am--include-marker
-include tests/$(DEPDIR)/test_vfs-test_vfs.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-aci.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-bus.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-cli_config.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-cpu.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-dbg.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-disasm.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-io.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-krusader.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-main.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-port.Po # am--include-marker
+#include ./$(DEPDIR)/apple1-term.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-aci.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-cpu.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-dbg.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-disasm.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-krusader.Po # am--include-marker
+#include ./$(DEPDIR)/test_aci-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-aci.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-cpu.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-dbg.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-disasm.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-io.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-krusader.Po # am--include-marker
+#include ./$(DEPDIR)/test_bus-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_config-cli_config.Po # am--include-marker
+#include ./$(DEPDIR)/test_config-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-aci.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-cpu.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-dbg.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-disasm.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-io.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-krusader.Po # am--include-marker
+#include ./$(DEPDIR)/test_cpu-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_dualram-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_dualram-io.Po # am--include-marker
+#include ./$(DEPDIR)/test_dualram-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-aci.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-cpu.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-dbg.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-disasm.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-io.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-krusader.Po # am--include-marker
+#include ./$(DEPDIR)/test_interrupts-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-aci.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-cpu.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-dbg.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-disasm.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-io.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-krusader.Po # am--include-marker
+#include ./$(DEPDIR)/test_tomharte-port.Po # am--include-marker
+#include ./$(DEPDIR)/test_vfs-bus.Po # am--include-marker
+#include ./$(DEPDIR)/test_vfs-io.Po # am--include-marker
+#include ./$(DEPDIR)/test_vfs-port.Po # am--include-marker
+#include tests/$(DEPDIR)/test_aci-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_aci-test_aci.Po # am--include-marker
+#include tests/$(DEPDIR)/test_bus-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_bus-test_bus.Po # am--include-marker
+#include tests/$(DEPDIR)/test_config-test_config.Po # am--include-marker
+#include tests/$(DEPDIR)/test_cpu-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_cpu-test_cpu.Po # am--include-marker
+#include tests/$(DEPDIR)/test_dualram-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_dualram-test_dualram.Po # am--include-marker
+#include tests/$(DEPDIR)/test_interrupts-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_interrupts-test_interrupts.Po # am--include-marker
+#include tests/$(DEPDIR)/test_tomharte-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_tomharte-test_tomharte.Po # am--include-marker
+#include tests/$(DEPDIR)/test_vfs-term_dummy.Po # am--include-marker
+#include tests/$(DEPDIR)/test_vfs-test_vfs.Po # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -934,1028 +934,1028 @@ $(am__depfiles_remade):
 am--depfiles: $(am__depfiles_remade)
 
 .c.o:
-	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-	$(am__mv) $$depbase.Tpo $$depbase.Po
-#	$(AM_V_CC)source='$<' object='$@' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(COMPILE) -c -o $@ $<
+#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+#	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CC)source='$<' object='$@' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(COMPILE) -c -o $@ $<
 
 .c.obj:
-	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-	$(am__mv) $$depbase.Tpo $$depbase.Po
-#	$(AM_V_CC)source='$<' object='$@' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+#	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+#	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+#	$(am__mv) $$depbase.Tpo $$depbase.Po
+#	$(AM_V_CC)source='$<' object='$@' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
 apple1-main.o: main.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-main.o -MD -MP -MF $(DEPDIR)/apple1-main.Tpo -c -o apple1-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-main.Tpo $(DEPDIR)/apple1-main.Po
-#	$(AM_V_CC)source='main.c' object='apple1-main.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-main.o -MD -MP -MF $(DEPDIR)/apple1-main.Tpo -c -o apple1-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-main.Tpo $(DEPDIR)/apple1-main.Po
+#	$(AM_V_CC)source='main.c' object='apple1-main.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
 apple1-main.obj: main.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-main.obj -MD -MP -MF $(DEPDIR)/apple1-main.Tpo -c -o apple1-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-main.Tpo $(DEPDIR)/apple1-main.Po
-#	$(AM_V_CC)source='main.c' object='apple1-main.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-main.obj -MD -MP -MF $(DEPDIR)/apple1-main.Tpo -c -o apple1-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-main.Tpo $(DEPDIR)/apple1-main.Po
+#	$(AM_V_CC)source='main.c' object='apple1-main.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
 apple1-cli_config.o: cli_config.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cli_config.o -MD -MP -MF $(DEPDIR)/apple1-cli_config.Tpo -c -o apple1-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cli_config.Tpo $(DEPDIR)/apple1-cli_config.Po
-#	$(AM_V_CC)source='cli_config.c' object='apple1-cli_config.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cli_config.o -MD -MP -MF $(DEPDIR)/apple1-cli_config.Tpo -c -o apple1-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cli_config.Tpo $(DEPDIR)/apple1-cli_config.Po
+#	$(AM_V_CC)source='cli_config.c' object='apple1-cli_config.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
 
 apple1-cli_config.obj: cli_config.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cli_config.obj -MD -MP -MF $(DEPDIR)/apple1-cli_config.Tpo -c -o apple1-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cli_config.Tpo $(DEPDIR)/apple1-cli_config.Po
-#	$(AM_V_CC)source='cli_config.c' object='apple1-cli_config.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cli_config.obj -MD -MP -MF $(DEPDIR)/apple1-cli_config.Tpo -c -o apple1-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cli_config.Tpo $(DEPDIR)/apple1-cli_config.Po
+#	$(AM_V_CC)source='cli_config.c' object='apple1-cli_config.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
 
 apple1-cpu.o: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cpu.o -MD -MP -MF $(DEPDIR)/apple1-cpu.Tpo -c -o apple1-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cpu.Tpo $(DEPDIR)/apple1-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='apple1-cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cpu.o -MD -MP -MF $(DEPDIR)/apple1-cpu.Tpo -c -o apple1-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cpu.Tpo $(DEPDIR)/apple1-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='apple1-cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 
 apple1-cpu.obj: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cpu.obj -MD -MP -MF $(DEPDIR)/apple1-cpu.Tpo -c -o apple1-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cpu.Tpo $(DEPDIR)/apple1-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='apple1-cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-cpu.obj -MD -MP -MF $(DEPDIR)/apple1-cpu.Tpo -c -o apple1-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-cpu.Tpo $(DEPDIR)/apple1-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='apple1-cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
 
 apple1-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-bus.o -MD -MP -MF $(DEPDIR)/apple1-bus.Tpo -c -o apple1-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-bus.Tpo $(DEPDIR)/apple1-bus.Po
-#	$(AM_V_CC)source='bus.c' object='apple1-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-bus.o -MD -MP -MF $(DEPDIR)/apple1-bus.Tpo -c -o apple1-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-bus.Tpo $(DEPDIR)/apple1-bus.Po
+#	$(AM_V_CC)source='bus.c' object='apple1-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 apple1-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-bus.obj -MD -MP -MF $(DEPDIR)/apple1-bus.Tpo -c -o apple1-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-bus.Tpo $(DEPDIR)/apple1-bus.Po
-#	$(AM_V_CC)source='bus.c' object='apple1-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-bus.obj -MD -MP -MF $(DEPDIR)/apple1-bus.Tpo -c -o apple1-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-bus.Tpo $(DEPDIR)/apple1-bus.Po
+#	$(AM_V_CC)source='bus.c' object='apple1-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 apple1-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-io.o -MD -MP -MF $(DEPDIR)/apple1-io.Tpo -c -o apple1-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-io.Tpo $(DEPDIR)/apple1-io.Po
-#	$(AM_V_CC)source='io.c' object='apple1-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-io.o -MD -MP -MF $(DEPDIR)/apple1-io.Tpo -c -o apple1-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-io.Tpo $(DEPDIR)/apple1-io.Po
+#	$(AM_V_CC)source='io.c' object='apple1-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 apple1-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-io.obj -MD -MP -MF $(DEPDIR)/apple1-io.Tpo -c -o apple1-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-io.Tpo $(DEPDIR)/apple1-io.Po
-#	$(AM_V_CC)source='io.c' object='apple1-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-io.obj -MD -MP -MF $(DEPDIR)/apple1-io.Tpo -c -o apple1-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-io.Tpo $(DEPDIR)/apple1-io.Po
+#	$(AM_V_CC)source='io.c' object='apple1-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 apple1-aci.o: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-aci.o -MD -MP -MF $(DEPDIR)/apple1-aci.Tpo -c -o apple1-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-aci.Tpo $(DEPDIR)/apple1-aci.Po
-#	$(AM_V_CC)source='aci.c' object='apple1-aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-aci.o -MD -MP -MF $(DEPDIR)/apple1-aci.Tpo -c -o apple1-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-aci.Tpo $(DEPDIR)/apple1-aci.Po
+#	$(AM_V_CC)source='aci.c' object='apple1-aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
 
 apple1-aci.obj: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-aci.obj -MD -MP -MF $(DEPDIR)/apple1-aci.Tpo -c -o apple1-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-aci.Tpo $(DEPDIR)/apple1-aci.Po
-#	$(AM_V_CC)source='aci.c' object='apple1-aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-aci.obj -MD -MP -MF $(DEPDIR)/apple1-aci.Tpo -c -o apple1-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-aci.Tpo $(DEPDIR)/apple1-aci.Po
+#	$(AM_V_CC)source='aci.c' object='apple1-aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
 
 apple1-krusader.o: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-krusader.o -MD -MP -MF $(DEPDIR)/apple1-krusader.Tpo -c -o apple1-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-krusader.Tpo $(DEPDIR)/apple1-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='apple1-krusader.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-krusader.o -MD -MP -MF $(DEPDIR)/apple1-krusader.Tpo -c -o apple1-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-krusader.Tpo $(DEPDIR)/apple1-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='apple1-krusader.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
 
 apple1-krusader.obj: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-krusader.obj -MD -MP -MF $(DEPDIR)/apple1-krusader.Tpo -c -o apple1-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-krusader.Tpo $(DEPDIR)/apple1-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='apple1-krusader.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-krusader.obj -MD -MP -MF $(DEPDIR)/apple1-krusader.Tpo -c -o apple1-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-krusader.Tpo $(DEPDIR)/apple1-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='apple1-krusader.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
 
 apple1-disasm.o: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-disasm.o -MD -MP -MF $(DEPDIR)/apple1-disasm.Tpo -c -o apple1-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-disasm.Tpo $(DEPDIR)/apple1-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='apple1-disasm.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-disasm.o -MD -MP -MF $(DEPDIR)/apple1-disasm.Tpo -c -o apple1-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-disasm.Tpo $(DEPDIR)/apple1-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='apple1-disasm.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
 
 apple1-disasm.obj: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-disasm.obj -MD -MP -MF $(DEPDIR)/apple1-disasm.Tpo -c -o apple1-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-disasm.Tpo $(DEPDIR)/apple1-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='apple1-disasm.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-disasm.obj -MD -MP -MF $(DEPDIR)/apple1-disasm.Tpo -c -o apple1-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-disasm.Tpo $(DEPDIR)/apple1-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='apple1-disasm.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
 
 apple1-dbg.o: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-dbg.o -MD -MP -MF $(DEPDIR)/apple1-dbg.Tpo -c -o apple1-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-dbg.Tpo $(DEPDIR)/apple1-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='apple1-dbg.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-dbg.o -MD -MP -MF $(DEPDIR)/apple1-dbg.Tpo -c -o apple1-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-dbg.Tpo $(DEPDIR)/apple1-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='apple1-dbg.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
 
 apple1-dbg.obj: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-dbg.obj -MD -MP -MF $(DEPDIR)/apple1-dbg.Tpo -c -o apple1-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-dbg.Tpo $(DEPDIR)/apple1-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='apple1-dbg.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-dbg.obj -MD -MP -MF $(DEPDIR)/apple1-dbg.Tpo -c -o apple1-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-dbg.Tpo $(DEPDIR)/apple1-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='apple1-dbg.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
 
 apple1-term.obj: term.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-term.obj -MD -MP -MF $(DEPDIR)/apple1-term.Tpo -c -o apple1-term.obj `if test -f 'term.c'; then $(CYGPATH_W) 'term.c'; else $(CYGPATH_W) '$(srcdir)/term.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-term.Tpo $(DEPDIR)/apple1-term.Po
-#	$(AM_V_CC)source='term.c' object='apple1-term.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-term.obj `if test -f 'term.c'; then $(CYGPATH_W) 'term.c'; else $(CYGPATH_W) '$(srcdir)/term.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-term.obj -MD -MP -MF $(DEPDIR)/apple1-term.Tpo -c -o apple1-term.obj `if test -f 'term.c'; then $(CYGPATH_W) 'term.c'; else $(CYGPATH_W) '$(srcdir)/term.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-term.Tpo $(DEPDIR)/apple1-term.Po
+#	$(AM_V_CC)source='term.c' object='apple1-term.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-term.obj `if test -f 'term.c'; then $(CYGPATH_W) 'term.c'; else $(CYGPATH_W) '$(srcdir)/term.c'; fi`
 
 apple1-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-port.obj -MD -MP -MF $(DEPDIR)/apple1-port.Tpo -c -o apple1-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-port.Tpo $(DEPDIR)/apple1-port.Po
-#	$(AM_V_CC)source='port.c' object='apple1-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-port.obj -MD -MP -MF $(DEPDIR)/apple1-port.Tpo -c -o apple1-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-port.Tpo $(DEPDIR)/apple1-port.Po
+#	$(AM_V_CC)source='port.c' object='apple1-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_aci-test_aci.o: tests/test_aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-test_aci.o -MD -MP -MF tests/$(DEPDIR)/test_aci-test_aci.Tpo -c -o tests/test_aci-test_aci.o `test -f 'tests/test_aci.c' || echo '$(srcdir)/'`tests/test_aci.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-test_aci.Tpo tests/$(DEPDIR)/test_aci-test_aci.Po
-#	$(AM_V_CC)source='tests/test_aci.c' object='tests/test_aci-test_aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-test_aci.o `test -f 'tests/test_aci.c' || echo '$(srcdir)/'`tests/test_aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-test_aci.o -MD -MP -MF tests/$(DEPDIR)/test_aci-test_aci.Tpo -c -o tests/test_aci-test_aci.o `test -f 'tests/test_aci.c' || echo '$(srcdir)/'`tests/test_aci.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-test_aci.Tpo tests/$(DEPDIR)/test_aci-test_aci.Po
+#	$(AM_V_CC)source='tests/test_aci.c' object='tests/test_aci-test_aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-test_aci.o `test -f 'tests/test_aci.c' || echo '$(srcdir)/'`tests/test_aci.c
 
 tests/test_aci-test_aci.obj: tests/test_aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-test_aci.obj -MD -MP -MF tests/$(DEPDIR)/test_aci-test_aci.Tpo -c -o tests/test_aci-test_aci.obj `if test -f 'tests/test_aci.c'; then $(CYGPATH_W) 'tests/test_aci.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_aci.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-test_aci.Tpo tests/$(DEPDIR)/test_aci-test_aci.Po
-#	$(AM_V_CC)source='tests/test_aci.c' object='tests/test_aci-test_aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-test_aci.obj `if test -f 'tests/test_aci.c'; then $(CYGPATH_W) 'tests/test_aci.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-test_aci.obj -MD -MP -MF tests/$(DEPDIR)/test_aci-test_aci.Tpo -c -o tests/test_aci-test_aci.obj `if test -f 'tests/test_aci.c'; then $(CYGPATH_W) 'tests/test_aci.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_aci.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-test_aci.Tpo tests/$(DEPDIR)/test_aci-test_aci.Po
+#	$(AM_V_CC)source='tests/test_aci.c' object='tests/test_aci-test_aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-test_aci.obj `if test -f 'tests/test_aci.c'; then $(CYGPATH_W) 'tests/test_aci.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_aci.c'; fi`
 
 tests/test_aci-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_aci-term_dummy.Tpo -c -o tests/test_aci-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-term_dummy.Tpo tests/$(DEPDIR)/test_aci-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_aci-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_aci-term_dummy.Tpo -c -o tests/test_aci-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-term_dummy.Tpo tests/$(DEPDIR)/test_aci-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_aci-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_aci-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_aci-term_dummy.Tpo -c -o tests/test_aci-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-term_dummy.Tpo tests/$(DEPDIR)/test_aci-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_aci-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT tests/test_aci-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_aci-term_dummy.Tpo -c -o tests/test_aci-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_aci-term_dummy.Tpo tests/$(DEPDIR)/test_aci-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_aci-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o tests/test_aci-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_aci-cpu.o: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-cpu.o -MD -MP -MF $(DEPDIR)/test_aci-cpu.Tpo -c -o test_aci-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-cpu.Tpo $(DEPDIR)/test_aci-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_aci-cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-cpu.o -MD -MP -MF $(DEPDIR)/test_aci-cpu.Tpo -c -o test_aci-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-cpu.Tpo $(DEPDIR)/test_aci-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_aci-cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 
 test_aci-cpu.obj: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-cpu.obj -MD -MP -MF $(DEPDIR)/test_aci-cpu.Tpo -c -o test_aci-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-cpu.Tpo $(DEPDIR)/test_aci-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_aci-cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-cpu.obj -MD -MP -MF $(DEPDIR)/test_aci-cpu.Tpo -c -o test_aci-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-cpu.Tpo $(DEPDIR)/test_aci-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_aci-cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
 
 test_aci-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-bus.o -MD -MP -MF $(DEPDIR)/test_aci-bus.Tpo -c -o test_aci-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-bus.Tpo $(DEPDIR)/test_aci-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_aci-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-bus.o -MD -MP -MF $(DEPDIR)/test_aci-bus.Tpo -c -o test_aci-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-bus.Tpo $(DEPDIR)/test_aci-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_aci-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_aci-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-bus.obj -MD -MP -MF $(DEPDIR)/test_aci-bus.Tpo -c -o test_aci-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-bus.Tpo $(DEPDIR)/test_aci-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_aci-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-bus.obj -MD -MP -MF $(DEPDIR)/test_aci-bus.Tpo -c -o test_aci-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-bus.Tpo $(DEPDIR)/test_aci-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_aci-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_aci-aci.o: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-aci.o -MD -MP -MF $(DEPDIR)/test_aci-aci.Tpo -c -o test_aci-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-aci.Tpo $(DEPDIR)/test_aci-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_aci-aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-aci.o -MD -MP -MF $(DEPDIR)/test_aci-aci.Tpo -c -o test_aci-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-aci.Tpo $(DEPDIR)/test_aci-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_aci-aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
 
 test_aci-aci.obj: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-aci.obj -MD -MP -MF $(DEPDIR)/test_aci-aci.Tpo -c -o test_aci-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-aci.Tpo $(DEPDIR)/test_aci-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_aci-aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-aci.obj -MD -MP -MF $(DEPDIR)/test_aci-aci.Tpo -c -o test_aci-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-aci.Tpo $(DEPDIR)/test_aci-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_aci-aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
 
 test_aci-krusader.o: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-krusader.o -MD -MP -MF $(DEPDIR)/test_aci-krusader.Tpo -c -o test_aci-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-krusader.Tpo $(DEPDIR)/test_aci-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_aci-krusader.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-krusader.o -MD -MP -MF $(DEPDIR)/test_aci-krusader.Tpo -c -o test_aci-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-krusader.Tpo $(DEPDIR)/test_aci-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_aci-krusader.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
 
 test_aci-krusader.obj: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-krusader.obj -MD -MP -MF $(DEPDIR)/test_aci-krusader.Tpo -c -o test_aci-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-krusader.Tpo $(DEPDIR)/test_aci-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_aci-krusader.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-krusader.obj -MD -MP -MF $(DEPDIR)/test_aci-krusader.Tpo -c -o test_aci-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-krusader.Tpo $(DEPDIR)/test_aci-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_aci-krusader.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
 
 test_aci-disasm.o: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-disasm.o -MD -MP -MF $(DEPDIR)/test_aci-disasm.Tpo -c -o test_aci-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-disasm.Tpo $(DEPDIR)/test_aci-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_aci-disasm.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-disasm.o -MD -MP -MF $(DEPDIR)/test_aci-disasm.Tpo -c -o test_aci-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-disasm.Tpo $(DEPDIR)/test_aci-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_aci-disasm.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
 
 test_aci-disasm.obj: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-disasm.obj -MD -MP -MF $(DEPDIR)/test_aci-disasm.Tpo -c -o test_aci-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-disasm.Tpo $(DEPDIR)/test_aci-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_aci-disasm.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-disasm.obj -MD -MP -MF $(DEPDIR)/test_aci-disasm.Tpo -c -o test_aci-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-disasm.Tpo $(DEPDIR)/test_aci-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_aci-disasm.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
 
 test_aci-dbg.o: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-dbg.o -MD -MP -MF $(DEPDIR)/test_aci-dbg.Tpo -c -o test_aci-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-dbg.Tpo $(DEPDIR)/test_aci-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_aci-dbg.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-dbg.o -MD -MP -MF $(DEPDIR)/test_aci-dbg.Tpo -c -o test_aci-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-dbg.Tpo $(DEPDIR)/test_aci-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_aci-dbg.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
 
 test_aci-dbg.obj: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-dbg.obj -MD -MP -MF $(DEPDIR)/test_aci-dbg.Tpo -c -o test_aci-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-dbg.Tpo $(DEPDIR)/test_aci-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_aci-dbg.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-dbg.obj -MD -MP -MF $(DEPDIR)/test_aci-dbg.Tpo -c -o test_aci-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-dbg.Tpo $(DEPDIR)/test_aci-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_aci-dbg.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
 
 test_aci-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-port.o -MD -MP -MF $(DEPDIR)/test_aci-port.Tpo -c -o test_aci-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-port.Tpo $(DEPDIR)/test_aci-port.Po
-#	$(AM_V_CC)source='port.c' object='test_aci-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-port.o -MD -MP -MF $(DEPDIR)/test_aci-port.Tpo -c -o test_aci-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-port.Tpo $(DEPDIR)/test_aci-port.Po
+#	$(AM_V_CC)source='port.c' object='test_aci-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_aci-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-port.obj -MD -MP -MF $(DEPDIR)/test_aci-port.Tpo -c -o test_aci-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-port.Tpo $(DEPDIR)/test_aci-port.Po
-#	$(AM_V_CC)source='port.c' object='test_aci-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -MT test_aci-port.obj -MD -MP -MF $(DEPDIR)/test_aci-port.Tpo -c -o test_aci-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_aci-port.Tpo $(DEPDIR)/test_aci-port.Po
+#	$(AM_V_CC)source='port.c' object='test_aci-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_aci_CFLAGS) $(CFLAGS) -c -o test_aci-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_bus-test_bus.o: tests/test_bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-test_bus.o -MD -MP -MF tests/$(DEPDIR)/test_bus-test_bus.Tpo -c -o tests/test_bus-test_bus.o `test -f 'tests/test_bus.c' || echo '$(srcdir)/'`tests/test_bus.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-test_bus.Tpo tests/$(DEPDIR)/test_bus-test_bus.Po
-#	$(AM_V_CC)source='tests/test_bus.c' object='tests/test_bus-test_bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-test_bus.o `test -f 'tests/test_bus.c' || echo '$(srcdir)/'`tests/test_bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-test_bus.o -MD -MP -MF tests/$(DEPDIR)/test_bus-test_bus.Tpo -c -o tests/test_bus-test_bus.o `test -f 'tests/test_bus.c' || echo '$(srcdir)/'`tests/test_bus.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-test_bus.Tpo tests/$(DEPDIR)/test_bus-test_bus.Po
+#	$(AM_V_CC)source='tests/test_bus.c' object='tests/test_bus-test_bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-test_bus.o `test -f 'tests/test_bus.c' || echo '$(srcdir)/'`tests/test_bus.c
 
 tests/test_bus-test_bus.obj: tests/test_bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-test_bus.obj -MD -MP -MF tests/$(DEPDIR)/test_bus-test_bus.Tpo -c -o tests/test_bus-test_bus.obj `if test -f 'tests/test_bus.c'; then $(CYGPATH_W) 'tests/test_bus.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_bus.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-test_bus.Tpo tests/$(DEPDIR)/test_bus-test_bus.Po
-#	$(AM_V_CC)source='tests/test_bus.c' object='tests/test_bus-test_bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-test_bus.obj `if test -f 'tests/test_bus.c'; then $(CYGPATH_W) 'tests/test_bus.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-test_bus.obj -MD -MP -MF tests/$(DEPDIR)/test_bus-test_bus.Tpo -c -o tests/test_bus-test_bus.obj `if test -f 'tests/test_bus.c'; then $(CYGPATH_W) 'tests/test_bus.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_bus.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-test_bus.Tpo tests/$(DEPDIR)/test_bus-test_bus.Po
+#	$(AM_V_CC)source='tests/test_bus.c' object='tests/test_bus-test_bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-test_bus.obj `if test -f 'tests/test_bus.c'; then $(CYGPATH_W) 'tests/test_bus.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_bus.c'; fi`
 
 tests/test_bus-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_bus-term_dummy.Tpo -c -o tests/test_bus-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-term_dummy.Tpo tests/$(DEPDIR)/test_bus-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_bus-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_bus-term_dummy.Tpo -c -o tests/test_bus-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-term_dummy.Tpo tests/$(DEPDIR)/test_bus-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_bus-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_bus-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_bus-term_dummy.Tpo -c -o tests/test_bus-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-term_dummy.Tpo tests/$(DEPDIR)/test_bus-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_bus-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT tests/test_bus-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_bus-term_dummy.Tpo -c -o tests/test_bus-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_bus-term_dummy.Tpo tests/$(DEPDIR)/test_bus-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_bus-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o tests/test_bus-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_bus-cpu.o: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-cpu.o -MD -MP -MF $(DEPDIR)/test_bus-cpu.Tpo -c -o test_bus-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-cpu.Tpo $(DEPDIR)/test_bus-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_bus-cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-cpu.o -MD -MP -MF $(DEPDIR)/test_bus-cpu.Tpo -c -o test_bus-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-cpu.Tpo $(DEPDIR)/test_bus-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_bus-cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 
 test_bus-cpu.obj: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-cpu.obj -MD -MP -MF $(DEPDIR)/test_bus-cpu.Tpo -c -o test_bus-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-cpu.Tpo $(DEPDIR)/test_bus-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_bus-cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-cpu.obj -MD -MP -MF $(DEPDIR)/test_bus-cpu.Tpo -c -o test_bus-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-cpu.Tpo $(DEPDIR)/test_bus-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_bus-cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
 
 test_bus-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-bus.o -MD -MP -MF $(DEPDIR)/test_bus-bus.Tpo -c -o test_bus-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-bus.Tpo $(DEPDIR)/test_bus-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_bus-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-bus.o -MD -MP -MF $(DEPDIR)/test_bus-bus.Tpo -c -o test_bus-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-bus.Tpo $(DEPDIR)/test_bus-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_bus-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_bus-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-bus.obj -MD -MP -MF $(DEPDIR)/test_bus-bus.Tpo -c -o test_bus-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-bus.Tpo $(DEPDIR)/test_bus-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_bus-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-bus.obj -MD -MP -MF $(DEPDIR)/test_bus-bus.Tpo -c -o test_bus-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-bus.Tpo $(DEPDIR)/test_bus-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_bus-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_bus-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-io.o -MD -MP -MF $(DEPDIR)/test_bus-io.Tpo -c -o test_bus-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-io.Tpo $(DEPDIR)/test_bus-io.Po
-#	$(AM_V_CC)source='io.c' object='test_bus-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-io.o -MD -MP -MF $(DEPDIR)/test_bus-io.Tpo -c -o test_bus-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-io.Tpo $(DEPDIR)/test_bus-io.Po
+#	$(AM_V_CC)source='io.c' object='test_bus-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 test_bus-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-io.obj -MD -MP -MF $(DEPDIR)/test_bus-io.Tpo -c -o test_bus-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-io.Tpo $(DEPDIR)/test_bus-io.Po
-#	$(AM_V_CC)source='io.c' object='test_bus-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-io.obj -MD -MP -MF $(DEPDIR)/test_bus-io.Tpo -c -o test_bus-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-io.Tpo $(DEPDIR)/test_bus-io.Po
+#	$(AM_V_CC)source='io.c' object='test_bus-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 test_bus-aci.o: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-aci.o -MD -MP -MF $(DEPDIR)/test_bus-aci.Tpo -c -o test_bus-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-aci.Tpo $(DEPDIR)/test_bus-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_bus-aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-aci.o -MD -MP -MF $(DEPDIR)/test_bus-aci.Tpo -c -o test_bus-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-aci.Tpo $(DEPDIR)/test_bus-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_bus-aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
 
 test_bus-aci.obj: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-aci.obj -MD -MP -MF $(DEPDIR)/test_bus-aci.Tpo -c -o test_bus-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-aci.Tpo $(DEPDIR)/test_bus-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_bus-aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-aci.obj -MD -MP -MF $(DEPDIR)/test_bus-aci.Tpo -c -o test_bus-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-aci.Tpo $(DEPDIR)/test_bus-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_bus-aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
 
 test_bus-krusader.o: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-krusader.o -MD -MP -MF $(DEPDIR)/test_bus-krusader.Tpo -c -o test_bus-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-krusader.Tpo $(DEPDIR)/test_bus-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_bus-krusader.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-krusader.o -MD -MP -MF $(DEPDIR)/test_bus-krusader.Tpo -c -o test_bus-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-krusader.Tpo $(DEPDIR)/test_bus-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_bus-krusader.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
 
 test_bus-krusader.obj: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-krusader.obj -MD -MP -MF $(DEPDIR)/test_bus-krusader.Tpo -c -o test_bus-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-krusader.Tpo $(DEPDIR)/test_bus-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_bus-krusader.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-krusader.obj -MD -MP -MF $(DEPDIR)/test_bus-krusader.Tpo -c -o test_bus-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-krusader.Tpo $(DEPDIR)/test_bus-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_bus-krusader.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
 
 test_bus-disasm.o: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-disasm.o -MD -MP -MF $(DEPDIR)/test_bus-disasm.Tpo -c -o test_bus-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-disasm.Tpo $(DEPDIR)/test_bus-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_bus-disasm.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-disasm.o -MD -MP -MF $(DEPDIR)/test_bus-disasm.Tpo -c -o test_bus-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-disasm.Tpo $(DEPDIR)/test_bus-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_bus-disasm.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
 
 test_bus-disasm.obj: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-disasm.obj -MD -MP -MF $(DEPDIR)/test_bus-disasm.Tpo -c -o test_bus-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-disasm.Tpo $(DEPDIR)/test_bus-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_bus-disasm.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-disasm.obj -MD -MP -MF $(DEPDIR)/test_bus-disasm.Tpo -c -o test_bus-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-disasm.Tpo $(DEPDIR)/test_bus-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_bus-disasm.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
 
 test_bus-dbg.o: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-dbg.o -MD -MP -MF $(DEPDIR)/test_bus-dbg.Tpo -c -o test_bus-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-dbg.Tpo $(DEPDIR)/test_bus-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_bus-dbg.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-dbg.o -MD -MP -MF $(DEPDIR)/test_bus-dbg.Tpo -c -o test_bus-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-dbg.Tpo $(DEPDIR)/test_bus-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_bus-dbg.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
 
 test_bus-dbg.obj: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-dbg.obj -MD -MP -MF $(DEPDIR)/test_bus-dbg.Tpo -c -o test_bus-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-dbg.Tpo $(DEPDIR)/test_bus-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_bus-dbg.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-dbg.obj -MD -MP -MF $(DEPDIR)/test_bus-dbg.Tpo -c -o test_bus-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-dbg.Tpo $(DEPDIR)/test_bus-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_bus-dbg.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
 
 test_bus-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-port.o -MD -MP -MF $(DEPDIR)/test_bus-port.Tpo -c -o test_bus-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-port.Tpo $(DEPDIR)/test_bus-port.Po
-#	$(AM_V_CC)source='port.c' object='test_bus-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-port.o -MD -MP -MF $(DEPDIR)/test_bus-port.Tpo -c -o test_bus-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-port.Tpo $(DEPDIR)/test_bus-port.Po
+#	$(AM_V_CC)source='port.c' object='test_bus-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_bus-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-port.obj -MD -MP -MF $(DEPDIR)/test_bus-port.Tpo -c -o test_bus-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-port.Tpo $(DEPDIR)/test_bus-port.Po
-#	$(AM_V_CC)source='port.c' object='test_bus-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -MT test_bus-port.obj -MD -MP -MF $(DEPDIR)/test_bus-port.Tpo -c -o test_bus-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_bus-port.Tpo $(DEPDIR)/test_bus-port.Po
+#	$(AM_V_CC)source='port.c' object='test_bus-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_bus_CFLAGS) $(CFLAGS) -c -o test_bus-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_config-test_config.o: tests/test_config.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT tests/test_config-test_config.o -MD -MP -MF tests/$(DEPDIR)/test_config-test_config.Tpo -c -o tests/test_config-test_config.o `test -f 'tests/test_config.c' || echo '$(srcdir)/'`tests/test_config.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_config-test_config.Tpo tests/$(DEPDIR)/test_config-test_config.Po
-#	$(AM_V_CC)source='tests/test_config.c' object='tests/test_config-test_config.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o tests/test_config-test_config.o `test -f 'tests/test_config.c' || echo '$(srcdir)/'`tests/test_config.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT tests/test_config-test_config.o -MD -MP -MF tests/$(DEPDIR)/test_config-test_config.Tpo -c -o tests/test_config-test_config.o `test -f 'tests/test_config.c' || echo '$(srcdir)/'`tests/test_config.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_config-test_config.Tpo tests/$(DEPDIR)/test_config-test_config.Po
+#	$(AM_V_CC)source='tests/test_config.c' object='tests/test_config-test_config.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o tests/test_config-test_config.o `test -f 'tests/test_config.c' || echo '$(srcdir)/'`tests/test_config.c
 
 tests/test_config-test_config.obj: tests/test_config.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT tests/test_config-test_config.obj -MD -MP -MF tests/$(DEPDIR)/test_config-test_config.Tpo -c -o tests/test_config-test_config.obj `if test -f 'tests/test_config.c'; then $(CYGPATH_W) 'tests/test_config.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_config.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_config-test_config.Tpo tests/$(DEPDIR)/test_config-test_config.Po
-#	$(AM_V_CC)source='tests/test_config.c' object='tests/test_config-test_config.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o tests/test_config-test_config.obj `if test -f 'tests/test_config.c'; then $(CYGPATH_W) 'tests/test_config.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_config.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT tests/test_config-test_config.obj -MD -MP -MF tests/$(DEPDIR)/test_config-test_config.Tpo -c -o tests/test_config-test_config.obj `if test -f 'tests/test_config.c'; then $(CYGPATH_W) 'tests/test_config.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_config.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_config-test_config.Tpo tests/$(DEPDIR)/test_config-test_config.Po
+#	$(AM_V_CC)source='tests/test_config.c' object='tests/test_config-test_config.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o tests/test_config-test_config.obj `if test -f 'tests/test_config.c'; then $(CYGPATH_W) 'tests/test_config.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_config.c'; fi`
 
 test_config-cli_config.o: cli_config.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-cli_config.o -MD -MP -MF $(DEPDIR)/test_config-cli_config.Tpo -c -o test_config-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-cli_config.Tpo $(DEPDIR)/test_config-cli_config.Po
-#	$(AM_V_CC)source='cli_config.c' object='test_config-cli_config.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-cli_config.o -MD -MP -MF $(DEPDIR)/test_config-cli_config.Tpo -c -o test_config-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-cli_config.Tpo $(DEPDIR)/test_config-cli_config.Po
+#	$(AM_V_CC)source='cli_config.c' object='test_config-cli_config.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-cli_config.o `test -f 'cli_config.c' || echo '$(srcdir)/'`cli_config.c
 
 test_config-cli_config.obj: cli_config.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-cli_config.obj -MD -MP -MF $(DEPDIR)/test_config-cli_config.Tpo -c -o test_config-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-cli_config.Tpo $(DEPDIR)/test_config-cli_config.Po
-#	$(AM_V_CC)source='cli_config.c' object='test_config-cli_config.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-cli_config.obj -MD -MP -MF $(DEPDIR)/test_config-cli_config.Tpo -c -o test_config-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-cli_config.Tpo $(DEPDIR)/test_config-cli_config.Po
+#	$(AM_V_CC)source='cli_config.c' object='test_config-cli_config.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-cli_config.obj `if test -f 'cli_config.c'; then $(CYGPATH_W) 'cli_config.c'; else $(CYGPATH_W) '$(srcdir)/cli_config.c'; fi`
 
 test_config-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-port.o -MD -MP -MF $(DEPDIR)/test_config-port.Tpo -c -o test_config-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-port.Tpo $(DEPDIR)/test_config-port.Po
-#	$(AM_V_CC)source='port.c' object='test_config-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-port.o -MD -MP -MF $(DEPDIR)/test_config-port.Tpo -c -o test_config-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-port.Tpo $(DEPDIR)/test_config-port.Po
+#	$(AM_V_CC)source='port.c' object='test_config-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_config-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-port.obj -MD -MP -MF $(DEPDIR)/test_config-port.Tpo -c -o test_config-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-port.Tpo $(DEPDIR)/test_config-port.Po
-#	$(AM_V_CC)source='port.c' object='test_config-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -MT test_config-port.obj -MD -MP -MF $(DEPDIR)/test_config-port.Tpo -c -o test_config-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_config-port.Tpo $(DEPDIR)/test_config-port.Po
+#	$(AM_V_CC)source='port.c' object='test_config-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_config_CFLAGS) $(CFLAGS) -c -o test_config-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_cpu-test_cpu.o: tests/test_cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-test_cpu.o -MD -MP -MF tests/$(DEPDIR)/test_cpu-test_cpu.Tpo -c -o tests/test_cpu-test_cpu.o `test -f 'tests/test_cpu.c' || echo '$(srcdir)/'`tests/test_cpu.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-test_cpu.Tpo tests/$(DEPDIR)/test_cpu-test_cpu.Po
-#	$(AM_V_CC)source='tests/test_cpu.c' object='tests/test_cpu-test_cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-test_cpu.o `test -f 'tests/test_cpu.c' || echo '$(srcdir)/'`tests/test_cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-test_cpu.o -MD -MP -MF tests/$(DEPDIR)/test_cpu-test_cpu.Tpo -c -o tests/test_cpu-test_cpu.o `test -f 'tests/test_cpu.c' || echo '$(srcdir)/'`tests/test_cpu.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-test_cpu.Tpo tests/$(DEPDIR)/test_cpu-test_cpu.Po
+#	$(AM_V_CC)source='tests/test_cpu.c' object='tests/test_cpu-test_cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-test_cpu.o `test -f 'tests/test_cpu.c' || echo '$(srcdir)/'`tests/test_cpu.c
 
 tests/test_cpu-test_cpu.obj: tests/test_cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-test_cpu.obj -MD -MP -MF tests/$(DEPDIR)/test_cpu-test_cpu.Tpo -c -o tests/test_cpu-test_cpu.obj `if test -f 'tests/test_cpu.c'; then $(CYGPATH_W) 'tests/test_cpu.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_cpu.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-test_cpu.Tpo tests/$(DEPDIR)/test_cpu-test_cpu.Po
-#	$(AM_V_CC)source='tests/test_cpu.c' object='tests/test_cpu-test_cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-test_cpu.obj `if test -f 'tests/test_cpu.c'; then $(CYGPATH_W) 'tests/test_cpu.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-test_cpu.obj -MD -MP -MF tests/$(DEPDIR)/test_cpu-test_cpu.Tpo -c -o tests/test_cpu-test_cpu.obj `if test -f 'tests/test_cpu.c'; then $(CYGPATH_W) 'tests/test_cpu.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-test_cpu.Tpo tests/$(DEPDIR)/test_cpu-test_cpu.Po
+#	$(AM_V_CC)source='tests/test_cpu.c' object='tests/test_cpu-test_cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-test_cpu.obj `if test -f 'tests/test_cpu.c'; then $(CYGPATH_W) 'tests/test_cpu.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_cpu.c'; fi`
 
 tests/test_cpu-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_cpu-term_dummy.Tpo -c -o tests/test_cpu-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-term_dummy.Tpo tests/$(DEPDIR)/test_cpu-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_cpu-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_cpu-term_dummy.Tpo -c -o tests/test_cpu-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-term_dummy.Tpo tests/$(DEPDIR)/test_cpu-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_cpu-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_cpu-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_cpu-term_dummy.Tpo -c -o tests/test_cpu-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-term_dummy.Tpo tests/$(DEPDIR)/test_cpu-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_cpu-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT tests/test_cpu-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_cpu-term_dummy.Tpo -c -o tests/test_cpu-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_cpu-term_dummy.Tpo tests/$(DEPDIR)/test_cpu-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_cpu-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o tests/test_cpu-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_cpu-cpu.o: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-cpu.o -MD -MP -MF $(DEPDIR)/test_cpu-cpu.Tpo -c -o test_cpu-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-cpu.Tpo $(DEPDIR)/test_cpu-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_cpu-cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-cpu.o -MD -MP -MF $(DEPDIR)/test_cpu-cpu.Tpo -c -o test_cpu-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-cpu.Tpo $(DEPDIR)/test_cpu-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_cpu-cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 
 test_cpu-cpu.obj: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-cpu.obj -MD -MP -MF $(DEPDIR)/test_cpu-cpu.Tpo -c -o test_cpu-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-cpu.Tpo $(DEPDIR)/test_cpu-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_cpu-cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-cpu.obj -MD -MP -MF $(DEPDIR)/test_cpu-cpu.Tpo -c -o test_cpu-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-cpu.Tpo $(DEPDIR)/test_cpu-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_cpu-cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
 
 test_cpu-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-bus.o -MD -MP -MF $(DEPDIR)/test_cpu-bus.Tpo -c -o test_cpu-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-bus.Tpo $(DEPDIR)/test_cpu-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_cpu-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-bus.o -MD -MP -MF $(DEPDIR)/test_cpu-bus.Tpo -c -o test_cpu-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-bus.Tpo $(DEPDIR)/test_cpu-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_cpu-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_cpu-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-bus.obj -MD -MP -MF $(DEPDIR)/test_cpu-bus.Tpo -c -o test_cpu-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-bus.Tpo $(DEPDIR)/test_cpu-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_cpu-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-bus.obj -MD -MP -MF $(DEPDIR)/test_cpu-bus.Tpo -c -o test_cpu-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-bus.Tpo $(DEPDIR)/test_cpu-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_cpu-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_cpu-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-io.o -MD -MP -MF $(DEPDIR)/test_cpu-io.Tpo -c -o test_cpu-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-io.Tpo $(DEPDIR)/test_cpu-io.Po
-#	$(AM_V_CC)source='io.c' object='test_cpu-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-io.o -MD -MP -MF $(DEPDIR)/test_cpu-io.Tpo -c -o test_cpu-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-io.Tpo $(DEPDIR)/test_cpu-io.Po
+#	$(AM_V_CC)source='io.c' object='test_cpu-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 test_cpu-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-io.obj -MD -MP -MF $(DEPDIR)/test_cpu-io.Tpo -c -o test_cpu-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-io.Tpo $(DEPDIR)/test_cpu-io.Po
-#	$(AM_V_CC)source='io.c' object='test_cpu-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-io.obj -MD -MP -MF $(DEPDIR)/test_cpu-io.Tpo -c -o test_cpu-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-io.Tpo $(DEPDIR)/test_cpu-io.Po
+#	$(AM_V_CC)source='io.c' object='test_cpu-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 test_cpu-aci.o: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-aci.o -MD -MP -MF $(DEPDIR)/test_cpu-aci.Tpo -c -o test_cpu-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-aci.Tpo $(DEPDIR)/test_cpu-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_cpu-aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-aci.o -MD -MP -MF $(DEPDIR)/test_cpu-aci.Tpo -c -o test_cpu-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-aci.Tpo $(DEPDIR)/test_cpu-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_cpu-aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
 
 test_cpu-aci.obj: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-aci.obj -MD -MP -MF $(DEPDIR)/test_cpu-aci.Tpo -c -o test_cpu-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-aci.Tpo $(DEPDIR)/test_cpu-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_cpu-aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-aci.obj -MD -MP -MF $(DEPDIR)/test_cpu-aci.Tpo -c -o test_cpu-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-aci.Tpo $(DEPDIR)/test_cpu-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_cpu-aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
 
 test_cpu-krusader.o: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-krusader.o -MD -MP -MF $(DEPDIR)/test_cpu-krusader.Tpo -c -o test_cpu-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-krusader.Tpo $(DEPDIR)/test_cpu-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_cpu-krusader.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-krusader.o -MD -MP -MF $(DEPDIR)/test_cpu-krusader.Tpo -c -o test_cpu-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-krusader.Tpo $(DEPDIR)/test_cpu-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_cpu-krusader.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
 
 test_cpu-krusader.obj: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-krusader.obj -MD -MP -MF $(DEPDIR)/test_cpu-krusader.Tpo -c -o test_cpu-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-krusader.Tpo $(DEPDIR)/test_cpu-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_cpu-krusader.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-krusader.obj -MD -MP -MF $(DEPDIR)/test_cpu-krusader.Tpo -c -o test_cpu-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-krusader.Tpo $(DEPDIR)/test_cpu-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_cpu-krusader.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
 
 test_cpu-disasm.o: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-disasm.o -MD -MP -MF $(DEPDIR)/test_cpu-disasm.Tpo -c -o test_cpu-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-disasm.Tpo $(DEPDIR)/test_cpu-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_cpu-disasm.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-disasm.o -MD -MP -MF $(DEPDIR)/test_cpu-disasm.Tpo -c -o test_cpu-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-disasm.Tpo $(DEPDIR)/test_cpu-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_cpu-disasm.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
 
 test_cpu-disasm.obj: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-disasm.obj -MD -MP -MF $(DEPDIR)/test_cpu-disasm.Tpo -c -o test_cpu-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-disasm.Tpo $(DEPDIR)/test_cpu-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_cpu-disasm.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-disasm.obj -MD -MP -MF $(DEPDIR)/test_cpu-disasm.Tpo -c -o test_cpu-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-disasm.Tpo $(DEPDIR)/test_cpu-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_cpu-disasm.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
 
 test_cpu-dbg.o: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-dbg.o -MD -MP -MF $(DEPDIR)/test_cpu-dbg.Tpo -c -o test_cpu-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-dbg.Tpo $(DEPDIR)/test_cpu-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_cpu-dbg.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-dbg.o -MD -MP -MF $(DEPDIR)/test_cpu-dbg.Tpo -c -o test_cpu-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-dbg.Tpo $(DEPDIR)/test_cpu-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_cpu-dbg.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
 
 test_cpu-dbg.obj: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-dbg.obj -MD -MP -MF $(DEPDIR)/test_cpu-dbg.Tpo -c -o test_cpu-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-dbg.Tpo $(DEPDIR)/test_cpu-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_cpu-dbg.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-dbg.obj -MD -MP -MF $(DEPDIR)/test_cpu-dbg.Tpo -c -o test_cpu-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-dbg.Tpo $(DEPDIR)/test_cpu-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_cpu-dbg.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
 
 test_cpu-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-port.o -MD -MP -MF $(DEPDIR)/test_cpu-port.Tpo -c -o test_cpu-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-port.Tpo $(DEPDIR)/test_cpu-port.Po
-#	$(AM_V_CC)source='port.c' object='test_cpu-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-port.o -MD -MP -MF $(DEPDIR)/test_cpu-port.Tpo -c -o test_cpu-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-port.Tpo $(DEPDIR)/test_cpu-port.Po
+#	$(AM_V_CC)source='port.c' object='test_cpu-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_cpu-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-port.obj -MD -MP -MF $(DEPDIR)/test_cpu-port.Tpo -c -o test_cpu-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-port.Tpo $(DEPDIR)/test_cpu-port.Po
-#	$(AM_V_CC)source='port.c' object='test_cpu-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -MT test_cpu-port.obj -MD -MP -MF $(DEPDIR)/test_cpu-port.Tpo -c -o test_cpu-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_cpu-port.Tpo $(DEPDIR)/test_cpu-port.Po
+#	$(AM_V_CC)source='port.c' object='test_cpu-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_cpu_CFLAGS) $(CFLAGS) -c -o test_cpu-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_dualram-test_dualram.o: tests/test_dualram.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-test_dualram.o -MD -MP -MF tests/$(DEPDIR)/test_dualram-test_dualram.Tpo -c -o tests/test_dualram-test_dualram.o `test -f 'tests/test_dualram.c' || echo '$(srcdir)/'`tests/test_dualram.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-test_dualram.Tpo tests/$(DEPDIR)/test_dualram-test_dualram.Po
-#	$(AM_V_CC)source='tests/test_dualram.c' object='tests/test_dualram-test_dualram.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-test_dualram.o `test -f 'tests/test_dualram.c' || echo '$(srcdir)/'`tests/test_dualram.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-test_dualram.o -MD -MP -MF tests/$(DEPDIR)/test_dualram-test_dualram.Tpo -c -o tests/test_dualram-test_dualram.o `test -f 'tests/test_dualram.c' || echo '$(srcdir)/'`tests/test_dualram.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-test_dualram.Tpo tests/$(DEPDIR)/test_dualram-test_dualram.Po
+#	$(AM_V_CC)source='tests/test_dualram.c' object='tests/test_dualram-test_dualram.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-test_dualram.o `test -f 'tests/test_dualram.c' || echo '$(srcdir)/'`tests/test_dualram.c
 
 tests/test_dualram-test_dualram.obj: tests/test_dualram.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-test_dualram.obj -MD -MP -MF tests/$(DEPDIR)/test_dualram-test_dualram.Tpo -c -o tests/test_dualram-test_dualram.obj `if test -f 'tests/test_dualram.c'; then $(CYGPATH_W) 'tests/test_dualram.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_dualram.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-test_dualram.Tpo tests/$(DEPDIR)/test_dualram-test_dualram.Po
-#	$(AM_V_CC)source='tests/test_dualram.c' object='tests/test_dualram-test_dualram.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-test_dualram.obj `if test -f 'tests/test_dualram.c'; then $(CYGPATH_W) 'tests/test_dualram.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_dualram.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-test_dualram.obj -MD -MP -MF tests/$(DEPDIR)/test_dualram-test_dualram.Tpo -c -o tests/test_dualram-test_dualram.obj `if test -f 'tests/test_dualram.c'; then $(CYGPATH_W) 'tests/test_dualram.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_dualram.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-test_dualram.Tpo tests/$(DEPDIR)/test_dualram-test_dualram.Po
+#	$(AM_V_CC)source='tests/test_dualram.c' object='tests/test_dualram-test_dualram.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-test_dualram.obj `if test -f 'tests/test_dualram.c'; then $(CYGPATH_W) 'tests/test_dualram.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_dualram.c'; fi`
 
 tests/test_dualram-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_dualram-term_dummy.Tpo -c -o tests/test_dualram-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-term_dummy.Tpo tests/$(DEPDIR)/test_dualram-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_dualram-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_dualram-term_dummy.Tpo -c -o tests/test_dualram-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-term_dummy.Tpo tests/$(DEPDIR)/test_dualram-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_dualram-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_dualram-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_dualram-term_dummy.Tpo -c -o tests/test_dualram-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-term_dummy.Tpo tests/$(DEPDIR)/test_dualram-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_dualram-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT tests/test_dualram-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_dualram-term_dummy.Tpo -c -o tests/test_dualram-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_dualram-term_dummy.Tpo tests/$(DEPDIR)/test_dualram-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_dualram-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o tests/test_dualram-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_dualram-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-bus.o -MD -MP -MF $(DEPDIR)/test_dualram-bus.Tpo -c -o test_dualram-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-bus.Tpo $(DEPDIR)/test_dualram-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_dualram-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-bus.o -MD -MP -MF $(DEPDIR)/test_dualram-bus.Tpo -c -o test_dualram-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-bus.Tpo $(DEPDIR)/test_dualram-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_dualram-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_dualram-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-bus.obj -MD -MP -MF $(DEPDIR)/test_dualram-bus.Tpo -c -o test_dualram-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-bus.Tpo $(DEPDIR)/test_dualram-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_dualram-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-bus.obj -MD -MP -MF $(DEPDIR)/test_dualram-bus.Tpo -c -o test_dualram-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-bus.Tpo $(DEPDIR)/test_dualram-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_dualram-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_dualram-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-io.o -MD -MP -MF $(DEPDIR)/test_dualram-io.Tpo -c -o test_dualram-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-io.Tpo $(DEPDIR)/test_dualram-io.Po
-#	$(AM_V_CC)source='io.c' object='test_dualram-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-io.o -MD -MP -MF $(DEPDIR)/test_dualram-io.Tpo -c -o test_dualram-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-io.Tpo $(DEPDIR)/test_dualram-io.Po
+#	$(AM_V_CC)source='io.c' object='test_dualram-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 test_dualram-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-io.obj -MD -MP -MF $(DEPDIR)/test_dualram-io.Tpo -c -o test_dualram-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-io.Tpo $(DEPDIR)/test_dualram-io.Po
-#	$(AM_V_CC)source='io.c' object='test_dualram-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-io.obj -MD -MP -MF $(DEPDIR)/test_dualram-io.Tpo -c -o test_dualram-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-io.Tpo $(DEPDIR)/test_dualram-io.Po
+#	$(AM_V_CC)source='io.c' object='test_dualram-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 test_dualram-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-port.o -MD -MP -MF $(DEPDIR)/test_dualram-port.Tpo -c -o test_dualram-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-port.Tpo $(DEPDIR)/test_dualram-port.Po
-#	$(AM_V_CC)source='port.c' object='test_dualram-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-port.o -MD -MP -MF $(DEPDIR)/test_dualram-port.Tpo -c -o test_dualram-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-port.Tpo $(DEPDIR)/test_dualram-port.Po
+#	$(AM_V_CC)source='port.c' object='test_dualram-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_dualram-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-port.obj -MD -MP -MF $(DEPDIR)/test_dualram-port.Tpo -c -o test_dualram-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-port.Tpo $(DEPDIR)/test_dualram-port.Po
-#	$(AM_V_CC)source='port.c' object='test_dualram-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -MT test_dualram-port.obj -MD -MP -MF $(DEPDIR)/test_dualram-port.Tpo -c -o test_dualram-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_dualram-port.Tpo $(DEPDIR)/test_dualram-port.Po
+#	$(AM_V_CC)source='port.c' object='test_dualram-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_dualram_CFLAGS) $(CFLAGS) -c -o test_dualram-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_interrupts-test_interrupts.o: tests/test_interrupts.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-test_interrupts.o -MD -MP -MF tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo -c -o tests/test_interrupts-test_interrupts.o `test -f 'tests/test_interrupts.c' || echo '$(srcdir)/'`tests/test_interrupts.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo tests/$(DEPDIR)/test_interrupts-test_interrupts.Po
-#	$(AM_V_CC)source='tests/test_interrupts.c' object='tests/test_interrupts-test_interrupts.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-test_interrupts.o `test -f 'tests/test_interrupts.c' || echo '$(srcdir)/'`tests/test_interrupts.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-test_interrupts.o -MD -MP -MF tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo -c -o tests/test_interrupts-test_interrupts.o `test -f 'tests/test_interrupts.c' || echo '$(srcdir)/'`tests/test_interrupts.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo tests/$(DEPDIR)/test_interrupts-test_interrupts.Po
+#	$(AM_V_CC)source='tests/test_interrupts.c' object='tests/test_interrupts-test_interrupts.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-test_interrupts.o `test -f 'tests/test_interrupts.c' || echo '$(srcdir)/'`tests/test_interrupts.c
 
 tests/test_interrupts-test_interrupts.obj: tests/test_interrupts.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-test_interrupts.obj -MD -MP -MF tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo -c -o tests/test_interrupts-test_interrupts.obj `if test -f 'tests/test_interrupts.c'; then $(CYGPATH_W) 'tests/test_interrupts.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_interrupts.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo tests/$(DEPDIR)/test_interrupts-test_interrupts.Po
-#	$(AM_V_CC)source='tests/test_interrupts.c' object='tests/test_interrupts-test_interrupts.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-test_interrupts.obj `if test -f 'tests/test_interrupts.c'; then $(CYGPATH_W) 'tests/test_interrupts.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_interrupts.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-test_interrupts.obj -MD -MP -MF tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo -c -o tests/test_interrupts-test_interrupts.obj `if test -f 'tests/test_interrupts.c'; then $(CYGPATH_W) 'tests/test_interrupts.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_interrupts.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-test_interrupts.Tpo tests/$(DEPDIR)/test_interrupts-test_interrupts.Po
+#	$(AM_V_CC)source='tests/test_interrupts.c' object='tests/test_interrupts-test_interrupts.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-test_interrupts.obj `if test -f 'tests/test_interrupts.c'; then $(CYGPATH_W) 'tests/test_interrupts.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_interrupts.c'; fi`
 
 tests/test_interrupts-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo -c -o tests/test_interrupts-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo tests/$(DEPDIR)/test_interrupts-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_interrupts-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo -c -o tests/test_interrupts-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo tests/$(DEPDIR)/test_interrupts-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_interrupts-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_interrupts-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo -c -o tests/test_interrupts-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo tests/$(DEPDIR)/test_interrupts-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_interrupts-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT tests/test_interrupts-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo -c -o tests/test_interrupts-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_interrupts-term_dummy.Tpo tests/$(DEPDIR)/test_interrupts-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_interrupts-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o tests/test_interrupts-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_interrupts-cpu.o: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-cpu.o -MD -MP -MF $(DEPDIR)/test_interrupts-cpu.Tpo -c -o test_interrupts-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-cpu.Tpo $(DEPDIR)/test_interrupts-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_interrupts-cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-cpu.o -MD -MP -MF $(DEPDIR)/test_interrupts-cpu.Tpo -c -o test_interrupts-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-cpu.Tpo $(DEPDIR)/test_interrupts-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_interrupts-cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 
 test_interrupts-cpu.obj: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-cpu.obj -MD -MP -MF $(DEPDIR)/test_interrupts-cpu.Tpo -c -o test_interrupts-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-cpu.Tpo $(DEPDIR)/test_interrupts-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_interrupts-cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-cpu.obj -MD -MP -MF $(DEPDIR)/test_interrupts-cpu.Tpo -c -o test_interrupts-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-cpu.Tpo $(DEPDIR)/test_interrupts-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_interrupts-cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
 
 test_interrupts-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-bus.o -MD -MP -MF $(DEPDIR)/test_interrupts-bus.Tpo -c -o test_interrupts-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-bus.Tpo $(DEPDIR)/test_interrupts-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_interrupts-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-bus.o -MD -MP -MF $(DEPDIR)/test_interrupts-bus.Tpo -c -o test_interrupts-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-bus.Tpo $(DEPDIR)/test_interrupts-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_interrupts-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_interrupts-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-bus.obj -MD -MP -MF $(DEPDIR)/test_interrupts-bus.Tpo -c -o test_interrupts-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-bus.Tpo $(DEPDIR)/test_interrupts-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_interrupts-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-bus.obj -MD -MP -MF $(DEPDIR)/test_interrupts-bus.Tpo -c -o test_interrupts-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-bus.Tpo $(DEPDIR)/test_interrupts-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_interrupts-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_interrupts-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-io.o -MD -MP -MF $(DEPDIR)/test_interrupts-io.Tpo -c -o test_interrupts-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-io.Tpo $(DEPDIR)/test_interrupts-io.Po
-#	$(AM_V_CC)source='io.c' object='test_interrupts-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-io.o -MD -MP -MF $(DEPDIR)/test_interrupts-io.Tpo -c -o test_interrupts-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-io.Tpo $(DEPDIR)/test_interrupts-io.Po
+#	$(AM_V_CC)source='io.c' object='test_interrupts-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 test_interrupts-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-io.obj -MD -MP -MF $(DEPDIR)/test_interrupts-io.Tpo -c -o test_interrupts-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-io.Tpo $(DEPDIR)/test_interrupts-io.Po
-#	$(AM_V_CC)source='io.c' object='test_interrupts-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-io.obj -MD -MP -MF $(DEPDIR)/test_interrupts-io.Tpo -c -o test_interrupts-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-io.Tpo $(DEPDIR)/test_interrupts-io.Po
+#	$(AM_V_CC)source='io.c' object='test_interrupts-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 test_interrupts-aci.o: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-aci.o -MD -MP -MF $(DEPDIR)/test_interrupts-aci.Tpo -c -o test_interrupts-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-aci.Tpo $(DEPDIR)/test_interrupts-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_interrupts-aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-aci.o -MD -MP -MF $(DEPDIR)/test_interrupts-aci.Tpo -c -o test_interrupts-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-aci.Tpo $(DEPDIR)/test_interrupts-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_interrupts-aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
 
 test_interrupts-aci.obj: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-aci.obj -MD -MP -MF $(DEPDIR)/test_interrupts-aci.Tpo -c -o test_interrupts-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-aci.Tpo $(DEPDIR)/test_interrupts-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_interrupts-aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-aci.obj -MD -MP -MF $(DEPDIR)/test_interrupts-aci.Tpo -c -o test_interrupts-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-aci.Tpo $(DEPDIR)/test_interrupts-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_interrupts-aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
 
 test_interrupts-krusader.o: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-krusader.o -MD -MP -MF $(DEPDIR)/test_interrupts-krusader.Tpo -c -o test_interrupts-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-krusader.Tpo $(DEPDIR)/test_interrupts-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_interrupts-krusader.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-krusader.o -MD -MP -MF $(DEPDIR)/test_interrupts-krusader.Tpo -c -o test_interrupts-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-krusader.Tpo $(DEPDIR)/test_interrupts-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_interrupts-krusader.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
 
 test_interrupts-krusader.obj: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-krusader.obj -MD -MP -MF $(DEPDIR)/test_interrupts-krusader.Tpo -c -o test_interrupts-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-krusader.Tpo $(DEPDIR)/test_interrupts-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_interrupts-krusader.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-krusader.obj -MD -MP -MF $(DEPDIR)/test_interrupts-krusader.Tpo -c -o test_interrupts-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-krusader.Tpo $(DEPDIR)/test_interrupts-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_interrupts-krusader.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
 
 test_interrupts-disasm.o: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-disasm.o -MD -MP -MF $(DEPDIR)/test_interrupts-disasm.Tpo -c -o test_interrupts-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-disasm.Tpo $(DEPDIR)/test_interrupts-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_interrupts-disasm.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-disasm.o -MD -MP -MF $(DEPDIR)/test_interrupts-disasm.Tpo -c -o test_interrupts-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-disasm.Tpo $(DEPDIR)/test_interrupts-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_interrupts-disasm.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
 
 test_interrupts-disasm.obj: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-disasm.obj -MD -MP -MF $(DEPDIR)/test_interrupts-disasm.Tpo -c -o test_interrupts-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-disasm.Tpo $(DEPDIR)/test_interrupts-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_interrupts-disasm.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-disasm.obj -MD -MP -MF $(DEPDIR)/test_interrupts-disasm.Tpo -c -o test_interrupts-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-disasm.Tpo $(DEPDIR)/test_interrupts-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_interrupts-disasm.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
 
 test_interrupts-dbg.o: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-dbg.o -MD -MP -MF $(DEPDIR)/test_interrupts-dbg.Tpo -c -o test_interrupts-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-dbg.Tpo $(DEPDIR)/test_interrupts-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_interrupts-dbg.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-dbg.o -MD -MP -MF $(DEPDIR)/test_interrupts-dbg.Tpo -c -o test_interrupts-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-dbg.Tpo $(DEPDIR)/test_interrupts-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_interrupts-dbg.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
 
 test_interrupts-dbg.obj: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-dbg.obj -MD -MP -MF $(DEPDIR)/test_interrupts-dbg.Tpo -c -o test_interrupts-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-dbg.Tpo $(DEPDIR)/test_interrupts-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_interrupts-dbg.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-dbg.obj -MD -MP -MF $(DEPDIR)/test_interrupts-dbg.Tpo -c -o test_interrupts-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-dbg.Tpo $(DEPDIR)/test_interrupts-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_interrupts-dbg.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
 
 test_interrupts-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-port.o -MD -MP -MF $(DEPDIR)/test_interrupts-port.Tpo -c -o test_interrupts-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-port.Tpo $(DEPDIR)/test_interrupts-port.Po
-#	$(AM_V_CC)source='port.c' object='test_interrupts-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-port.o -MD -MP -MF $(DEPDIR)/test_interrupts-port.Tpo -c -o test_interrupts-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-port.Tpo $(DEPDIR)/test_interrupts-port.Po
+#	$(AM_V_CC)source='port.c' object='test_interrupts-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_interrupts-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-port.obj -MD -MP -MF $(DEPDIR)/test_interrupts-port.Tpo -c -o test_interrupts-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-port.Tpo $(DEPDIR)/test_interrupts-port.Po
-#	$(AM_V_CC)source='port.c' object='test_interrupts-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -MT test_interrupts-port.obj -MD -MP -MF $(DEPDIR)/test_interrupts-port.Tpo -c -o test_interrupts-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_interrupts-port.Tpo $(DEPDIR)/test_interrupts-port.Po
+#	$(AM_V_CC)source='port.c' object='test_interrupts-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_interrupts_CFLAGS) $(CFLAGS) -c -o test_interrupts-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_tomharte-test_tomharte.o: tests/test_tomharte.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-test_tomharte.o -MD -MP -MF tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo -c -o tests/test_tomharte-test_tomharte.o `test -f 'tests/test_tomharte.c' || echo '$(srcdir)/'`tests/test_tomharte.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo tests/$(DEPDIR)/test_tomharte-test_tomharte.Po
-#	$(AM_V_CC)source='tests/test_tomharte.c' object='tests/test_tomharte-test_tomharte.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-test_tomharte.o `test -f 'tests/test_tomharte.c' || echo '$(srcdir)/'`tests/test_tomharte.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-test_tomharte.o -MD -MP -MF tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo -c -o tests/test_tomharte-test_tomharte.o `test -f 'tests/test_tomharte.c' || echo '$(srcdir)/'`tests/test_tomharte.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo tests/$(DEPDIR)/test_tomharte-test_tomharte.Po
+#	$(AM_V_CC)source='tests/test_tomharte.c' object='tests/test_tomharte-test_tomharte.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-test_tomharte.o `test -f 'tests/test_tomharte.c' || echo '$(srcdir)/'`tests/test_tomharte.c
 
 tests/test_tomharte-test_tomharte.obj: tests/test_tomharte.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-test_tomharte.obj -MD -MP -MF tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo -c -o tests/test_tomharte-test_tomharte.obj `if test -f 'tests/test_tomharte.c'; then $(CYGPATH_W) 'tests/test_tomharte.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_tomharte.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo tests/$(DEPDIR)/test_tomharte-test_tomharte.Po
-#	$(AM_V_CC)source='tests/test_tomharte.c' object='tests/test_tomharte-test_tomharte.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-test_tomharte.obj `if test -f 'tests/test_tomharte.c'; then $(CYGPATH_W) 'tests/test_tomharte.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_tomharte.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-test_tomharte.obj -MD -MP -MF tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo -c -o tests/test_tomharte-test_tomharte.obj `if test -f 'tests/test_tomharte.c'; then $(CYGPATH_W) 'tests/test_tomharte.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_tomharte.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-test_tomharte.Tpo tests/$(DEPDIR)/test_tomharte-test_tomharte.Po
+#	$(AM_V_CC)source='tests/test_tomharte.c' object='tests/test_tomharte-test_tomharte.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-test_tomharte.obj `if test -f 'tests/test_tomharte.c'; then $(CYGPATH_W) 'tests/test_tomharte.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_tomharte.c'; fi`
 
 tests/test_tomharte-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo -c -o tests/test_tomharte-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo tests/$(DEPDIR)/test_tomharte-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_tomharte-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo -c -o tests/test_tomharte-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo tests/$(DEPDIR)/test_tomharte-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_tomharte-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_tomharte-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo -c -o tests/test_tomharte-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo tests/$(DEPDIR)/test_tomharte-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_tomharte-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT tests/test_tomharte-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo -c -o tests/test_tomharte-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_tomharte-term_dummy.Tpo tests/$(DEPDIR)/test_tomharte-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_tomharte-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o tests/test_tomharte-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_tomharte-cpu.o: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-cpu.o -MD -MP -MF $(DEPDIR)/test_tomharte-cpu.Tpo -c -o test_tomharte-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-cpu.Tpo $(DEPDIR)/test_tomharte-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_tomharte-cpu.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-cpu.o -MD -MP -MF $(DEPDIR)/test_tomharte-cpu.Tpo -c -o test_tomharte-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-cpu.Tpo $(DEPDIR)/test_tomharte-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_tomharte-cpu.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-cpu.o `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 
 test_tomharte-cpu.obj: cpu.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-cpu.obj -MD -MP -MF $(DEPDIR)/test_tomharte-cpu.Tpo -c -o test_tomharte-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-cpu.Tpo $(DEPDIR)/test_tomharte-cpu.Po
-#	$(AM_V_CC)source='cpu.c' object='test_tomharte-cpu.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-cpu.obj -MD -MP -MF $(DEPDIR)/test_tomharte-cpu.Tpo -c -o test_tomharte-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-cpu.Tpo $(DEPDIR)/test_tomharte-cpu.Po
+#	$(AM_V_CC)source='cpu.c' object='test_tomharte-cpu.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-cpu.obj `if test -f 'cpu.c'; then $(CYGPATH_W) 'cpu.c'; else $(CYGPATH_W) '$(srcdir)/cpu.c'; fi`
 
 test_tomharte-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-bus.o -MD -MP -MF $(DEPDIR)/test_tomharte-bus.Tpo -c -o test_tomharte-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-bus.Tpo $(DEPDIR)/test_tomharte-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_tomharte-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-bus.o -MD -MP -MF $(DEPDIR)/test_tomharte-bus.Tpo -c -o test_tomharte-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-bus.Tpo $(DEPDIR)/test_tomharte-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_tomharte-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_tomharte-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-bus.obj -MD -MP -MF $(DEPDIR)/test_tomharte-bus.Tpo -c -o test_tomharte-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-bus.Tpo $(DEPDIR)/test_tomharte-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_tomharte-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-bus.obj -MD -MP -MF $(DEPDIR)/test_tomharte-bus.Tpo -c -o test_tomharte-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-bus.Tpo $(DEPDIR)/test_tomharte-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_tomharte-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_tomharte-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-io.o -MD -MP -MF $(DEPDIR)/test_tomharte-io.Tpo -c -o test_tomharte-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-io.Tpo $(DEPDIR)/test_tomharte-io.Po
-#	$(AM_V_CC)source='io.c' object='test_tomharte-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-io.o -MD -MP -MF $(DEPDIR)/test_tomharte-io.Tpo -c -o test_tomharte-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-io.Tpo $(DEPDIR)/test_tomharte-io.Po
+#	$(AM_V_CC)source='io.c' object='test_tomharte-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 test_tomharte-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-io.obj -MD -MP -MF $(DEPDIR)/test_tomharte-io.Tpo -c -o test_tomharte-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-io.Tpo $(DEPDIR)/test_tomharte-io.Po
-#	$(AM_V_CC)source='io.c' object='test_tomharte-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-io.obj -MD -MP -MF $(DEPDIR)/test_tomharte-io.Tpo -c -o test_tomharte-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-io.Tpo $(DEPDIR)/test_tomharte-io.Po
+#	$(AM_V_CC)source='io.c' object='test_tomharte-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 test_tomharte-aci.o: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-aci.o -MD -MP -MF $(DEPDIR)/test_tomharte-aci.Tpo -c -o test_tomharte-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-aci.Tpo $(DEPDIR)/test_tomharte-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_tomharte-aci.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-aci.o -MD -MP -MF $(DEPDIR)/test_tomharte-aci.Tpo -c -o test_tomharte-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-aci.Tpo $(DEPDIR)/test_tomharte-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_tomharte-aci.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-aci.o `test -f 'aci.c' || echo '$(srcdir)/'`aci.c
 
 test_tomharte-aci.obj: aci.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-aci.obj -MD -MP -MF $(DEPDIR)/test_tomharte-aci.Tpo -c -o test_tomharte-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-aci.Tpo $(DEPDIR)/test_tomharte-aci.Po
-#	$(AM_V_CC)source='aci.c' object='test_tomharte-aci.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-aci.obj -MD -MP -MF $(DEPDIR)/test_tomharte-aci.Tpo -c -o test_tomharte-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-aci.Tpo $(DEPDIR)/test_tomharte-aci.Po
+#	$(AM_V_CC)source='aci.c' object='test_tomharte-aci.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-aci.obj `if test -f 'aci.c'; then $(CYGPATH_W) 'aci.c'; else $(CYGPATH_W) '$(srcdir)/aci.c'; fi`
 
 test_tomharte-krusader.o: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-krusader.o -MD -MP -MF $(DEPDIR)/test_tomharte-krusader.Tpo -c -o test_tomharte-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-krusader.Tpo $(DEPDIR)/test_tomharte-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_tomharte-krusader.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-krusader.o -MD -MP -MF $(DEPDIR)/test_tomharte-krusader.Tpo -c -o test_tomharte-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-krusader.Tpo $(DEPDIR)/test_tomharte-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_tomharte-krusader.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-krusader.o `test -f 'krusader.c' || echo '$(srcdir)/'`krusader.c
 
 test_tomharte-krusader.obj: krusader.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-krusader.obj -MD -MP -MF $(DEPDIR)/test_tomharte-krusader.Tpo -c -o test_tomharte-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-krusader.Tpo $(DEPDIR)/test_tomharte-krusader.Po
-#	$(AM_V_CC)source='krusader.c' object='test_tomharte-krusader.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-krusader.obj -MD -MP -MF $(DEPDIR)/test_tomharte-krusader.Tpo -c -o test_tomharte-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-krusader.Tpo $(DEPDIR)/test_tomharte-krusader.Po
+#	$(AM_V_CC)source='krusader.c' object='test_tomharte-krusader.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-krusader.obj `if test -f 'krusader.c'; then $(CYGPATH_W) 'krusader.c'; else $(CYGPATH_W) '$(srcdir)/krusader.c'; fi`
 
 test_tomharte-disasm.o: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-disasm.o -MD -MP -MF $(DEPDIR)/test_tomharte-disasm.Tpo -c -o test_tomharte-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-disasm.Tpo $(DEPDIR)/test_tomharte-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_tomharte-disasm.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-disasm.o -MD -MP -MF $(DEPDIR)/test_tomharte-disasm.Tpo -c -o test_tomharte-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-disasm.Tpo $(DEPDIR)/test_tomharte-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_tomharte-disasm.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-disasm.o `test -f 'disasm.c' || echo '$(srcdir)/'`disasm.c
 
 test_tomharte-disasm.obj: disasm.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-disasm.obj -MD -MP -MF $(DEPDIR)/test_tomharte-disasm.Tpo -c -o test_tomharte-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-disasm.Tpo $(DEPDIR)/test_tomharte-disasm.Po
-#	$(AM_V_CC)source='disasm.c' object='test_tomharte-disasm.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-disasm.obj -MD -MP -MF $(DEPDIR)/test_tomharte-disasm.Tpo -c -o test_tomharte-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-disasm.Tpo $(DEPDIR)/test_tomharte-disasm.Po
+#	$(AM_V_CC)source='disasm.c' object='test_tomharte-disasm.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-disasm.obj `if test -f 'disasm.c'; then $(CYGPATH_W) 'disasm.c'; else $(CYGPATH_W) '$(srcdir)/disasm.c'; fi`
 
 test_tomharte-dbg.o: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-dbg.o -MD -MP -MF $(DEPDIR)/test_tomharte-dbg.Tpo -c -o test_tomharte-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-dbg.Tpo $(DEPDIR)/test_tomharte-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_tomharte-dbg.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-dbg.o -MD -MP -MF $(DEPDIR)/test_tomharte-dbg.Tpo -c -o test_tomharte-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-dbg.Tpo $(DEPDIR)/test_tomharte-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_tomharte-dbg.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-dbg.o `test -f 'dbg.c' || echo '$(srcdir)/'`dbg.c
 
 test_tomharte-dbg.obj: dbg.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-dbg.obj -MD -MP -MF $(DEPDIR)/test_tomharte-dbg.Tpo -c -o test_tomharte-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-dbg.Tpo $(DEPDIR)/test_tomharte-dbg.Po
-#	$(AM_V_CC)source='dbg.c' object='test_tomharte-dbg.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-dbg.obj -MD -MP -MF $(DEPDIR)/test_tomharte-dbg.Tpo -c -o test_tomharte-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-dbg.Tpo $(DEPDIR)/test_tomharte-dbg.Po
+#	$(AM_V_CC)source='dbg.c' object='test_tomharte-dbg.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-dbg.obj `if test -f 'dbg.c'; then $(CYGPATH_W) 'dbg.c'; else $(CYGPATH_W) '$(srcdir)/dbg.c'; fi`
 
 test_tomharte-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-port.o -MD -MP -MF $(DEPDIR)/test_tomharte-port.Tpo -c -o test_tomharte-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-port.Tpo $(DEPDIR)/test_tomharte-port.Po
-#	$(AM_V_CC)source='port.c' object='test_tomharte-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-port.o -MD -MP -MF $(DEPDIR)/test_tomharte-port.Tpo -c -o test_tomharte-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-port.Tpo $(DEPDIR)/test_tomharte-port.Po
+#	$(AM_V_CC)source='port.c' object='test_tomharte-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_tomharte-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-port.obj -MD -MP -MF $(DEPDIR)/test_tomharte-port.Tpo -c -o test_tomharte-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-port.Tpo $(DEPDIR)/test_tomharte-port.Po
-#	$(AM_V_CC)source='port.c' object='test_tomharte-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -MT test_tomharte-port.obj -MD -MP -MF $(DEPDIR)/test_tomharte-port.Tpo -c -o test_tomharte-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_tomharte-port.Tpo $(DEPDIR)/test_tomharte-port.Po
+#	$(AM_V_CC)source='port.c' object='test_tomharte-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_tomharte_CFLAGS) $(CFLAGS) -c -o test_tomharte-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 tests/test_vfs-test_vfs.o: tests/test_vfs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-test_vfs.o -MD -MP -MF tests/$(DEPDIR)/test_vfs-test_vfs.Tpo -c -o tests/test_vfs-test_vfs.o `test -f 'tests/test_vfs.c' || echo '$(srcdir)/'`tests/test_vfs.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-test_vfs.Tpo tests/$(DEPDIR)/test_vfs-test_vfs.Po
-#	$(AM_V_CC)source='tests/test_vfs.c' object='tests/test_vfs-test_vfs.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-test_vfs.o `test -f 'tests/test_vfs.c' || echo '$(srcdir)/'`tests/test_vfs.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-test_vfs.o -MD -MP -MF tests/$(DEPDIR)/test_vfs-test_vfs.Tpo -c -o tests/test_vfs-test_vfs.o `test -f 'tests/test_vfs.c' || echo '$(srcdir)/'`tests/test_vfs.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-test_vfs.Tpo tests/$(DEPDIR)/test_vfs-test_vfs.Po
+#	$(AM_V_CC)source='tests/test_vfs.c' object='tests/test_vfs-test_vfs.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-test_vfs.o `test -f 'tests/test_vfs.c' || echo '$(srcdir)/'`tests/test_vfs.c
 
 tests/test_vfs-test_vfs.obj: tests/test_vfs.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-test_vfs.obj -MD -MP -MF tests/$(DEPDIR)/test_vfs-test_vfs.Tpo -c -o tests/test_vfs-test_vfs.obj `if test -f 'tests/test_vfs.c'; then $(CYGPATH_W) 'tests/test_vfs.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_vfs.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-test_vfs.Tpo tests/$(DEPDIR)/test_vfs-test_vfs.Po
-#	$(AM_V_CC)source='tests/test_vfs.c' object='tests/test_vfs-test_vfs.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-test_vfs.obj `if test -f 'tests/test_vfs.c'; then $(CYGPATH_W) 'tests/test_vfs.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_vfs.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-test_vfs.obj -MD -MP -MF tests/$(DEPDIR)/test_vfs-test_vfs.Tpo -c -o tests/test_vfs-test_vfs.obj `if test -f 'tests/test_vfs.c'; then $(CYGPATH_W) 'tests/test_vfs.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_vfs.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-test_vfs.Tpo tests/$(DEPDIR)/test_vfs-test_vfs.Po
+#	$(AM_V_CC)source='tests/test_vfs.c' object='tests/test_vfs-test_vfs.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-test_vfs.obj `if test -f 'tests/test_vfs.c'; then $(CYGPATH_W) 'tests/test_vfs.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_vfs.c'; fi`
 
 tests/test_vfs-term_dummy.o: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_vfs-term_dummy.Tpo -c -o tests/test_vfs-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-term_dummy.Tpo tests/$(DEPDIR)/test_vfs-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_vfs-term_dummy.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-term_dummy.o -MD -MP -MF tests/$(DEPDIR)/test_vfs-term_dummy.Tpo -c -o tests/test_vfs-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-term_dummy.Tpo tests/$(DEPDIR)/test_vfs-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_vfs-term_dummy.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-term_dummy.o `test -f 'tests/term_dummy.c' || echo '$(srcdir)/'`tests/term_dummy.c
 
 tests/test_vfs-term_dummy.obj: tests/term_dummy.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_vfs-term_dummy.Tpo -c -o tests/test_vfs-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
-	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-term_dummy.Tpo tests/$(DEPDIR)/test_vfs-term_dummy.Po
-#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_vfs-term_dummy.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT tests/test_vfs-term_dummy.obj -MD -MP -MF tests/$(DEPDIR)/test_vfs-term_dummy.Tpo -c -o tests/test_vfs-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
+#	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_vfs-term_dummy.Tpo tests/$(DEPDIR)/test_vfs-term_dummy.Po
+#	$(AM_V_CC)source='tests/term_dummy.c' object='tests/test_vfs-term_dummy.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o tests/test_vfs-term_dummy.obj `if test -f 'tests/term_dummy.c'; then $(CYGPATH_W) 'tests/term_dummy.c'; else $(CYGPATH_W) '$(srcdir)/tests/term_dummy.c'; fi`
 
 test_vfs-bus.o: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-bus.o -MD -MP -MF $(DEPDIR)/test_vfs-bus.Tpo -c -o test_vfs-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-bus.Tpo $(DEPDIR)/test_vfs-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_vfs-bus.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-bus.o -MD -MP -MF $(DEPDIR)/test_vfs-bus.Tpo -c -o test_vfs-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-bus.Tpo $(DEPDIR)/test_vfs-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_vfs-bus.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
 
 test_vfs-bus.obj: bus.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-bus.obj -MD -MP -MF $(DEPDIR)/test_vfs-bus.Tpo -c -o test_vfs-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-bus.Tpo $(DEPDIR)/test_vfs-bus.Po
-#	$(AM_V_CC)source='bus.c' object='test_vfs-bus.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-bus.obj -MD -MP -MF $(DEPDIR)/test_vfs-bus.Tpo -c -o test_vfs-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-bus.Tpo $(DEPDIR)/test_vfs-bus.Po
+#	$(AM_V_CC)source='bus.c' object='test_vfs-bus.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
 
 test_vfs-io.o: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-io.o -MD -MP -MF $(DEPDIR)/test_vfs-io.Tpo -c -o test_vfs-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-io.Tpo $(DEPDIR)/test_vfs-io.Po
-#	$(AM_V_CC)source='io.c' object='test_vfs-io.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-io.o -MD -MP -MF $(DEPDIR)/test_vfs-io.Tpo -c -o test_vfs-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-io.Tpo $(DEPDIR)/test_vfs-io.Po
+#	$(AM_V_CC)source='io.c' object='test_vfs-io.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
 
 test_vfs-io.obj: io.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-io.obj -MD -MP -MF $(DEPDIR)/test_vfs-io.Tpo -c -o test_vfs-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-io.Tpo $(DEPDIR)/test_vfs-io.Po
-#	$(AM_V_CC)source='io.c' object='test_vfs-io.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-io.obj -MD -MP -MF $(DEPDIR)/test_vfs-io.Tpo -c -o test_vfs-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-io.Tpo $(DEPDIR)/test_vfs-io.Po
+#	$(AM_V_CC)source='io.c' object='test_vfs-io.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
 
 test_vfs-port.o: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-port.o -MD -MP -MF $(DEPDIR)/test_vfs-port.Tpo -c -o test_vfs-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-port.Tpo $(DEPDIR)/test_vfs-port.Po
-#	$(AM_V_CC)source='port.c' object='test_vfs-port.o' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-port.o -MD -MP -MF $(DEPDIR)/test_vfs-port.Tpo -c -o test_vfs-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-port.Tpo $(DEPDIR)/test_vfs-port.Po
+#	$(AM_V_CC)source='port.c' object='test_vfs-port.o' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-port.o `test -f 'port.c' || echo '$(srcdir)/'`port.c
 
 test_vfs-port.obj: port.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-port.obj -MD -MP -MF $(DEPDIR)/test_vfs-port.Tpo -c -o test_vfs-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-port.Tpo $(DEPDIR)/test_vfs-port.Po
-#	$(AM_V_CC)source='port.c' object='test_vfs-port.obj' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -MT test_vfs-port.obj -MD -MP -MF $(DEPDIR)/test_vfs-port.Tpo -c -o test_vfs-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
+#	$(AM_V_at)$(am__mv) $(DEPDIR)/test_vfs-port.Tpo $(DEPDIR)/test_vfs-port.Po
+#	$(AM_V_CC)source='port.c' object='test_vfs-port.obj' libtool=no 
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) 
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_vfs_CFLAGS) $(CFLAGS) -c -o test_vfs-port.obj `if test -f 'port.c'; then $(CYGPATH_W) 'port.c'; else $(CYGPATH_W) '$(srcdir)/port.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -2813,7 +2813,7 @@ cwsdpmi.exe:
 apple1.exe: dos-djgpp
 
 # ---------------------------------------------------------------------------
-# Alternate C compilers (hosted POSIX)
+# Alternate C compilers (hosted POSIX) — all use portable $(CC) -c rules.
 # ---------------------------------------------------------------------------
 
 tcc:
@@ -2838,17 +2838,13 @@ apple1-port.o: port.c $(PORT_SHIM) port_attrs.h port_stdarg.h \
                 port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
                 port_posix_inc.h
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-port.o -MD -MP \
-	    -MF $(DEPDIR)/apple1-port.Tpo -c -o apple1-port.o \
+	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-port.o \
 	    `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-port.Tpo $(DEPDIR)/apple1-port.Po
 
 apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-term.o -MD -MP \
-	    -MF $(DEPDIR)/apple1-term.Tpo -c -o apple1-term.o \
+	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-term.o \
 	    `test -f 'term.c' || echo '$(srcdir)/'`term.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-term.Tpo $(DEPDIR)/apple1-term.Po
 
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
         single single-posix single-dos single-watcom single-win check-single \

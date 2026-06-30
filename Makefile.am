@@ -162,7 +162,7 @@ cwsdpmi.exe:
 apple1.exe: dos-djgpp
 
 # ---------------------------------------------------------------------------
-# Alternate C compilers (hosted POSIX)
+# Alternate C compilers (hosted POSIX) — all use portable $(CC) -c rules.
 # ---------------------------------------------------------------------------
 
 tcc:
@@ -187,17 +187,13 @@ apple1-port.o: port.c $(PORT_SHIM) port_attrs.h port_stdarg.h \
                 port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
                 port_posix_inc.h
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-port.o -MD -MP \
-	    -MF $(DEPDIR)/apple1-port.Tpo -c -o apple1-port.o \
+	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-port.o \
 	    `test -f 'port.c' || echo '$(srcdir)/'`port.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-port.Tpo $(DEPDIR)/apple1-port.Po
 
 apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -MT apple1-term.o -MD -MP \
-	    -MF $(DEPDIR)/apple1-term.Tpo -c -o apple1-term.o \
+	    $(CPPFLAGS) $(apple1_CFLAGS) $(CFLAGS) -c -o apple1-term.o \
 	    `test -f 'term.c' || echo '$(srcdir)/'`term.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/apple1-term.Tpo $(DEPDIR)/apple1-term.Po
 
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
         single single-posix single-dos single-watcom single-win check-single \

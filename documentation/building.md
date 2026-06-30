@@ -13,7 +13,7 @@ make check-single # verify amalgamation links (posix)
 
 ## Requirements
 
-- C89 compiler (`cc`, `gcc`, `clang`, …)
+- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [lacc](https://github.com/larme/lacc), …)
 - Python 3 (for amalgamation / `make single`)
 - GNU autotools (`autoconf`, `automake`) for the first `./configure` only
 - POSIX-like shell for `make check`
@@ -50,7 +50,9 @@ make
 ```
 
 The generated Makefile sets `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI` via `AM_CPPFLAGS`
-and `-DAPPLE1_OMIT_CHARMAP` on the `apple1` target.
+and `-DAPPLE1_OMIT_CHARMAP` on the `apple1` target.  Compile lines use plain
+`$(CC) -c` (gcc-style `-MT`/`-MD` dependency tracking is **off** by default so
+`tcc`, `lacc`, and other non-gcc compilers work).
 
 Core sources include only `port.h` — no system headers — so the build does **not**
 pass libc feature macros (`_XOPEN_SOURCE`, `_DEFAULT_SOURCE`, …).  The POSIX port
@@ -59,16 +61,22 @@ include.  See `documentation/configuration.md`.
 
 ### Alternate compilers
 
-Smoke-tested hosted builds with other C compilers:
+All use the same multi-file build with `CC` set — no gcc-only flags:
 
 ```bash
-make tcc    # TinyCC (x86_64); clears -Wall/-std=c89 (needs port_tcc_va.c)
+make tcc    # TinyCC (clears -Wall/-std=c89 for the rebuild)
 make pcc    # PCC
 make lacc   # lacc
 ```
 
-Each target runs `make clean` first, then rebuilds `apple1` with `CC` set.
-To run unit tests under TinyCC: `make clean && make CC=tcc AM_CFLAGS= CFLAGS=-O2 check`
+Each runs `make clean` then rebuilds `apple1`.  To pick the compiler at
+configure time instead: `./configure CC=pcc`.
+
+Optional gcc-style header dependencies (maintainers only):
+
+```bash
+./configure --enable-dependency-tracking
+```
 
 ### Platform port selection
 
