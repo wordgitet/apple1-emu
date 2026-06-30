@@ -1,5 +1,10 @@
-#ifndef PORT_STDARG_HOST_H
-#define PORT_STDARG_HOST_H
+#ifndef PORT_STDARG_LIBC_H
+#define PORT_STDARG_LIBC_H
+
+/*
+ * Variadic support for hosted toolchains (system stdarg.h or TinyCC shim).
+ * Plan 9 native builds use port_stdarg_plan9.h instead.
+ */
 
 #if defined(__TINYC__) && defined(__x86_64__) && !defined(_WIN64)
 
@@ -43,4 +48,4 @@ typedef va_list __gnuc_va_list;
 
 #endif
 
-#endif /* PORT_STDARG_HOST_H */
+#endif /* PORT_STDARG_LIBC_H */

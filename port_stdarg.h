@@ -8,7 +8,7 @@
 #include "port_stdarg_plan9.h"
 #endif
 #else
-#include "port_stdarg_host.h"
+#include "port_stdarg_libc.h"
 #endif
 
 #endif /* PORT_STDARG_H */

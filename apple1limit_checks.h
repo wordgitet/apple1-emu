@@ -1,8 +1,9 @@
-#ifndef APPLE1LIMIT_HOST_H
-#define APPLE1LIMIT_HOST_H
+#ifndef APPLE1LIMIT_CHECKS_H
+#define APPLE1LIMIT_CHECKS_H
 
 /*
- * Compile-time limit validation (not used on Plan 9 / 9front builds).
+ * Compile-time limit range validation (#error guards).
+ * Omitted on Plan 9 / 9front builds (6c preprocessor limitations).
  */
 
 #if APPLE1_MAX_CARDS > 32
@@ -41,4 +42,4 @@
 #error "APPLE1_DEFAULT_RAM_KB is larger than APPLE1_STATIC_RAM_SIZE"
 #endif
 
-#endif /* APPLE1LIMIT_HOST_H */
+#endif /* APPLE1LIMIT_CHECKS_H */

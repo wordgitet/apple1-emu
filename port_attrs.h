@@ -1,8 +1,9 @@
-#ifndef PORT_HOST_H
-#define PORT_HOST_H
+#ifndef PORT_ATTRS_H
+#define PORT_ATTRS_H
 
 /*
- * Host-only port.h definitions (not used on Plan 9 / 9front builds).
+ * Inline, attribute, and port_size_t helpers for toolchains with a full
+ * preprocessor (not used on Plan 9 / 9front native 6c builds).
  */
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -31,4 +32,4 @@ typedef unsigned long port_size_t;
 #define PORT_NORETURN
 #endif
 
-#endif /* PORT_HOST_H */
+#endif /* PORT_ATTRS_H */

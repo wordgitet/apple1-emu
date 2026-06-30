@@ -130,6 +130,10 @@ Sub-variant for Plan 9 APE/pcc builds: **`APPLE1_PORT_PLAN9_APE`** (affects
 Always linked: **`port_string.c`** (strings, format, getopt, RNG). Conditional:
 **`port_tcc_va.c`** (TinyCC x86_64 va_list shim; omitted when `APPLE1_PORT_PLAN9`).
 
+Plan 9 native `6c` builds omit these companion headers (weak preprocessor):
+**`port_attrs.h`**, **`port_stdarg_libc.h`**, **`apple1limit_checks.h`** — replaced by
+inline shims in `port.h`, `port_stdarg_plan9.h`, or no `#error` guards respectively.
+
 ### Terminal backends (`APPLE1_TERM_*`)
 
 | Macro | Source file | Auto-detect trigger |

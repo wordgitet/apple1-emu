@@ -129,7 +129,7 @@ typedef unsigned long port_size_t;
 #define PORT_UNUSED
 #define PORT_NORETURN
 #else
-#include "port_host.h"
+#include "port_attrs.h"
 #endif
 
 /* ================================================================== */

@@ -69,7 +69,7 @@
 #endif
 
 #ifndef APPLE1_PORT_PLAN9
-#include "apple1limit_host.h"
+#include "apple1limit_checks.h"
 #endif
 
 /*

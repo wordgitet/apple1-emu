@@ -19,8 +19,6 @@ HFILES=\
 	port.h\
 	port_stdarg.h\
 	port_stdarg_plan9.h\
-	port_host.h\
-	apple1limit_host.h\
 	bus.h\
 	cpu.h\
 	dbg.h\
