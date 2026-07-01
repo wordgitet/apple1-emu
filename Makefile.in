@@ -640,7 +640,7 @@ AM_CFLAGS = -Wall -Wextra -std=c89
 
 # Included by port.c / term.c — not separate translation units.
 PORT_SHIM = port_string.c port_posix.c port_win.c port_msdos.c port_plan9.c \
-            port_freertos.c port_zephyr.c port_bare.c port_os2.c port_elks.c \
+            port_freertos.c port_zephyr.c port_bare.c port_os2.c \
             port_vxworks.c port_tcc_va.c
 
 TERM_SHIM = term_ansi.c term_dos.c term_vt100.c

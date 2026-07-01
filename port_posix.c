@@ -57,8 +57,7 @@ port_strdup(const char *str)
 /* Timing shims                                                       */
 /* ================================================================== */
 
-#if (!defined(APPLE1_PORT_FREERTOS) || !defined(FREERTOS_DEMO)) && \
-    !defined(APPLE1_PORT_ELKS)
+#if (!defined(APPLE1_PORT_FREERTOS) || !defined(FREERTOS_DEMO))
 
 uint32_t
 port_gettime_us(void)
@@ -82,7 +81,7 @@ port_sleep_us(uint32_t us)
 	nanosleep(&req, NULL);
 }
 
-#endif /* timing: not FreeRTOS demo / ELKS override */
+#endif /* timing: not FreeRTOS demo override */
 
 /* ================================================================== */
 /* Terminal I/O shims                                                 */

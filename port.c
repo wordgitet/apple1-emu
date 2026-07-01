@@ -30,8 +30,6 @@
 #include "port_zephyr.c"
 #elif defined(APPLE1_PORT_OS2)
 #include "port_os2.c"
-#elif defined(APPLE1_PORT_ELKS)
-#include "port_elks.c"
 #elif defined(APPLE1_PORT_VXWORKS)
 #include "port_vxworks.c"
 #else
@@ -45,8 +43,6 @@
 #include "port_plan9.c"
 #elif defined(__OS2__) || defined(__os2__)
 #include "port_os2.c"
-#elif defined(__ELKS__)
-#include "port_elks.c"
 #elif defined(__RTP__) || defined(_WRS_KERNEL)
 #include "port_vxworks.c"
 #elif defined(__unix__) || defined(__unix) || defined(__APPLE__) ||         \

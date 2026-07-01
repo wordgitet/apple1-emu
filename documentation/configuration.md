@@ -82,7 +82,7 @@ The Makefile passes `-DAPPLE1_OMIT_CHARMAP` on core object builds and sets:
 ```
 
 via `DEFS`. POSIX feature-test macros (`_POSIX_C_SOURCE`) are set in `port_posix_inc.h`
-and included only by the POSIX port layer (`port_posix.c`, `port_elks.c`).
+and included only by the POSIX port layer (`port_posix.c`).
 Core sources do not include system headers and do not need libc feature
 macros on the compiler command line.
 
@@ -118,7 +118,6 @@ casual `cc apple1.c` builds).
 | `APPLE1_PORT_MSDOS` | `port_msdos.c` | `__MSDOS__`, `__dos__`, Watcom DOS |
 | `APPLE1_PORT_PLAN9` | `port_plan9.c` | `__PLAN9__`, `__plan9__` |
 | `APPLE1_PORT_OS2` | `port_os2.c` | `__OS2__`, `__os2__` |
-| `APPLE1_PORT_ELKS` | `port_elks.c` | `__ELKS__` |
 | `APPLE1_PORT_VXWORKS` | `port_vxworks.c` | `__RTP__`, `_WRS_KERNEL` |
 | `APPLE1_PORT_FREERTOS` | `port_freertos.c` | POSIX host + `-D`; see `documentation/FREERTOS_DEMO.md` |
 | `APPLE1_PORT_ZEPHYR` | `port_zephyr.c` | (none — explicit `-D` only) |
@@ -194,7 +193,6 @@ blobs) on bare-metal targets.
 | `port_win.c` | `APPLE1_PORT_WIN` | Windows |
 | `port_plan9.c` | `APPLE1_PORT_PLAN9` | Plan 9 / 9front |
 | `port_os2.c` | `APPLE1_PORT_OS2` | OS/2 (includes POSIX subset) |
-| `port_elks.c` | `APPLE1_PORT_ELKS` | ELKS |
 | `port_vxworks.c` | `APPLE1_PORT_VXWORKS` | VxWorks RTP / kernel |
 | `port_freertos.c` | `APPLE1_PORT_FREERTOS` | FreeRTOS Posix_GCC simulator (POSIX host) |
 | `port_zephyr.c` | `APPLE1_PORT_ZEPHYR` | Zephyr RTOS (stub) |

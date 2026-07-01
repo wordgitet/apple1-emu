@@ -12,8 +12,7 @@
 #define PORT_STATIC_INLINE static
 #endif
 
-#if defined(__ELKS__) || defined(__MSDOS__) || defined(MSDOS) || \
-    defined(__dos__)
+#if defined(__MSDOS__) || defined(MSDOS) || defined(__dos__)
 typedef unsigned int port_size_t;
 #elif defined(__x86_64__) || defined(__aarch64__) || defined(__mips64__) || \
     defined(__riscv) || defined(__powerpc64__) || defined(__s390x__) || \

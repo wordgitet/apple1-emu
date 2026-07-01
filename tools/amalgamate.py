@@ -90,7 +90,6 @@ INTERNAL_HEADERS = {
     "port_zephyr.c",
     "port_bare.c",
     "port_os2.c",
-    "port_elks.c",
     "port_vxworks.c",
     "port_tcc_va.c",
     "term_ansi.c",

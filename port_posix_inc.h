@@ -4,7 +4,7 @@
 /*
  * port_posix_inc.h -- Feature-test macros for the POSIX port layer.
  *
- * Include this before any system header in port_posix.c, port_elks.c,
+ * Include this before any system header in port_posix.c,
  * or any translation unit that needs POSIX libc interfaces for the
  * hosted Unix port.  Core emulator sources and other port backends
  * must not include this header.
