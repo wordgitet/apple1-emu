@@ -60,6 +60,7 @@ cli_printf(const char *fmt, ...)
 
 #define CLOCK_RATE_HZ 1022727 /* Apple 1 clock: 1.022727 MHz */
 #define CYCLES_PER_MS (CLOCK_RATE_HZ / 1000)
+#define KBD_POLL_US   1000UL /* stdin poll rate in interactive mode */
 
 /* Globals read by dbg.c, term_ansi.c, and term_internal.h */
 struct bus *g_bus = NULL;
@@ -289,6 +290,7 @@ main(int argc, char *argv[])
 	char trace_line[160];
 	char disasm_buf[64];
 	char hex_bytes[16];
+	uint32_t last_kbd_poll;
 	uint32_t last_render;
 	uint32_t last_time;
 	struct expansion_card *aci_card;
@@ -786,6 +788,7 @@ main(int argc, char *argv[])
 
 	cycle_accumulator = 0;
 	last_time = port_gettime_us();
+	last_kbd_poll = last_time;
 	last_render = port_gettime_us();
 	prev_pc = 0xFFFF;
 	loop_count = 0;
@@ -801,13 +804,19 @@ main(int argc, char *argv[])
 			continue;
 		}
 
-		/* Keyboard + reset */
+		/* Keyboard + reset (poll stdin ~1 kHz, not every insn) */
 		if (opt_headless == false) {
-			bus_update_keyboard(&bus);
-			if (io_reset_pending() != 0) {
-				bus_reset(&bus);
-				io_reset();
-				cpu_reset(&cpu);
+			uint32_t now_kbd;
+
+			now_kbd = port_gettime_us();
+			if (now_kbd - last_kbd_poll >= KBD_POLL_US) {
+				bus_update_keyboard(&bus);
+				last_kbd_poll = now_kbd;
+				if (io_reset_pending() != 0) {
+					bus_reset(&bus);
+					io_reset();
+					cpu_reset(&cpu);
+				}
 			}
 			if (process_sigint() != 0) {
 				break;
