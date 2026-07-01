@@ -83,12 +83,14 @@ port_term_raw_enable(void)
 	DWORD mode;
 
 	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (h_out != INVALID_HANDLE_VALUE) {
-		GetConsoleMode(h_out, &orig_console_mode);
-		mode = orig_console_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-		SetConsoleMode(h_out, mode);
-		raw_mode_active = 1;
-	}
+	if (h_out == INVALID_HANDLE_VALUE)
+		return;
+	if (GetConsoleMode(h_out, &orig_console_mode) == 0)
+		return;
+	mode = orig_console_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (SetConsoleMode(h_out, mode) == 0)
+		return;
+	raw_mode_active = 1;
 }
 
 void
@@ -131,9 +133,13 @@ port_term_write_buf(const char *buf, port_size_t n)
 	DWORD written;
 
 	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (h_out != INVALID_HANDLE_VALUE) {
-		WriteConsoleA(h_out, buf, (DWORD)n, &written, NULL);
-	}
+	if (h_out == INVALID_HANDLE_VALUE)
+		return;
+	if (WriteConsoleA(h_out, buf, (DWORD)n, &written, NULL) != 0)
+		return;
+	if (WriteFile(h_out, buf, (DWORD)n, &written, NULL) != 0)
+		return;
+	fwrite(buf, 1, (size_t)n, stdout);
 }
 
 char *
