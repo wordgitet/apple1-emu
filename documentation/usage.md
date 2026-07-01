@@ -32,7 +32,8 @@ Run `./apple1 -h` for a summary.
 | `-E <wav>` | Save recorded ACI tape to WAV on exit |
 | `-k <rom>` | Krusader assembler ROM (1–4096 bytes) |
 | `-B <baud>` | Terminal baud-rate limit (e.g. `-B 1200`; 0 = no limit) |
-| `-c` | Cap CPU speed to authentic ~1.023 MHz |
+| `-c` | Cap CPU speed to authentic ~1.023 MHz (default without `-u`) |
+| `-u` | Run uncapped (as fast as the host allows) |
 | `-F` | Flat bus: map `$0000–$FFFF` as linear RAM (requires 64 KB static RAM) |
 | `-p` | Disable PIA I/O timing throttle |
 | `-d` | Emulate DRAM refresh cycle stealing |
@@ -51,7 +52,7 @@ If a **flat binary** path is given after all options, it is loaded at `$0000` an
 Example — Klaus Dormann functional test:
 
 ```bash
-./apple1 -H -F 6502_functional_test.bin
+./apple1 -Hu -F 6502_functional_test.bin
 ```
 
 ---

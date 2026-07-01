@@ -31,7 +31,7 @@ cli_config_init_defaults(struct cli_config_opts *opts)
 	opts->save_tape_path = NULL;
 	opts->krusader_path = NULL;
 	opts->baud = 0;
-	opts->opt_uncapped = true;
+	opts->opt_uncapped = false;
 	opts->opt_throttle_pia = true;
 	opts->opt_emulate_dram = false;
 	opts->opt_emulate_bounce = false;

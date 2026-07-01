@@ -52,8 +52,9 @@ Requires **`APPLE1_STATIC_RAM_SIZE=65536`** at compile time.
 
 | Setting | Behaviour |
 |---------|-----------|
-| Default | **Uncapped** — runs as fast as the host CPU allows |
-| `-c` | Cap at **1.022727 MHz** (authentic Apple-1 crystal) |
+| Default | **Capped** at **1.022727 MHz** (authentic Apple-1 crystal) |
+| `-c` | Cap at **1.022727 MHz** (same as default) |
+| `-u` | **Uncapped** — runs as fast as the host CPU allows |
 | `-d` | DRAM refresh cycle stealing |
 | `-p` off | Disable microsecond PIA access delay when uncapped |
 | `-B baud` | Inter-character display delay (DSP busy bit timing) |

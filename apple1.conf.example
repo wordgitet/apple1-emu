@@ -96,8 +96,9 @@
 
 # speed_cap = yes
 #   When yes: cap CPU to authentic Apple-1 speed (~1.023 MHz).
-#   When no: run as fast as the host allows (same as omitting this/b on CLI).
-#   Default: no (uncapped).
+#   When no: run as fast as the host allows (same as -u on the CLI).
+#   Default: yes (capped). Omit this line to stay capped; use speed_cap = no
+#   or -u on the CLI for full speed.
 
 # throttle_pia = yes
 #   When yes: emulate PIA I/O timing (keyboard/display strobe delays).

@@ -147,7 +147,7 @@ test_empty_config(void)
 	assert(rc == CLI_CONFIG_OK);
 	assert(opts.rom_path == NULL);
 	assert(opts.ram_size == (uint32_t)(APPLE1_DEFAULT_RAM_KB * 1024));
-	assert(opts.opt_uncapped == true);
+	assert(opts.opt_uncapped == false);
 
 	cli_config_free_strings(&opts);
 	mock_restore();

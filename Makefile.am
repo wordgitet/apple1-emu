@@ -62,7 +62,7 @@ DORMANN_URL = https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master
 	curl -L -o $@ $(DORMANN_URL)
 
 test-official: apple1 6502_functional_test.bin
-	./apple1 -H -F 6502_functional_test.bin
+	./apple1 -Hu -F 6502_functional_test.bin
 
 # ---------------------------------------------------------------------------
 # Single-file amalgamation and cross-builds

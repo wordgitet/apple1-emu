@@ -132,7 +132,8 @@ print_usage(const char *prog)
 		  "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
 		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 		  "  -l <file>@<hex>      Load binary at hex address\n"
-		  "  -c                   Cap emulation speed to 1.023 MHz\n",
+		  "  -c                   Cap emulation speed to 1.023 MHz\n"
+		  "  -u                   Run uncapped (as fast as host allows)\n",
 	    prog, prog);
 	cli_error("  -p                   Disable PIA I/O throttling\n"
 		  "  -d                   Emulate DRAM refresh cycle stealing\n"
@@ -366,7 +367,7 @@ main(int argc, char *argv[])
 	opt_randomize_cold = true;
 	opt_throttle_pia = true;
 	opt_trace = false;
-	opt_uncapped = true;
+	opt_uncapped = false;
 
 	/* Scan for .conf path, runtime flags (-H/-g/-h), and config mode. */
 	{
@@ -450,7 +451,7 @@ main(int argc, char *argv[])
 	} else {
 		while ((opt = port_getopt(argc,
 			    argv,
-			    "r:m:l:w:a:e:E:B:k:cFpdbsHgth")) != -1) {
+			    "r:m:l:w:a:e:E:B:k:cFpdbsHgthu")) != -1) {
 			switch (opt) {
 			case 'r':
 				if (rom_path != NULL) {
@@ -527,6 +528,9 @@ main(int argc, char *argv[])
 				break;
 			case 'c':
 				opt_uncapped = false;
+				break;
+			case 'u':
+				opt_uncapped = true;
 				break;
 			case 'F':
 				opt_flat_bus = true;
@@ -931,8 +935,7 @@ main(int argc, char *argv[])
 		}
 
 		/* Speed throttle (capped mode) */
-		if (opt_uncapped == false && opt_headless == false &&
-		    cycle_accumulator >= CYCLES_PER_MS) {
+		if (opt_uncapped == false && cycle_accumulator >= CYCLES_PER_MS) {
 			uint32_t current_time;
 			uint32_t elapsed_us;
 			uint32_t expected_us;

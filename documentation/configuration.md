@@ -211,7 +211,8 @@ maintained paths.
 |---------|-------|
 | RAM size 4–64 KB | `-m` CLI or `ram_kb` in `.conf` (≤ `APPLE1_STATIC_RAM_SIZE`) |
 | Flat 64 KB bus | `-F` or `flat_bin` / positional flat binary |
-| Speed cap (~1.023 MHz) | `-c` or `speed_cap` in `.conf` |
+| Speed cap (~1.023 MHz) | Default; `-c` or `speed_cap = yes` in `.conf` |
+| Uncapped (full host speed) | `-u` or `speed_cap = no` in `.conf` |
 | Headless | `-H` (CLI only) |
 | Debugger | `-g` (CLI only; must not define `APPLE1_OMIT_DEBUGGER`) |
 | Baud rate | `-B 1200` or `baud` in `.conf` |
