@@ -310,6 +310,8 @@ main(int argc, char *argv[])
 	bool opt_throttle_pia;
 	bool opt_trace;
 	bool opt_uncapped;
+	bool opt_set_capped;
+	bool opt_set_uncapped;
 	bool has_run_addr;
 	char *aci_path;
 	char *bin_path;
@@ -368,6 +370,8 @@ main(int argc, char *argv[])
 	opt_throttle_pia = true;
 	opt_trace = false;
 	opt_uncapped = false;
+	opt_set_capped = false;
+	opt_set_uncapped = false;
 
 	/* Scan for .conf path, runtime flags (-H/-g/-h), and config mode. */
 	{
@@ -527,9 +531,11 @@ main(int argc, char *argv[])
 				krusader_path = port_strdup(port_optarg);
 				break;
 			case 'c':
+				opt_set_capped = true;
 				opt_uncapped = false;
 				break;
 			case 'u':
+				opt_set_uncapped = true;
 				opt_uncapped = true;
 				break;
 			case 'F':
@@ -563,6 +569,11 @@ main(int argc, char *argv[])
 				print_usage(argv[0]);
 				return (1);
 			}
+		}
+
+		if (opt_set_capped != 0 && opt_set_uncapped != 0) {
+			cli_error("Error: -c and -u are mutually exclusive\n");
+			return (1);
 		}
 
 		/* Positional arg = flat binary (switch mode only) */
