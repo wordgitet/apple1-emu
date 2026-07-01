@@ -114,15 +114,16 @@ zephyr_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-zephyr_xSize(void *file)
+static int
+zephyr_xSize(void *file, port_size_t *size)
 {
 	(void)file;
+	(void)size;
 	return (-1);
 }
 
 static int
-zephyr_xSeek(void *file, long offset, int whence)
+zephyr_xSeek(void *file, int32_t offset, int whence)
 {
 	(void)file;
 	(void)offset;
@@ -130,12 +131,13 @@ zephyr_xSeek(void *file, long offset, int whence)
 	return (-1);
 }
 
-static long
-zephyr_xWrite(void *file, const void *buf, port_size_t sz)
+static int
+zephyr_xWrite(void *file, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
 	(void)file;
 	(void)buf;
 	(void)sz;
+	(void)nwritten;
 	return (-1);
 }
 

@@ -394,10 +394,10 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 	{
 		void *f;
 		port_size_t read_bytes;
-		long size;
+		port_size_t size;
 
 		f = port_vfs_default.open(rom_path, PORT_VFS_READ);
-		if (f == NULL) {
+		if (f == PORT_FILE_INVALID) {
 			char msg[512];
 			port_snprintf(msg,
 			    sizeof(msg),
@@ -417,16 +417,25 @@ bus_load_rom(struct bus *bus, const char *rom_path)
 #endif
 		}
 
-		size = port_vfs_default.size(f);
+		if (port_vfs_default.size(f, &size) != 0) {
+			char msg[512];
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "Error: Could not size ROM file '%s'.",
+			    rom_path);
+			BUS_LOG(bus, BUS_LOG_ERROR, msg);
+			port_vfs_default.close(f);
+			return (PORT_IO);
+		}
 
 		if (size != 256) {
 			char msg[512];
 			port_snprintf(msg,
 			    sizeof(msg),
-			    "Error: ROM file '%s' is %ld bytes. "
+			    "Error: ROM file '%s' is %lu bytes. "
 			    "Apple 1 Monitor ROM must be exactly 256 bytes.",
 			    rom_path,
-			    size);
+			    (unsigned long)size);
 			BUS_LOG(bus, BUS_LOG_ERROR, msg);
 			port_vfs_default.close(f);
 			return (PORT_PROTOCOL);
@@ -464,14 +473,14 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 {
 	void *f;
 	uint8_t *buf;
-	long size;
+	port_size_t size;
 	port_result_t ret;
 
 	if (bus == (void *)0 || bin_path == (void *)0) {
 		return (PORT_INVALID);
 	}
 	f = port_vfs_default.open(bin_path, PORT_VFS_READ);
-	if (f == NULL) {
+	if (f == PORT_FILE_INVALID) {
 		char msg[512];
 		port_snprintf(msg,
 		    sizeof(msg),
@@ -481,9 +490,18 @@ bus_load_bin(struct bus *bus, const char *bin_path, uint16_t address)
 		return (PORT_CANTOPEN);
 	}
 
-	size = port_vfs_default.size(f);
+	if (port_vfs_default.size(f, &size) != 0) {
+		char msg[512];
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Could not size binary file '%s'.",
+		    bin_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		port_vfs_default.close(f);
+		return (PORT_IO);
+	}
 
-	if (size <= 0) {
+	if (size == 0) {
 		char msg[512];
 		port_snprintf(msg,
 		    sizeof(msg),
@@ -531,7 +549,7 @@ bus_load_wozmon_txt(struct bus *bus,
 {
 	char *content;
 	port_size_t read_bytes;
-	long size;
+	port_size_t size;
 	void *f;
 	port_result_t ret;
 
@@ -539,7 +557,7 @@ bus_load_wozmon_txt(struct bus *bus,
 		return (PORT_INVALID);
 	}
 	f = port_vfs_default.open(txt_path, PORT_VFS_READ);
-	if (f == NULL) {
+	if (f == PORT_FILE_INVALID) {
 		char msg[512];
 		port_snprintf(msg,
 		    sizeof(msg),
@@ -549,9 +567,18 @@ bus_load_wozmon_txt(struct bus *bus,
 		return (PORT_CANTOPEN);
 	}
 
-	size = port_vfs_default.size(f);
+	if (port_vfs_default.size(f, &size) != 0) {
+		char msg[512];
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Error: Could not size text file '%s'.",
+		    txt_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		port_vfs_default.close(f);
+		return (PORT_IO);
+	}
 
-	if (size <= 0) {
+	if (size == 0) {
 		char msg[512];
 		port_snprintf(msg,
 		    sizeof(msg),

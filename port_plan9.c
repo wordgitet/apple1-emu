@@ -243,25 +243,27 @@ plan9_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-plan9_xSize(void *file)
+static int
+plan9_xSize(void *file, port_size_t *size)
 {
 	int fd;
 	Dir *d;
-	long size;
 
+	if (file == NULL || size == NULL) {
+		return (-1);
+	}
 	fd = (int)(long)file;
 	d = dirfstat(fd);
 	if (d == NULL) {
 		return (-1);
 	}
-	size = (long)d->length;
+	*size = (port_size_t)d->length;
 	free(d);
-	return (size);
+	return (0);
 }
 
 static int
-plan9_xSeek(void *file, long offset, int whence)
+plan9_xSeek(void *file, int32_t offset, int whence)
 {
 	int fd;
 	int w;
@@ -280,18 +282,30 @@ plan9_xSeek(void *file, long offset, int whence)
 	default:
 		return (-1);
 	}
-	return (seek(fd, offset, w) >= 0 ? 0 : -1);
+	return (seek(fd, (long)offset, w) >= 0 ? 0 : -1);
 }
 
-static long
-plan9_xWrite(void *file, const void *buf, port_size_t sz)
+static int
+plan9_xWrite(void *file, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
 	int fd;
 	long r;
 
+	if (file == NULL || buf == NULL) {
+		return (-1);
+	}
 	fd = (int)(long)file;
 	r = write(fd, (void *)buf, (long)sz);
-	return (r);
+	if (r < 0) {
+		return (-1);
+	}
+	if (nwritten != NULL) {
+		*nwritten = (port_size_t)r;
+	}
+	if ((port_size_t)r != sz) {
+		return (-1);
+	}
+	return (0);
 }
 
 static int

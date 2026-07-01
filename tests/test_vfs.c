@@ -174,20 +174,21 @@ mock_vfs_read(port_file_t f, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-mock_vfs_size(port_file_t f)
+static int
+mock_vfs_size(port_file_t f, port_size_t *size)
 {
 	struct mock_handle *mh;
 
-	if (f == PORT_FILE_INVALID) {
+	if (f == PORT_FILE_INVALID || size == NULL) {
 		return (-1);
 	}
 	mh = (struct mock_handle *)f;
-	return (mock_files[mh->slot].size);
+	*size = (port_size_t)mock_files[mh->slot].size;
+	return (0);
 }
 
 static int
-mock_vfs_seek(port_file_t f, long offset, int whence)
+mock_vfs_seek(port_file_t f, int32_t offset, int whence)
 {
 	struct mock_handle *mh;
 	long base;
@@ -210,7 +211,7 @@ mock_vfs_seek(port_file_t f, long offset, int whence)
 	default:
 		return (-1);
 	}
-	next = base + offset;
+	next = base + (long)offset;
 	if (next < 0) {
 		return (-1);
 	}
@@ -218,8 +219,8 @@ mock_vfs_seek(port_file_t f, long offset, int whence)
 	return (0);
 }
 
-static long
-mock_vfs_write(port_file_t f, const void *buf, port_size_t sz)
+static int
+mock_vfs_write(port_file_t f, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
 	struct mock_handle *mh;
 	struct mock_slot *slot;
@@ -242,7 +243,10 @@ mock_vfs_write(port_file_t f, const void *buf, port_size_t sz)
 	if (mh->pos > slot->size) {
 		slot->size = mh->pos;
 	}
-	return ((long)sz);
+	if (nwritten != NULL) {
+		*nwritten = sz;
+	}
+	return (0);
 }
 
 static int
@@ -316,7 +320,8 @@ test_vfs_vtable(void)
 	port_file_t f;
 	char buf[64];
 	port_size_t nread;
-	long wrote;
+	port_size_t fsize;
+	port_size_t nwritten;
 	char line[32];
 
 	mock_install_file(MOCK_PATH_WOZ,
@@ -326,7 +331,8 @@ test_vfs_vtable(void)
 
 	f = port_vfs_default.open(MOCK_PATH_BIN, PORT_VFS_READ);
 	assert(f != PORT_FILE_INVALID);
-	assert(port_vfs_default.size(f) == 4);
+	assert(port_vfs_default.size(f, &fsize) == 0);
+	assert(fsize == 4);
 
 	nread = 0;
 	assert(port_vfs_default.read(f, buf, 2, &nread) == 0);
@@ -342,8 +348,9 @@ test_vfs_vtable(void)
 
 	f = port_vfs_default.open("ram:new.txt", PORT_VFS_WRITE);
 	assert(f != PORT_FILE_INVALID);
-	wrote = port_vfs_default.write(f, "OK", 2);
-	assert(wrote == 2);
+	nwritten = 0;
+	assert(port_vfs_default.write(f, "OK", 2, &nwritten) == 0);
+	assert(nwritten == 2);
 	port_vfs_default.close(f);
 
 	f = port_vfs_default.open("ram:new.txt", PORT_VFS_READ);

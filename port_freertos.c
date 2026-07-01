@@ -128,15 +128,16 @@ freertos_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-freertos_xSize(void *file)
+static int
+freertos_xSize(void *file, port_size_t *size)
 {
 	(void)file;
+	(void)size;
 	return (-1);
 }
 
 static int
-freertos_xSeek(void *file, long offset, int whence)
+freertos_xSeek(void *file, int32_t offset, int whence)
 {
 	(void)file;
 	(void)offset;
@@ -144,12 +145,13 @@ freertos_xSeek(void *file, long offset, int whence)
 	return (-1);
 }
 
-static long
-freertos_xWrite(void *file, const void *buf, port_size_t sz)
+static int
+freertos_xWrite(void *file, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
 	(void)file;
 	(void)buf;
 	(void)sz;
+	(void)nwritten;
 	return (-1);
 }
 

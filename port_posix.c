@@ -250,14 +250,14 @@ posix_vfs_read(port_file_t f, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-posix_vfs_size(port_file_t f)
+static int
+posix_vfs_size(port_file_t f, port_size_t *size)
 {
 	long current;
 	long sz;
 	FILE *fp;
 
-	if (f == PORT_FILE_INVALID) {
+	if (f == PORT_FILE_INVALID || size == NULL) {
 		return (-1);
 	}
 	fp = (FILE *)f;
@@ -272,11 +272,12 @@ posix_vfs_size(port_file_t f)
 	if (fseek(fp, current, SEEK_SET) != 0) {
 		return (-1);
 	}
-	return (sz);
+	*size = (port_size_t)sz;
+	return (0);
 }
 
 static int
-posix_vfs_seek(port_file_t f, long offset, int whence)
+posix_vfs_seek(port_file_t f, int32_t offset, int whence)
 {
 	int w;
 
@@ -296,16 +297,25 @@ posix_vfs_seek(port_file_t f, long offset, int whence)
 	default:
 		return (-1);
 	}
-	return (fseek((FILE *)f, offset, w) == 0 ? 0 : -1);
+	return (fseek((FILE *)f, (long)offset, w) == 0 ? 0 : -1);
 }
 
-static long
-posix_vfs_write(port_file_t f, const void *buf, port_size_t sz)
+static int
+posix_vfs_write(port_file_t f, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
-	if (f == PORT_FILE_INVALID) {
+	size_t w;
+
+	if (f == PORT_FILE_INVALID || buf == NULL) {
 		return (-1);
 	}
-	return ((long)fwrite(buf, 1, sz, (FILE *)f));
+	w = fwrite(buf, 1, (size_t)sz, (FILE *)f);
+	if (nwritten != NULL) {
+		*nwritten = (port_size_t)w;
+	}
+	if (w != (size_t)sz) {
+		return (-1);
+	}
+	return (0);
 }
 
 static int

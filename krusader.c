@@ -35,7 +35,7 @@ krusader_create(struct bus *bus, const char *rom_path)
 {
 	void *f;
 	char msg[128];
-	long size;
+	port_size_t size;
 	port_size_t nread;
 
 	if (s_in_use != 0) {
@@ -46,7 +46,7 @@ krusader_create(struct bus *bus, const char *rom_path)
 	}
 
 	f = port_vfs_default.open(rom_path, PORT_VFS_READ);
-	if (f == NULL) {
+	if (f == PORT_FILE_INVALID) {
 		port_snprintf(msg,
 		    sizeof(msg),
 		    "Krusader: cannot open ROM '%s'",
@@ -55,14 +55,22 @@ krusader_create(struct bus *bus, const char *rom_path)
 		return (NULL);
 	}
 
-	size = port_vfs_default.size(f);
-
-	if (size <= 0 || size > 4096) {
+	if (port_vfs_default.size(f, &size) != 0) {
 		port_snprintf(msg,
 		    sizeof(msg),
-		    "Krusader: ROM '%s' is %ld bytes; must be 1-4096",
+		    "Krusader: cannot size ROM '%s'",
+		    rom_path);
+		BUS_LOG(bus, BUS_LOG_ERROR, msg);
+		port_vfs_default.close(f);
+		return (NULL);
+	}
+
+	if (size == 0 || size > 4096) {
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "Krusader: ROM '%s' is %lu bytes; must be 1-4096",
 		    rom_path,
-		    size);
+		    (unsigned long)size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (NULL);
@@ -75,10 +83,10 @@ krusader_create(struct bus *bus, const char *rom_path)
 	    nread != (port_size_t)size) {
 		port_snprintf(msg,
 		    sizeof(msg),
-		    "Krusader: short read on '%s' (%lu of %ld bytes)",
+		    "Krusader: short read on '%s' (%lu of %lu bytes)",
 		    rom_path,
 		    (unsigned long)nread,
-		    size);
+		    (unsigned long)size);
 		BUS_LOG(bus, BUS_LOG_ERROR, msg);
 		port_vfs_default.close(f);
 		return (NULL);

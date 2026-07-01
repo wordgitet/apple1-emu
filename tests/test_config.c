@@ -50,15 +50,16 @@ mock_read(port_file_t f, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-mock_size(port_file_t f)
+static int
+mock_size(port_file_t f, port_size_t *size)
 {
 	(void)f;
+	(void)size;
 	return (-1);
 }
 
 static int
-mock_seek(port_file_t f, long offset, int whence)
+mock_seek(port_file_t f, int32_t offset, int whence)
 {
 	(void)f;
 	(void)offset;
@@ -66,12 +67,13 @@ mock_seek(port_file_t f, long offset, int whence)
 	return (-1);
 }
 
-static long
-mock_write(port_file_t f, const void *buf, port_size_t sz)
+static int
+mock_write(port_file_t f, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
 	(void)f;
 	(void)buf;
 	(void)sz;
+	(void)nwritten;
 	return (-1);
 }
 

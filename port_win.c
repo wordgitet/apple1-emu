@@ -209,14 +209,14 @@ win_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
 	return (0);
 }
 
-static long
-win_xSize(void *file)
+static int
+win_xSize(void *file, port_size_t *size)
 {
 	long current;
-	long size;
+	long sz;
 	FILE *f;
 
-	if (file == NULL) {
+	if (file == NULL || size == NULL) {
 		return (-1);
 	}
 	f = (FILE *)file;
@@ -227,15 +227,16 @@ win_xSize(void *file)
 	if (fseek(f, 0, SEEK_END) != 0) {
 		return (-1);
 	}
-	size = ftell(f);
+	sz = ftell(f);
 	if (fseek(f, current, SEEK_SET) != 0) {
 		return (-1);
 	}
-	return (size);
+	*size = (port_size_t)sz;
+	return (0);
 }
 
 static int
-win_xSeek(void *file, long offset, int whence)
+win_xSeek(void *file, int32_t offset, int whence)
 {
 	int w;
 
@@ -255,16 +256,25 @@ win_xSeek(void *file, long offset, int whence)
 	default:
 		return (-1);
 	}
-	return (fseek((FILE *)file, offset, w) == 0 ? 0 : -1);
+	return (fseek((FILE *)file, (long)offset, w) == 0 ? 0 : -1);
 }
 
-static long
-win_xWrite(void *file, const void *buf, port_size_t sz)
+static int
+win_xWrite(void *file, const void *buf, port_size_t sz, port_size_t *nwritten)
 {
-	if (file == NULL) {
+	size_t w;
+
+	if (file == NULL || buf == NULL) {
 		return (-1);
 	}
-	return ((long)fwrite(buf, 1, sz, (FILE *)file));
+	w = fwrite(buf, 1, (size_t)sz, (FILE *)file);
+	if (nwritten != NULL) {
+		*nwritten = (port_size_t)w;
+	}
+	if (w != (size_t)sz) {
+		return (-1);
+	}
+	return (0);
 }
 
 static int

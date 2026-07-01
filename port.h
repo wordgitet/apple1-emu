@@ -399,23 +399,26 @@ struct port_vfs {
 	    port_size_t *nread);
 
 	/*
-     * size: return total file size in bytes without altering the
-     * current position.  Returns -1 on error.
+     * size: store total file size in bytes without altering the
+     * current position.  Returns 0 on success, -1 on error.
      */
-	long (*size)(port_file_t f);
+	int (*size)(port_file_t f, port_size_t *size);
 
 	/*
      * seek: reposition the file pointer.  whence is one of
-     * PORT_VFS_SEEK_SET / _CUR / _END.  Returns 0 on success, -1
-     * on failure.
+     * PORT_VFS_SEEK_SET / _CUR / _END.  offset is signed.
+     * Returns 0 on success, -1 on failure.
      */
-	int (*seek)(port_file_t f, long offset, int whence);
+	int (*seek)(port_file_t f, int32_t offset, int whence);
 
 	/*
-     * write: write sz bytes from buf.  Returns number of bytes
-     * written, or -1 on error.
+     * write: write up to sz bytes from buf.  Stores bytes actually
+     * written in *nwritten.  Returns 0 on success, -1 on error.
      */
-	long (*write)(port_file_t f, const void *buf, port_size_t sz);
+	int (*write)(port_file_t f,
+	    const void *buf,
+	    port_size_t sz,
+	    port_size_t *nwritten);
 
 	/*
      * read_line: read one text line into buf (up to size-1 chars),
