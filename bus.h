@@ -73,7 +73,7 @@ struct bus {
 	uint8_t last_bus_value;
 	struct expansion_card *cards[APPLE1_MAX_CARDS];
 	int num_cards;
-	uint32_t kbd_bounce_cycles; /* remaining bounce window (in calls) */
+	uint32_t kbd_bounce_cycles; /* remaining bounce window (6502 cycles) */
 
 #ifndef APPLE1_OMIT_BUS_ACCESS_CB
 	/* Optional callback fired on every non-dummy bus access (read or write).
@@ -145,6 +145,10 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy);
 /* Poll for keyboard input and update the PIA keyboard registers */
 void
 bus_update_keyboard(struct bus *bus);
+
+/* Advance keyboard bounce lockout by emulated CPU cycles */
+void
+bus_tick_kbd_bounce(struct bus *bus, uint8_t cycles);
 
 /* Reset the PIA to default/boot state */
 void

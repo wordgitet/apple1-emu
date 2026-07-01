@@ -891,6 +891,7 @@ main(int argc, char *argv[])
 
 			bus.access_cb = NULL;
 			cycle_accumulator += cycles;
+			bus_tick_kbd_bounce(&bus, cycles);
 
 			/* Tick expansion cards */
 			for (j = 0; j < bus.num_cards; j++) {

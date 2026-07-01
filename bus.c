@@ -834,9 +834,34 @@ bus_write_ext(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 }
 
 void
+bus_tick_kbd_bounce(struct bus *bus, uint8_t cycles)
+{
+#ifndef APPLE1_OMIT_KBD_BOUNCE
+	if (bus->opts.emulate_kbd_bounce != 0 && bus->kbd_bounce_cycles > 0) {
+		if (bus->kbd_bounce_cycles > (uint32_t)cycles) {
+			bus->kbd_bounce_cycles -= (uint32_t)cycles;
+		} else {
+			bus->kbd_bounce_cycles = 0;
+		}
+	}
+#else
+	(void)bus;
+	(void)cycles;
+#endif
+}
+
+void
 bus_update_keyboard(struct bus *bus)
 {
-	bool key_avail = io_check_keyboard();
+	bool key_avail;
+
+#ifndef APPLE1_OMIT_KBD_BOUNCE
+	if (bus->opts.emulate_kbd_bounce != 0 && bus->kbd_bounce_cycles > 0) {
+		return; /* encoder still settling - ignore new input */
+	}
+#endif
+
+	key_avail = io_check_keyboard();
 
 	/*
 	 * Keyboard bounce emulation (hardware-accurate):
@@ -859,12 +884,6 @@ bus_update_keyboard(struct bus *bus)
 	 * strobe bit is left exactly as the struct cpu last left it (cleared after the
 	 * $D010 read) - no toggling, no fake rising edges.
 	 */
-#ifndef APPLE1_OMIT_KBD_BOUNCE
-	if (bus->opts.emulate_kbd_bounce != 0 && bus->kbd_bounce_cycles > 0) {
-		bus->kbd_bounce_cycles--;
-		return; /* encoder still settling - ignore new input */
-	}
-#endif
 
 	/* Check if keyboard strobe is clear */
 	if ((bus->pia.kbd_control & 0x80) == 0) {
@@ -874,18 +893,14 @@ bus_update_keyboard(struct bus *bus)
 			if (key != 0) {
 				bus->pia.kbd_data = key;
 				bus->pia.kbd_control |= 0x80;
-				/*
-				 * Start lockout window: 5-15 ms at ~1 MHz
-				 * = 5 000-15 000 cycles. bus_update_keyboard is
-				 * called once per cpu_step (~2-7 cycles on
-				 * average), so divide by ~4 for call count.
-				 * Result: ~1 250-3 750 calls = realistic MM5740
-				 * inter-key settle time.
-				 */
 #ifndef APPLE1_OMIT_KBD_BOUNCE
 				if (bus->opts.emulate_kbd_bounce != 0) {
-					bus->kbd_bounce_cycles = 1250 +
-					    (uint32_t)(port_rand() % 2500);
+					/*
+					 * 5-15 ms at ~1 MHz = 5 000-15 000
+					 * emulated cycles (see bus_tick_kbd_bounce).
+					 */
+					bus->kbd_bounce_cycles = 5000 +
+					    (uint32_t)(port_rand() % 10000);
 				}
 #endif
 			}
