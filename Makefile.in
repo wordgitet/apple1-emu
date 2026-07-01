@@ -691,6 +691,17 @@ DOS_CFLAGS = -O2 -Wall -std=gnu99 -D__MSDOS__ -DAPPLE1_OMIT_CHARMAP \
 WATCOM_DEFS = -dMSDOS -dAPPLE1_OMIT_CHARMAP -dAPPLE1_PORT_MSDOS \
                   -dAPPLE1_TERM_DOS
 
+
+# ---------------------------------------------------------------------------
+# FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
+# ---------------------------------------------------------------------------
+FREERTOS_CFLAGS = -Wall -Wextra -std=c89 -O2 \
+	-DAPPLE1_PORT_FREERTOS -DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
+	-DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI -DAPPLE1_OMIT_KRUSADER
+
+FREERTOS_OBJS = freertos-cpu.o freertos-bus.o freertos-io.o freertos-cli_config.o \
+	freertos-term.o freertos-port.o freertos-main.o
+
 all: all-am
 
 .SUFFIXES:
@@ -2828,9 +2839,38 @@ lacc:
 	$(MAKE) clean
 	$(MAKE) CC=lacc apple1
 
+freertos: apple1_freertos
+
+apple1_freertos: $(FREERTOS_OBJS)
+	@echo "Linking apple1_freertos (POSIX host, no FreeRTOS kernel)..."
+	$(CC) -o apple1_freertos $(FREERTOS_OBJS)
+	@echo "Done: ./apple1_freertos (see documentation/FREERTOS_DEMO.md)"
+
+freertos-cpu.o: cpu.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ cpu.c
+
+freertos-bus.o: bus.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ bus.c
+
+freertos-io.o: io.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ io.c
+
+freertos-cli_config.o: cli_config.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ cli_config.c
+
+freertos-term.o: term.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ term.c
+
+freertos-port.o: port.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ port.c
+
+freertos-main.o: main.c
+	$(CC) $(FREERTOS_CFLAGS) -c -o $@ main.c
+
 clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
+	-rm -f apple1_freertos freertos-*.o
 
 # port.c / term.c #include shim sources — explicit rules (automake cannot
 # express included-file dependencies without overriding its own recipes).
@@ -2849,7 +2889,7 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
         single single-posix single-dos single-watcom single-win check-single \
         dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe apple1.exe \
-        cwsdpmi.exe tcc pcc lacc
+        cwsdpmi.exe tcc pcc lacc freertos
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

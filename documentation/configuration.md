@@ -120,7 +120,7 @@ casual `cc apple1.c` builds).
 | `APPLE1_PORT_OS2` | `port_os2.c` | `__OS2__`, `__os2__` |
 | `APPLE1_PORT_ELKS` | `port_elks.c` | `__ELKS__` |
 | `APPLE1_PORT_VXWORKS` | `port_vxworks.c` | `__RTP__`, `_WRS_KERNEL` |
-| `APPLE1_PORT_FREERTOS` | `port_freertos.c` | (none — explicit `-D` only) |
+| `APPLE1_PORT_FREERTOS` | `port_freertos.c` | POSIX host + `-D`; see `documentation/FREERTOS_DEMO.md` |
 | `APPLE1_PORT_ZEPHYR` | `port_zephyr.c` | (none — explicit `-D` only) |
 | `APPLE1_PORT_BARE` | `port_bare.c` | fallback when host is unknown |
 
@@ -196,7 +196,7 @@ blobs) on bare-metal targets.
 | `port_os2.c` | `APPLE1_PORT_OS2` | OS/2 (includes POSIX subset) |
 | `port_elks.c` | `APPLE1_PORT_ELKS` | ELKS |
 | `port_vxworks.c` | `APPLE1_PORT_VXWORKS` | VxWorks RTP / kernel |
-| `port_freertos.c` | `APPLE1_PORT_FREERTOS` | FreeRTOS (stub) |
+| `port_freertos.c` | `APPLE1_PORT_FREERTOS` | FreeRTOS Posix_GCC simulator (POSIX host) |
 | `port_zephyr.c` | `APPLE1_PORT_ZEPHYR` | Zephyr RTOS (stub) |
 | `port_bare.c` | `APPLE1_PORT_BARE` | Bare-metal fallback (no filesystem) |
 

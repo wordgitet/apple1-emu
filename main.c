@@ -277,8 +277,13 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 /*  main                                                                */
 /* ------------------------------------------------------------------ */
 
+#ifdef FREERTOS_DEMO
+int
+emulator_main(int argc, char *argv[])
+#else
 int
 main(int argc, char *argv[])
+#endif
 {
 	/* Static RAM buffer — must not live on the stack (DOS extenders use ~8 KB). */
 	static uint8_t static_ram[APPLE1_STATIC_RAM_SIZE];

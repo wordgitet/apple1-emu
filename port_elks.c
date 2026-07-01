@@ -7,9 +7,7 @@
 /* Use POSIX for standard memory, terminal, signals, and VFS */
 #include "port_posix.c"
 
-/* ELKS timing overrides */
-#undef port_gettime_us
-#undef port_sleep_us
+/* ELKS timing overrides (port_posix.c skips its timing when ELKS is set) */
 
 uint32_t
 port_gettime_us(void)

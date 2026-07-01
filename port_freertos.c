@@ -1,5 +1,21 @@
-#include "FreeRTOS.h"
+/*
+ * port_freertos.c - FreeRTOS POSIX simulator port for Apple-1 Emulator
+ *
+ * Reuses port_posix.c for terminal I/O and VFS on a POSIX host.  When
+ * FREERTOS_DEMO is defined (Posix_GCC demo link), heap and timing call
+ * FreeRTOS APIs instead of libc.
+ */
+
 #include "port.h"
+
+#if defined(__linux__) || defined(__APPLE__)
+
+#include "port_posix_inc.h"
+#include "port_posix.c"
+
+#ifdef FREERTOS_DEMO
+
+#include "FreeRTOS.h"
 #include "task.h"
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
@@ -18,7 +34,6 @@ port_free(void *ptr)
 void *
 port_realloc(void *ptr, port_size_t sz)
 {
-	/* FreeRTOS pvPortMalloc has no native realloc. Handle manually. */
 	void *nptr;
 
 	if (sz == 0) {
@@ -38,23 +53,6 @@ port_realloc(void *ptr, port_size_t sz)
 }
 #endif
 
-char *
-port_strdup(const char *str)
-{
-	port_size_t len;
-	char *dup;
-
-	if (str == NULL) {
-		return (NULL);
-	}
-	len = port_strlen(str) + 1;
-	dup = (char *)port_malloc(len);
-	if (dup != NULL) {
-		port_memcpy(dup, str, len);
-	}
-	return (dup);
-}
-
 uint32_t
 port_gettime_us(void)
 {
@@ -70,106 +68,21 @@ port_sleep_us(uint32_t us)
 	TickType_t ticks;
 
 	ticks = (us * configTICK_RATE_HZ + 999999UL) / 1000000UL;
-	vTaskDelay(ticks);
-}
-
-void
-port_term_raw_enable(void)
-{
-}
-
-void
-port_term_raw_disable(void)
-{
-}
-
-int
-port_term_read_char(void)
-{
-	return (-1);
-}
-
-void
-port_term_write_buf(const char *buf, port_size_t n)
-{
-	(void)buf;
-	(void)n;
-}
-
-void
-port_signal_setup(port_sig_flag *flag)
-{
-	(void)flag;
-}
-
-static void *
-freertos_xOpen(const char *path, int flags)
-{
-	(void)path;
-	(void)flags;
-	return (NULL);
-}
-
-static void
-freertos_xClose(void *file)
-{
-	(void)file;
-}
-
-static int
-freertos_xRead(void *file, void *buf, port_size_t sz, port_size_t *nread)
-{
-	(void)file;
-	(void)buf;
-	(void)sz;
-	if (nread != NULL) {
-		*nread = 0;
+	if (ticks > 0) {
+		vTaskDelay(ticks);
 	}
-	return (0);
 }
 
-static int
-freertos_xSize(void *file, port_size_t *size)
+PORT_NORETURN void
+port_exit(int code)
 {
-	(void)file;
-	(void)size;
-	return (-1);
+	(void)code;
+	vTaskDelete(NULL);
+	for (;;);
 }
 
-static int
-freertos_xSeek(void *file, int32_t offset, int whence)
-{
-	(void)file;
-	(void)offset;
-	(void)whence;
-	return (-1);
-}
+#endif /* FREERTOS_DEMO */
 
-static int
-freertos_xWrite(void *file, const void *buf, port_size_t sz, port_size_t *nwritten)
-{
-	(void)file;
-	(void)buf;
-	(void)sz;
-	(void)nwritten;
-	return (-1);
-}
-
-static int
-freertos_xReadLine(void *file, char *buf, port_size_t size)
-{
-	(void)file;
-	(void)buf;
-	(void)size;
-	return (0);
-}
-
-static struct port_vfs freertos_vfs = { freertos_xOpen,
-	freertos_xClose,
-	freertos_xRead,
-	freertos_xSize,
-	freertos_xSeek,
-	freertos_xWrite,
-	freertos_xReadLine };
-
-struct port_vfs *g_port_vfs = &freertos_vfs;
+#else
+#error "APPLE1_PORT_FREERTOS requires a POSIX host (FreeRTOS Posix_GCC simulator)"
+#endif

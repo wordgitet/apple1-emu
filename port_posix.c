@@ -15,7 +15,8 @@
 /* Memory allocation shims                                            */
 /* ================================================================== */
 
-#if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
+#if (!defined(APPLE1_PORT_FREERTOS) || !defined(FREERTOS_DEMO)) && \
+    !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
 void *
 port_malloc(port_size_t sz)
 {
@@ -56,6 +57,9 @@ port_strdup(const char *str)
 /* Timing shims                                                       */
 /* ================================================================== */
 
+#if (!defined(APPLE1_PORT_FREERTOS) || !defined(FREERTOS_DEMO)) && \
+    !defined(APPLE1_PORT_ELKS)
+
 uint32_t
 port_gettime_us(void)
 {
@@ -77,6 +81,8 @@ port_sleep_us(uint32_t us)
 	req.tv_nsec = (long)((us % 1000000) * 1000);
 	nanosleep(&req, NULL);
 }
+
+#endif /* timing: not FreeRTOS demo / ELKS override */
 
 /* ================================================================== */
 /* Terminal I/O shims                                                 */
@@ -344,8 +350,12 @@ struct port_vfs *g_port_vfs = &posix_vfs;
 /* Process exit                                                       */
 /* ================================================================== */
 
+#if !defined(APPLE1_PORT_FREERTOS) || !defined(FREERTOS_DEMO)
+
 PORT_NORETURN void
 port_exit(int code)
 {
 	exit(code);
 }
+
+#endif
