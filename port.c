@@ -7,50 +7,146 @@
 #include "port.h"
 
 #ifndef APPLE1_PORT_PLAN9
-#if defined(__TINYC__) && defined(__x86_64__) && !defined(_WIN64)
+#ifdef __TINYC__
+#ifdef __x86_64__
+#ifndef _WIN64
 #include "port_tcc_va.c"
+#endif
+#endif
 #endif
 #endif
 
 #include "port_string.c"
 
-#if defined(APPLE1_PORT_BARE)
+#ifdef APPLE1_PORT_BARE
 #include "port_bare.c"
-#elif defined(APPLE1_PORT_POSIX)
+#else
+#ifdef APPLE1_PORT_POSIX
 #include "port_posix.c"
-#elif defined(APPLE1_PORT_WIN)
+#else
+#ifdef APPLE1_PORT_WIN
 #include "port_win.c"
-#elif defined(APPLE1_PORT_MSDOS)
+#else
+#ifdef APPLE1_PORT_MSDOS
 #include "port_msdos.c"
-#elif defined(APPLE1_PORT_PLAN9)
+#else
+#ifdef APPLE1_PORT_PLAN9
 #include "port_plan9.c"
-#elif defined(APPLE1_PORT_FREERTOS)
+#else
+#ifdef APPLE1_PORT_FREERTOS
 #include "port_freertos.c"
-#elif defined(APPLE1_PORT_ZEPHYR)
+#else
+#ifdef APPLE1_PORT_ZEPHYR
 #include "port_zephyr.c"
-#elif defined(APPLE1_PORT_OS2)
+#else
+#ifdef APPLE1_PORT_OS2
 #include "port_os2.c"
-#elif defined(APPLE1_PORT_VXWORKS)
+#else
+#ifdef APPLE1_PORT_VXWORKS
 #include "port_vxworks.c"
 #else
-/* Auto-detect */
-#if defined(_WIN32) || defined(_WIN64)
+/* Auto-detect (nested #ifdef only — Plan 9 6c has no #if / #elif) */
+#ifdef _WIN32
 #include "port_win.c"
-#elif defined(__MSDOS__) || defined(MSDOS) || defined(__dos__) || \
-    (defined(__WATCOMC__) && defined(__DOS__))
+#else
+#ifdef _WIN64
+#include "port_win.c"
+#else
+#ifdef __MSDOS__
 #include "port_msdos.c"
-#elif defined(__PLAN9__) || defined(__plan9__)
+#else
+#ifdef MSDOS
+#include "port_msdos.c"
+#else
+#ifdef __dos__
+#include "port_msdos.c"
+#else
+#ifdef __WATCOMC__
+#ifdef __DOS__
+#include "port_msdos.c"
+#else
+#ifdef __PLAN9__
 #include "port_plan9.c"
-#elif defined(__OS2__) || defined(__os2__)
+#else
+#ifdef __plan9__
+#include "port_plan9.c"
+#else
+#ifdef __OS2__
 #include "port_os2.c"
-#elif defined(__RTP__) || defined(_WRS_KERNEL)
+#else
+#ifdef __os2__
+#include "port_os2.c"
+#else
+#ifdef __RTP__
 #include "port_vxworks.c"
-#elif defined(__unix__) || defined(__unix) || defined(__APPLE__) ||         \
-    defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) ||    \
-    defined(__OpenBSD__) || defined(__DragonFly__) || defined(__haiku__) || \
-    defined(__QNX__) || defined(__rtems__)
+#else
+#ifdef _WRS_KERNEL
+#include "port_vxworks.c"
+#else
+#ifdef __unix__
+#include "port_posix.c"
+#else
+#ifdef __unix
+#include "port_posix.c"
+#else
+#ifdef __APPLE__
+#include "port_posix.c"
+#else
+#ifdef __linux__
+#include "port_posix.c"
+#else
+#ifdef __FreeBSD__
+#include "port_posix.c"
+#else
+#ifdef __NetBSD__
+#include "port_posix.c"
+#else
+#ifdef __OpenBSD__
+#include "port_posix.c"
+#else
+#ifdef __DragonFly__
+#include "port_posix.c"
+#else
+#ifdef __haiku__
+#include "port_posix.c"
+#else
+#ifdef __QNX__
+#include "port_posix.c"
+#else
+#ifdef __rtems__
 #include "port_posix.c"
 #else
 #include "port_bare.c"
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
 #endif
 #endif
