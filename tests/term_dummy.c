@@ -52,56 +52,6 @@ term_reset_pending(void)
 	return (false);
 }
 
-void
-term_run_config_wizard(void)
-{
-}
-
-bool
-term_is_powered(void)
-{
-	return (true);
-}
-
-void
-term_trace_push(const char *line)
-{
-	(void)line;
-}
-
-bool
-term_trace_active(void)
-{
-	return (false);
-}
-
-bool
-term_should_step(void)
-{
-	return (false);
-}
-
-void
-term_request_step(void)
-{
-}
-
-bool
-term_is_paused(void)
-{
-	return (false);
-}
-
-void
-term_close_debugger(void)
-{
-}
-
-void
-term_open_debugger(void)
-{
-}
-
 bool
 term_dsp_ready(void)
 {

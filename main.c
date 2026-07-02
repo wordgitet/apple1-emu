@@ -806,12 +806,6 @@ main(int argc, char *argv[])
 			break;
 		}
 
-		/* When paused / powered off: just sleep */
-		if (opt_headless == false && term_is_powered() == false) {
-			port_sleep_us(10000UL); /* 10ms */
-			continue;
-		}
-
 		/* Keyboard + reset (poll stdin ~1 kHz, not every insn) */
 		if (opt_headless == false) {
 			uint32_t now_kbd;
@@ -998,7 +992,7 @@ main(int argc, char *argv[])
 	return (0);
 }
 
-/* dbg_log_append stub — only the GUI needs the ring buffer */
+/* dbg_log_append stub — retained for optional frontends */
 void
 dbg_log_append(const char *str)
 {

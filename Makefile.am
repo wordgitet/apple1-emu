@@ -76,7 +76,7 @@ test-official: apple1 6502_functional_test.bin
 #   make single HOST=watcom    # MS-DOS via Open Watcom
 #   make single HOST=win       # Windows via MinGW cross-compiler
 #
-# Plan 9 / 9front: use mkfile (native multi-file 6c build, not amalgamation).
+# Plan 9 / 9front: use mkfile (native multi-file 6c build) or mk amalg (no Python).
 # ---------------------------------------------------------------------------
 
 HOST ?= posix
@@ -90,13 +90,17 @@ amalgamation-dos:
 amalgamation-win:
 	python3 tools/amalgamate.py --port port_win.c --term term_ansi.c
 
+amalgamation-plan9:
+	python3 tools/amalgamate.py --port port_plan9.c --term term_vt100.c
+
 single:
 	@case "$(HOST)" in \
 	posix) $(MAKE) single-posix ;; \
 	dos|djgpp) $(MAKE) single-dos ;; \
 	watcom) $(MAKE) single-watcom ;; \
 	win|mingw) $(MAKE) single-win ;; \
-	*) echo "Unknown HOST=$(HOST). Use: posix dos watcom win" >&2; exit 1 ;; \
+	plan9|9front) $(MAKE) single-plan9 ;; \
+	*) echo "Unknown HOST=$(HOST). Use: posix dos watcom win plan9" >&2; exit 1 ;; \
 	esac
 
 single-posix: amalgamation
@@ -113,6 +117,12 @@ WIN_CFLAGS = -O2 -Wall -Wextra -std=c89 -DAPPLE1_OMIT_CHARMAP \
 
 single-win: amalgamation-win
 	$(WIN_CC) $(WIN_CFLAGS) -o apple1.exe apple1.c
+
+# Plan 9 APIs — amalgamate on POSIX, compile on Plan 9 with 6c (see mkfile).
+single-plan9: amalgamation-plan9
+	@echo "Plan 9 amalgamation: apple1.c + apple1.h"
+	@echo "On Plan 9: mk amalg && mk amal-single   (no Python)"
+	@echo "Or: 6c -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100 apple1.c"
 
 check-single:
 	@$(MAKE) amalgamation

@@ -46,6 +46,18 @@ term.$O: term.c term_vt100.c
 apple1:V: $O.$TARG
 	cp $O.$TARG apple1
 
+# Single-file amalgamation (no Python): rc + awk, then 6c/6l.
+amal:V: apple1.c apple1.h
+	@{echo amalgamation ready: apple1.c apple1.h}
+
+apple1.c apple1.h:V: tools/amalgamate.rc tools/amalgamate_plan9.awk
+	rc tools/amalgamate.rc
+
+amal-single:V: apple1.c apple1.h
+	6c $CFLAGS apple1.c
+	6l -o $O.$TARG apple1.$O
+	cp $O.$TARG apple1
+
 pcc:V:
 	mk clean
 	CC=pcc LD=pcc LIB=-lape CFLAGS='-DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100 -DAPPLE1_PORT_PLAN9_APE' mk all

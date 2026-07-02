@@ -1,0 +1,9 @@
+#!/bin/rc
+# tools/amalgamate.rc — Plan 9 amalgamation (no Python).
+#
+# From repo root:
+#   rc tools/amalgamate.rc
+#   mk amalg
+
+cd `{pwd}
+exec awk -f tools/amalgamate_plan9.awk

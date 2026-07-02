@@ -20,7 +20,7 @@ Single-file compile examples:
   make single HOST=dos         # MS-DOS via DJGPP
   make single HOST=watcom      # MS-DOS via Open Watcom
   make single HOST=win         # Windows via MinGW cross-compiler
-  make check-single            # link-test amalgamation (posix)
+  make single HOST=plan9       # Plan 9 preset (amalgamate; compile on 9front)
 
 Manual:
 
@@ -79,8 +79,6 @@ INTERNAL_HEADERS = {
     "font5x7.h",
     "stb_image_write.h",
     "term_internal.h",
-    "term_config.h",
-    "term_debug.h",
     "port_string.c",
     "port_posix.c",
     "port_win.c",

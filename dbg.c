@@ -4,7 +4,6 @@
 #include "disasm.h"
 #include "io.h"
 #include "port.h"
-#include "term_apple1.h"
 
 extern port_sig_flag g_quit_flag;
 
@@ -303,9 +302,6 @@ dbg_check_access(void *ctx, uint16_t addr, bool is_write, uint8_t val)
 
 			if (trigger != 0) {
 				dbg->step_mode = true;
-				if (dbg->cpu->bus->opts.headless == 0) {
-					term_open_debugger();
-				}
 				dbg_printf("\n*** WATCHPOINT TRIGGERED ***\n");
 				if (is_write) {
 					dbg_printf("Write to $%04X with value "
@@ -509,10 +505,8 @@ dbg_run_command(debugger_t *dbg, const char *cmd_line)
 		} else if (cmd == 's') {
 			dbg->repause = 1;
 			dbg->step_mode = false;
-			term_request_step();
 		} else if (cmd == 'c') {
 			dbg->step_mode = false;
-			term_close_debugger();
 			dbg_printf("Continuing...\n");
 		} else if (cmd == 'r') {
 			print_registers(dbg->cpu);

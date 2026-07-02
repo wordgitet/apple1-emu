@@ -128,8 +128,11 @@ target platform (build host must be POSIX — Linux, macOS, or *BSD with `make`)
 | `make single HOST=dos` | `apple1.exe` | DJGPP cross-compiler |
 | `make single HOST=watcom` | `apple1.exe` | Open Watcom |
 | `make single HOST=win` | `apple1.exe` | MinGW cross-compiler (`WIN_CC`) |
+| `make single HOST=plan9` | `apple1.c` + `apple1.h` | amalgamate only; compile on Plan 9 |
 
-Plan 9 / 9front uses **`mkfile`** (native multi-file build) — not amalgamation.
+Plan 9 / 9front: **`mk all`** (multi-file, recommended) or **`mk amalg`** (single-file,
+no Python — uses `tools/amalgamate.rc` + `awk`). POSIX hosts can run
+`make amalgamation-plan9` and `dircp` the generated files.
 
 Verify the amalgamation links without running the emulator:
 
@@ -150,6 +153,10 @@ cc -std=c89 -O2 -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
 | `posix` | `port.c` / `term.c` (auto-detect or `AM_CPPFLAGS`) |
 | `dos`, `watcom` | `port_msdos.c` / `term_dos.c` |
 | `win` | `port_win.c` / `term_ansi.c` |
+| `plan9` | `port_plan9.c` / `term_vt100.c` |
+
+On Plan 9 without Python: `mk amalg` (runs `rc tools/amalgamate.rc`) or
+`awk -f tools/amalgamate_plan9.awk` from the repo root.
 
 Override cross-compilers: `make single HOST=win WIN_CC=x86_64-w64-mingw32-gcc`
 

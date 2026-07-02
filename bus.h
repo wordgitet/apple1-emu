@@ -83,7 +83,7 @@ struct bus {
 #endif
 
 	/* Optional log callback.  If NULL, all messages are silently dropped.
-	 * Frontends set this to route errors to stderr, a GUI log, or a UART. */
+	 * Frontends set this to route errors to stderr, a log callback, or UART. */
 	void (*log)(void *log_ctx, int level, const char *msg);
 	void *log_ctx;
 };
