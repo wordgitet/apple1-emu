@@ -2,6 +2,10 @@
 *.o
 apple1
 apple1.exe
+apple1.vxe
+vxsmoke.vxe
+apple1_freertos
+freertos-*.o
 cwsdpmi.exe
 
 # test binaries

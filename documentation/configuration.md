@@ -118,7 +118,7 @@ casual `cc apple1.c` builds).
 | `APPLE1_PORT_MSDOS` | `port_msdos.c` | `__MSDOS__`, `__dos__`, Watcom DOS |
 | `APPLE1_PORT_PLAN9` | `port_plan9.c` | `__PLAN9__`, `__plan9__` |
 | `APPLE1_PORT_OS2` | `port_os2.c` | `__OS2__`, `__os2__` |
-| `APPLE1_PORT_VXWORKS` | `port_vxworks.c` | `__RTP__`, `_WRS_KERNEL` |
+| `APPLE1_PORT_VXWORKS` | `port_vxworks.c` | `__RTP__`, `_WRS_KERNEL` (wr-cc -rtp) |
 | `APPLE1_PORT_FREERTOS` | `port_freertos.c` | POSIX host + `-D`; see `documentation/FREERTOS_DEMO.md` |
 | `APPLE1_PORT_ZEPHYR` | `port_zephyr.c` | (none — explicit `-D` only) |
 | `APPLE1_PORT_BARE` | `port_bare.c` | fallback when host is unknown |
@@ -132,6 +132,13 @@ Always linked: **`port_string.c`** (strings, format, getopt, RNG). Conditional:
 Plan 9 native `6c` builds omit these companion headers (weak preprocessor):
 **`port_attrs.h`**, **`port_stdarg_libc.h`**, **`apple1limit_checks.h`** — replaced by
 inline shims in `port.h`, `port_stdarg_plan9.h`, or no `#error` guards respectively.
+
+**6c preprocessor rule:** the integrated Plan 9 preprocessor supports only
+`#ifdef`, `#ifndef`, `#define`, `#include`, `#undef`, `#line`, and `#endif`.
+It does **not** support `#if`, `defined()`, or `#elif` ([Plan 9 compiler
+docs](https://9p.io/sys/doc/comp.html)).  Shared sources (`main.c`,
+`term_vt100.c`, …) must use nested `#ifdef` / `#else` / `#endif`, not
+`#if defined(...)`.  Use `mk pcc` or `/bin/cpp` only if you need full ANSI cpp.
 
 ### Terminal backends (`APPLE1_TERM_*`)
 
@@ -193,7 +200,7 @@ blobs) on bare-metal targets.
 | `port_win.c` | `APPLE1_PORT_WIN` | Windows |
 | `port_plan9.c` | `APPLE1_PORT_PLAN9` | Plan 9 / 9front |
 | `port_os2.c` | `APPLE1_PORT_OS2` | OS/2 (includes POSIX subset) |
-| `port_vxworks.c` | `APPLE1_PORT_VXWORKS` | VxWorks RTP / kernel |
+| `port_vxworks.c` | `APPLE1_PORT_VXWORKS` | VxWorks 7 RTP — see `documentation/VXWORKS_RTP.md` |
 | `port_freertos.c` | `APPLE1_PORT_FREERTOS` | FreeRTOS Posix_GCC simulator (POSIX host) |
 | `port_zephyr.c` | `APPLE1_PORT_ZEPHYR` | Zephyr RTOS (stub) |
 | `port_bare.c` | `APPLE1_PORT_BARE` | Bare-metal fallback (no filesystem) |

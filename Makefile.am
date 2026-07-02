@@ -216,10 +216,18 @@ freertos-port.o: port.c
 freertos-main.o: main.c
 	$(CC) $(FREERTOS_CFLAGS) -c -o $@ main.c
 
+
 clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
 	-rm -f apple1_freertos freertos-*.o
+	-rm -f apple1.vxe apple1_full.vxe vxsmoke.vxe
+	-rm -f /tmp/apple1-vx-*.o
+
+distclean-local:
+	-rm -f Makefile.in aclocal.m4 configure
+	-rm -rf autom4te.cache
+
 
 # port.c / term.c #include shim sources — explicit rules (automake cannot
 # express included-file dependencies without overriding its own recipes).

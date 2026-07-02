@@ -306,5 +306,6 @@ nmake -f Makefile.msc
 
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr):**
 - **FreeRTOS (POSIX simulator):** `make freertos` for a host binary; full scheduler test via `documentation/FREERTOS_DEMO.md` and `freertos_demo_test.sh` from `FreeRTOS/Demo/Posix_GCC`.
+- **VxWorks 7 RTP (QEMU SDK):** `source path/to/vxworks/sdk/sdkenv.sh`, then `bash vxworks_rtp_build.sh`; see `documentation/VXWORKS_RTP.md`.
 - **Plan 9 / 9front:** `dircp` tree to `$home`, `rm -f apple1`, then `mk all`. Run `./6.out` (no `vt` needed). Headless: `./6.out -H`. See `documentation/plan9-terminal.md`.
 - Other ports: amalgamation with explicit flags, e.g. `python3 tools/amalgamate.py --port port_plan9.c` and `-DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100`

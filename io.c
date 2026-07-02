@@ -1,10 +1,9 @@
+#include "apple1limit.h"
 #include "io.h"
 #include "port.h"
 #include "term_apple1.h"
 
-#define KBD_BUFFER_SIZE 16384
-
-static uint8_t kbd_buffer[KBD_BUFFER_SIZE];
+static uint8_t kbd_buffer[APPLE1_KBD_BUFFER_SIZE];
 static int kbd_read_idx = 0;
 static int kbd_write_idx = 0;
 
@@ -33,7 +32,7 @@ io_check_keyboard(void)
 
 	key = term_poll();
 	if (key != 0) {
-		int next_write = (kbd_write_idx + 1) % KBD_BUFFER_SIZE;
+		int next_write = (kbd_write_idx + 1) % APPLE1_KBD_BUFFER_SIZE;
 		if (next_write != kbd_read_idx) {
 			kbd_buffer[kbd_write_idx] = key;
 			kbd_write_idx = next_write;
@@ -49,7 +48,7 @@ io_read_keyboard(void)
 
 	if (kbd_read_idx != kbd_write_idx) {
 		key = kbd_buffer[kbd_read_idx];
-		kbd_read_idx = (kbd_read_idx + 1) % KBD_BUFFER_SIZE;
+		kbd_read_idx = (kbd_read_idx + 1) % APPLE1_KBD_BUFFER_SIZE;
 	}
 	return (key);
 }

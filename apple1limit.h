@@ -68,6 +68,14 @@
 #define APPLE1_DEFAULT_BAUD 0
 #endif
 
+/*
+ * Keyboard ring buffer in io.c (default 16 KB).  Override for small-RTP
+ * targets (e.g. VxWorks QEMU).
+ */
+#ifndef APPLE1_KBD_BUFFER_SIZE
+#define APPLE1_KBD_BUFFER_SIZE 16384
+#endif
+
 #ifndef APPLE1_PORT_PLAN9
 #include "apple1limit_checks.h"
 #endif
