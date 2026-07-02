@@ -141,6 +141,16 @@ typedef unsigned long port_size_t;
 #define port_free(ptr)	      ((void)(ptr))
 #define port_realloc(ptr, sz) ((void *)0)
 #else
+
+struct port_mem_methods {
+	void *(*xMalloc)(port_size_t sz);
+	void (*xFree)(void *ptr);
+	void *(*xRealloc)(void *ptr, port_size_t sz);
+	port_result_t (*xInit)(void *app_data);
+	void (*xShutdown)(void *app_data);
+	void *pAppData;
+};
+
 #ifdef APPLE1_CUSTOM_MALLOC
 extern void *
 port_malloc(port_size_t sz);
@@ -155,6 +165,11 @@ void
 port_free(void *ptr);
 void *
 port_realloc(void *ptr, port_size_t sz);
+
+port_result_t
+port_mem_config(const struct port_mem_methods *methods);
+port_result_t
+port_mem_get_config(struct port_mem_methods *methods);
 #endif
 #endif
 

@@ -11,30 +11,7 @@
 #include <time.h>
 #include <unistd.h>
 
-/* ================================================================== */
-/* Memory allocation shims                                            */
-/* ================================================================== */
 
-#if (!defined(APPLE1_PORT_FREERTOS) || !defined(FREERTOS_DEMO)) && \
-    !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
-void *
-port_malloc(port_size_t sz)
-{
-	return (malloc(sz));
-}
-
-void
-port_free(void *ptr)
-{
-	free(ptr);
-}
-
-void *
-port_realloc(void *ptr, port_size_t sz)
-{
-	return (realloc(ptr, sz));
-}
-#endif
 
 char *
 port_strdup(const char *str)

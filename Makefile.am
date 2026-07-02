@@ -19,7 +19,7 @@ apple1_SOURCES = main.c cli_config.c $(CORE_SRC) term.c port.c \
 apple1_CFLAGS = $(AM_CFLAGS) -DAPPLE1_OMIT_CHARMAP
 
 check_PROGRAMS = test_cpu test_aci test_dualram test_bus test_tomharte \
-                 test_interrupts test_vfs test_config
+                 test_interrupts test_vfs test_config test_mem
 TESTS = $(check_PROGRAMS)
 
 test_cpu_SOURCES = tests/test_cpu.c tests/term_dummy.c $(CORE_SRC) port.c
@@ -48,12 +48,16 @@ test_vfs_CFLAGS = $(AM_CFLAGS)
 test_config_SOURCES = tests/test_config.c cli_config.c port.c
 test_config_CFLAGS = $(AM_CFLAGS)
 
+test_mem_SOURCES = tests/test_mem.c port.c
+test_mem_CFLAGS = $(AM_CFLAGS)
+
 EXTRA_DIST = $(PORT_SHIM) $(TERM_SHIM) port_attrs.h port_stdarg.h \
              port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
              port_posix_inc.h mkfile Makefile.msc tools/amalgamate.py \
              tests/term_dummy.c tests/test_cpu.c tests/test_aci.c \
              tests/test_dualram.c tests/test_bus.c tests/test_tomharte.c \
-             tests/test_interrupts.c tests/test_vfs.c tests/test_config.c
+             tests/test_interrupts.c tests/test_vfs.c tests/test_config.c \
+             tests/test_mem.c
 
 # Functional Test Suite Targets
 DORMANN_URL = https://github.com/Klaus2m5/6502_65C02_functional_tests/raw/master/bin_files/6502_functional_test.bin
@@ -221,7 +225,7 @@ clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
 	-rm -f apple1_freertos freertos-*.o
-	-rm -f apple1.vxe apple1_full.vxe vxsmoke.vxe
+	-rm -f apple1.vxe apple1_full.vxe
 	-rm -f /tmp/apple1-vx-*.o
 
 distclean-local:

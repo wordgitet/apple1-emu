@@ -19,20 +19,22 @@
 #include "task.h"
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
-void *
-port_malloc(port_size_t sz)
+#ifndef PORT_DEFAULT_MEM_METHODS
+
+static void *
+freertos_malloc(port_size_t sz)
 {
 	return (pvPortMalloc(sz));
 }
 
-void
-port_free(void *ptr)
+static void
+freertos_free(void *ptr)
 {
 	vPortFree(ptr);
 }
 
-void *
-port_realloc(void *ptr, port_size_t sz)
+static void *
+freertos_realloc(void *ptr, port_size_t sz)
 {
 	void *nptr;
 
@@ -51,6 +53,25 @@ port_realloc(void *ptr, port_size_t sz)
 	}
 	return (nptr);
 }
+
+static port_result_t
+freertos_init(void *app_data)
+{
+	(void)app_data;
+	return (PORT_OK);
+}
+
+static void
+freertos_shutdown(void *app_data)
+{
+	(void)app_data;
+}
+
+#define PORT_DEFAULT_MEM_METHODS \
+	{ freertos_malloc, freertos_free, freertos_realloc, \
+	freertos_init, freertos_shutdown, NULL }
+
+#endif
 #endif
 
 uint32_t

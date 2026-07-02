@@ -150,3 +150,175 @@
 #endif
 #endif
 #endif
+
+#ifndef APPLE1_ZERO_MALLOC
+#ifndef APPLE1_CUSTOM_MALLOC
+
+/*
+ * Default libc mem methods
+ */
+#ifndef PORT_DEFAULT_MEM_METHODS
+
+#ifdef APPLE1_PORT_PLAN9
+/*
+ * Native Plan 9: malloc/free/realloc come from libc.h (via port.h).
+ * Do not include <stdlib.h> — 6c builds do not use it.
+ */
+static void *
+libc_malloc(port_size_t sz)
+{
+	return (malloc(sz));
+}
+
+static void
+libc_free(void *ptr)
+{
+	free(ptr);
+}
+
+static void *
+libc_realloc(void *ptr, port_size_t sz)
+{
+	return (realloc(ptr, sz));
+}
+
+static port_result_t
+libc_init(void *app_data)
+{
+	(void)app_data;
+	return (PORT_OK);
+}
+
+static void
+libc_shutdown(void *app_data)
+{
+	(void)app_data;
+}
+
+#define PORT_DEFAULT_MEM_METHODS \
+	{ libc_malloc, libc_free, libc_realloc, libc_init, libc_shutdown, NULL }
+
+#else /* !APPLE1_PORT_PLAN9 */
+
+#include <stdlib.h>
+
+static void *
+libc_malloc(port_size_t sz)
+{
+	return (malloc(sz));
+}
+
+static void
+libc_free(void *ptr)
+{
+	free(ptr);
+}
+
+static void *
+libc_realloc(void *ptr, port_size_t sz)
+{
+	return (realloc(ptr, sz));
+}
+
+static port_result_t
+libc_init(void *app_data)
+{
+	(void)app_data;
+	return (PORT_OK);
+}
+
+static void
+libc_shutdown(void *app_data)
+{
+	(void)app_data;
+}
+
+#define PORT_DEFAULT_MEM_METHODS \
+	{ libc_malloc, libc_free, libc_realloc, libc_init, libc_shutdown, NULL }
+
+#endif /* APPLE1_PORT_PLAN9 */
+
+#endif
+
+static struct port_mem_methods g_port_mem = PORT_DEFAULT_MEM_METHODS;
+static bool g_port_mem_initialized = false;
+
+static port_result_t
+port_mem_init(void)
+{
+	port_result_t rc = PORT_OK;
+
+	if (g_port_mem_initialized == 0) {
+		if (g_port_mem.xInit != NULL) {
+			rc = g_port_mem.xInit(g_port_mem.pAppData);
+		}
+		if (rc == PORT_OK) {
+			g_port_mem_initialized = true;
+		}
+	}
+	return (rc);
+}
+
+void *
+port_malloc(port_size_t sz)
+{
+	if (g_port_mem_initialized == 0) {
+		if (port_mem_init() != PORT_OK) {
+			return (NULL);
+		}
+	}
+	return (g_port_mem.xMalloc(sz));
+}
+
+void
+port_free(void *ptr)
+{
+	if (ptr == NULL) {
+		return;
+	}
+	if (g_port_mem_initialized == 0) {
+		if (port_mem_init() != PORT_OK) {
+			return;
+		}
+	}
+	g_port_mem.xFree(ptr);
+}
+
+void *
+port_realloc(void *ptr, port_size_t sz)
+{
+	if (g_port_mem_initialized == 0) {
+		if (port_mem_init() != PORT_OK) {
+			return (NULL);
+		}
+	}
+	return (g_port_mem.xRealloc(ptr, sz));
+}
+
+port_result_t
+port_mem_config(const struct port_mem_methods *methods)
+{
+	if (g_port_mem_initialized != 0) {
+		/* SQLite rule: Cannot reconfigure memory subsystem once initialized */
+		return (PORT_ERROR);
+	}
+	if (methods == NULL || methods->xMalloc == NULL ||
+	    methods->xFree == NULL || methods->xRealloc == NULL) {
+		return (PORT_ERROR);
+	}
+	g_port_mem = *methods;
+	return (PORT_OK);
+}
+
+port_result_t
+port_mem_get_config(struct port_mem_methods *methods)
+{
+	if (methods == NULL) {
+		return (PORT_ERROR);
+	}
+	*methods = g_port_mem;
+	return (PORT_OK);
+}
+
+#endif /* APPLE1_CUSTOM_MALLOC */
+#endif /* APPLE1_ZERO_MALLOC */

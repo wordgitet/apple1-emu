@@ -84,30 +84,50 @@ static struct port_vfs bare_vfs = { bare_vfs_open,
 struct port_vfs *g_port_vfs = &bare_vfs;
 
 /* ================================================================== */
-/* Memory allocator shims                                             */
+/* Memory allocator defaults (runtime dispatch lives in port.c)       */
 /* ================================================================== */
 
 #if !defined(APPLE1_ZERO_MALLOC) && !defined(APPLE1_CUSTOM_MALLOC)
-void *
-port_malloc(port_size_t sz)
+#ifndef PORT_DEFAULT_MEM_METHODS
+
+static void *
+bare_malloc(port_size_t sz)
 {
 	(void)sz;
-	return ((void *)0);
+	return (NULL);
 }
 
-void
-port_free(void *ptr)
+static void
+bare_free(void *ptr)
 {
 	(void)ptr;
 }
 
-void *
-port_realloc(void *ptr, port_size_t sz)
+static void *
+bare_realloc(void *ptr, port_size_t sz)
 {
 	(void)ptr;
 	(void)sz;
-	return ((void *)0);
+	return (NULL);
 }
+
+static port_result_t
+bare_init(void *app_data)
+{
+	(void)app_data;
+	return (PORT_OK);
+}
+
+static void
+bare_shutdown(void *app_data)
+{
+	(void)app_data;
+}
+
+#define PORT_DEFAULT_MEM_METHODS \
+	{ bare_malloc, bare_free, bare_realloc, bare_init, bare_shutdown, NULL }
+
+#endif
 #endif
 
 char *
