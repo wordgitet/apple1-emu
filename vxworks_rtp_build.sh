@@ -35,8 +35,6 @@ for src in main.c cpu.c bus.c io.c cli_config.c term.c port.c; do
 done
 
 wr-cc $CFLAGS -static -o "$APPLE1_DIR/apple1.vxe" $OBJS
-wr-cc $CFLAGS -static -o "$APPLE1_DIR/vxsmoke.vxe" "$APPLE1_DIR/vxworks_smoke.c"
 
 echo "Built $APPLE1_DIR/apple1.vxe"
-echo "Built $APPLE1_DIR/vxsmoke.vxe (SDK smoke test)"
 echo "Deploy via FTP (see documentation/VXWORKS_RTP.md) and run from the VxWorks cmd shell."

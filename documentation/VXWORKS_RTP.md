@@ -20,7 +20,7 @@ From the emulator tree:
 bash vxworks_rtp_build.sh
 ```
 
-Produces **`apple1.vxe`** and **`vxsmoke.vxe`** in the repo root.
+Produces **`apple1.vxe`** in the repo root.
 
 The RTP build uses **`term_vt100.c`** (teletype output — plain text on a serial
 line).  Do not use `term_ansi.c` on QEMU `-serial stdio`; the ANSI full-screen
@@ -72,12 +72,6 @@ If the FTP root is your home directory and the repo is
 ```
 [vxWorks *]# cd /host.host/git/apple1-emu
 [vxWorks *]# ls
-```
-
-### Smoke test
-
-```
-[vxWorks *]# vxsmoke.vxe
 ```
 
 ### Emulator (interactive serial)
