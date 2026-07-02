@@ -28,6 +28,51 @@ Concretely, this means:
 - No variadic macros, no `_Static_assert`, no `//`-delimited line
   comments inside macros.
 
+## Plan 9 / 6c preprocessor (shared sources)
+
+Files built with native Plan 9 `6c` / `8c` / `kc` (`mkfile`, `mk all`)
+share sources with POSIX and other ports (`main.c`, `term_vt100.c`,
+`bus.c`, …).  The integrated Plan 9 preprocessor is **not** ANSI C:
+see [How to Use the Plan 9 C Compiler](https://9p.io/sys/doc/comp.html).
+
+**Supported:** `#define`, `#include`, `#undef`, `#line`, `#ifdef`,
+`#ifndef`, `#endif`.
+
+**Not supported:** `#if`, `defined()`, `#elif`, `##`.
+
+Any conditional in a file that Plan 9 compiles must use **nested**
+`#ifdef` / `#ifndef` / `#else` / `#endif` only — never `#if defined`
+or `#elif`.
+
+```c
+/* Wrong — breaks 6c */
+#if defined(APPLE1_PORT_PLAN9) || defined(APPLE1_PORT_VXWORKS)
+	cpu_reset(&cpu);
+#endif
+
+#if !defined(APPLE1_PORT_VXWORKS)
+	banner();
+#endif
+
+/* Right */
+#ifdef APPLE1_PORT_PLAN9
+	cpu_reset(&cpu);
+#else
+#ifdef APPLE1_PORT_VXWORKS
+	cpu_reset(&cpu);
+#endif
+#endif
+
+#ifndef APPLE1_PORT_VXWORKS
+	banner();
+#endif
+```
+
+Platform-specific headers omitted on Plan 9 (`port_attrs.h`,
+`apple1limit_checks.h`, …) are documented in `documentation/configuration.md`.
+Use `mk pcc` or `/bin/cpp` only when full ANSI cpp is unavoidable — do
+not rely on that for routine shared-tree edits.
+
 ## Core identity
 
 - Line width: 80 characters preferred. Diagnostic/error/panic strings
@@ -324,6 +369,8 @@ conflict with this project's KNF style — actively avoid them:
 - Designated initializers (`[N] = value`) in array/struct initializers
   — C89 only allows positional initialization.
 - `//` line comments — `/* */` only.
+- `#if`, `#elif`, or `defined()` in sources Plan 9 compiles — use nested
+  `#ifdef` / `#ifndef` only (see Plan 9 / 6c preprocessor).
 
 ## Verifying compliance
 

@@ -134,24 +134,21 @@ print_usage(const char *prog)
 		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 		  "  -l <file>@<hex>      Load binary at hex address\n"
 		  "  -c                   Cap emulation speed to 1.023 MHz\n"
-		  "  -u                   Run uncapped (as fast as host allows)\n",
-	    prog, prog);
-	cli_error("  -p                   Disable PIA I/O throttling\n"
+		  "  -u                   Run uncapped (as fast as host allows)\n"
+		  "  -p                   Disable PIA I/O throttling\n"
 		  "  -d                   Emulate DRAM refresh cycle stealing\n"
 		  "  -b                   Emulate keyboard bounce\n"
 		  "  -s                   Disable cold-boot RAM randomisation\n"
 		  "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
-		  "  -H                   Headless mode (no terminal "
-		  "rendering)\n"
-		  "  -g                   Enable debugger (pauses on start)\n");
+		  "  -H                   Headless mode (no terminal rendering)\n"
+		  "  -g                   Enable debugger (pauses on start)\n",
+	    prog, prog);
 	cli_error("  -t                   Enable CPU trace to stdout\n"
 		  "  -w <txt>             Load Woz Monitor text file\n"
 		  "  -a <rom>             Load ACI cassette card ROM\n"
 		  "  -e <wav>             Load WAV tape for ACI playback\n"
-		  "  -E <wav>             Save recorded ACI tape to WAV on "
-		  "exit\n"
-		  "  -B <baud>            Emulate terminal baud rate (e.g. "
-		  "1200)\n"
+		  "  -E <wav>             Save recorded ACI tape to WAV on exit\n"
+		  "  -B <baud>            Emulate terminal baud rate (e.g. 1200)\n"
 		  "  -k <rom>             Load Krusader assembler ROM\n"
 		  "  -h                   Show this help\n");
 #else
@@ -765,13 +762,19 @@ main(int argc, char *argv[])
 	/* Headless runs immediately; -g should break at the Woz Monitor
 	 * entry point, not power-on garbage at $0000.  Interactive play
 	 * still waits for Ctrl+R (authentic no-reset power-on), except on
-	 * Plan 9 where /dev/cons line buffering would block before reset. */
+	 * Plan 9 where /dev/cons line buffering would block before reset,
+	 * and on VxWorks RTP where the cmd shell does not deliver raw
+	 * Ctrl+R to the process unless launched with "rtp exec -i". */
 #ifdef APPLE1_PORT_PLAN9
+	cpu_reset(&cpu);
+#else
+#ifdef APPLE1_PORT_VXWORKS
 	cpu_reset(&cpu);
 #else
 	if (opt_headless != false || opt_debug != false) {
 		cpu_reset(&cpu);
 	}
+#endif
 #endif
 #ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
