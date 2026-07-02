@@ -29,7 +29,7 @@ read_word(struct cpu *cpu, uint16_t addr)
 	uint8_t lo = read_byte(cpu, addr);
 	uint8_t hi = read_byte(cpu, addr + 1);
 
-	return ((hi << 8) | lo);
+	return ((uint16_t)((hi << 8) | lo));
 }
 
 /* ------------------------------------------------------------------ */
@@ -63,7 +63,7 @@ pull_word(struct cpu *cpu)
 	uint8_t lo = pull_byte(cpu);
 	uint8_t hi = pull_byte(cpu);
 
-	return ((hi << 8) | lo);
+	return ((uint16_t)((hi << 8) | lo));
 }
 
 /* ------------------------------------------------------------------ */
@@ -134,7 +134,7 @@ cpu_reset(struct cpu *cpu)
 	lo = bus_read(cpu->bus, RESET_VECTOR);
 	hi = bus_read(cpu->bus, RESET_VECTOR + 1);
 
-	cpu->pc = (hi << 8) | lo;
+	cpu->pc = (uint16_t)((hi << 8) | lo);
 
 	cpu->pc_trace_idx = 0;
 	cpu->prev_pc = 0;
@@ -264,7 +264,7 @@ addr_ind(struct cpu *cpu)
 		uint8_t lo = read_byte(cpu, ptr);
 		uint8_t hi = read_byte(cpu, ptr & 0xFF00);
 
-		return ((hi << 8) | lo);
+		return ((uint16_t)((hi << 8) | lo));
 	}
 	return (read_word(cpu, ptr));
 }
@@ -283,7 +283,7 @@ addr_izx(struct cpu *cpu)
 	lo = read_byte(cpu, zp);
 	hi = read_byte(cpu, (zp + 1) & 0xFF);
 
-	return ((hi << 8) | lo);
+	return ((uint16_t)((hi << 8) | lo));
 }
 
 static uint16_t
@@ -295,7 +295,7 @@ addr_izy(struct cpu *cpu, bool *px)
 	zp = read_byte(cpu, cpu->pc++);
 	lo = read_byte(cpu, zp);
 	hi = read_byte(cpu, (zp + 1) & 0xFF);
-	base = (hi << 8) | lo;
+	base = (uint16_t)((hi << 8) | lo);
 	a = base + cpu->y;
 	*px = (base & 0xFF00) != (a & 0xFF00);
 	if (*px != 0) {
@@ -314,7 +314,7 @@ addr_izy_always(struct cpu *cpu)
 	zp = read_byte(cpu, cpu->pc++);
 	lo = read_byte(cpu, zp);
 	hi = read_byte(cpu, (zp + 1) & 0xFF);
-	base = (hi << 8) | lo;
+	base = (uint16_t)((hi << 8) | lo);
 	a = base + cpu->y;
 	/* cycle 5: dummy read of uncorrected address */
 	read_byte(cpu, (base & 0xFF00) | (a & 0x00FF));
@@ -335,7 +335,7 @@ do_branch(struct cpu *cpu, bool cond)
 	if (cond != 0) {
 		old = cpu->pc;
 		read_byte(cpu, old); /* cycle 3: dummy read of PC+2 */
-		target = old + off;
+		target = (uint16_t)(old + off);
 		if ((old & 0xFF00) != (target & 0xFF00)) {
 			/* cycle 4: dummy read of intermediate address (uncorrected page) */
 			intermediate = (old & 0xFF00) | (target & 0x00FF);
@@ -367,7 +367,7 @@ adc_bcd(struct cpu *cpu, uint8_t m)
 		low -= 10;
 		high++;
 	}
-	result = (high << 4) | (low & 0x0F);
+	result = (uint8_t)((high << 4) | (low & 0x0F));
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
 	set_flag(cpu,
 	    FLAG_OVERFLOW,
@@ -397,7 +397,7 @@ sbc_bcd(struct cpu *cpu, uint8_t m)
 		low += 10;
 		high--;
 	}
-	result = ((uint8_t)high << 4) | ((uint8_t)low & 0x0F);
+	result = (uint8_t)(((uint8_t)high << 4) | ((uint8_t)low & 0x0F));
 	set_flag(cpu, FLAG_NEGATIVE, (result & 0x80) != 0);
 	set_flag(cpu,
 	    FLAG_OVERFLOW,
@@ -1130,7 +1130,7 @@ op_jsr(struct cpu *cpu)
 	push_word(cpu,
 	    cpu->pc); /* cycles 4-5: push return addr (PC-1 already advanced) */
 	hi = read_byte(cpu, cpu->pc); /* cycle 6: addr high */
-	cpu->pc = (hi << 8) | lo;
+	cpu->pc = (uint16_t)((hi << 8) | lo);
 	cpu->last_cycles = 6;
 }
 static void
@@ -1466,7 +1466,7 @@ op_rol_acc(struct cpu *cpu)
 	read_byte(cpu, cpu->pc); /* cycle 2: dummy read */
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (cpu->a & 0x80) != 0);
-	cpu->a = (cpu->a << 1) | old_c;
+	cpu->a = (uint8_t)((cpu->a << 1) | old_c);
 	update_nz(cpu, cpu->a);
 	cpu->last_cycles = 2;
 }
@@ -1481,7 +1481,7 @@ op_rol_zp(struct cpu *cpu)
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
-	t = (t << 1) | old_c;
+	t = (uint8_t)((t << 1) | old_c);
 	write_byte(cpu, a, t);
 	update_nz(cpu, t);
 	cpu->last_cycles = 5;
@@ -1497,7 +1497,7 @@ op_rol_zpx(struct cpu *cpu)
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
-	t = (t << 1) | old_c;
+	t = (uint8_t)((t << 1) | old_c);
 	write_byte(cpu, a, t);
 	update_nz(cpu, t);
 	cpu->last_cycles = 6;
@@ -1513,7 +1513,7 @@ op_rol_abs(struct cpu *cpu)
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
-	t = (t << 1) | old_c;
+	t = (uint8_t)((t << 1) | old_c);
 	write_byte(cpu, a, t);
 	update_nz(cpu, t);
 	cpu->last_cycles = 6;
@@ -1529,7 +1529,7 @@ op_rol_absx(struct cpu *cpu)
 	write_byte_dummy(cpu, a, t); /* NMOS dummy write of unmodified value */
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
-	t = (t << 1) | old_c;
+	t = (uint8_t)((t << 1) | old_c);
 	write_byte(cpu, a, t);
 	update_nz(cpu, t);
 	cpu->last_cycles = 7;
@@ -2040,7 +2040,7 @@ rla_core(struct cpu *cpu, uint16_t a)
 	write_byte_dummy(cpu, a, t);
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
 	set_flag(cpu, FLAG_CARRY, (t & 0x80) != 0);
-	t = (t << 1) | old_c;
+	t = (uint8_t)((t << 1) | old_c);
 	cpu->a &= t;
 	update_nz(cpu, cpu->a);
 	write_byte(cpu, a, t);
@@ -2396,7 +2396,7 @@ op_shx(struct cpu *cpu)
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
-		addr = (val << 8) | (addr & 0xFF);
+		addr = (uint16_t)((val << 8) | (addr & 0xFF));
 	}
 	write_byte(cpu, addr, val);
 	cpu->last_cycles = 5;
@@ -2418,7 +2418,7 @@ op_shy(struct cpu *cpu)
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
-		addr = (val << 8) | (addr & 0xFF);
+		addr = (uint16_t)((val << 8) | (addr & 0xFF));
 	}
 	write_byte(cpu, addr, val);
 	cpu->last_cycles = 5;
@@ -2434,7 +2434,7 @@ op_ahx_izy(struct cpu *cpu)
 	zp = read_byte(cpu, cpu->pc++);
 	lo = read_byte(cpu, zp);
 	hi = read_byte(cpu, (zp + 1) & 0xFF);
-	base = (hi << 8) | lo;
+	base = (uint16_t)((hi << 8) | lo);
 	addr = base + cpu->y;
 	h = (base >> 8) + 1;
 	val = cpu->a & cpu->x & h;
@@ -2442,7 +2442,7 @@ op_ahx_izy(struct cpu *cpu)
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 5: dummy read of uncorrected address */
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
-		addr = (val << 8) | (addr & 0xFF);
+		addr = (uint16_t)((val << 8) | (addr & 0xFF));
 	}
 	write_byte(cpu, addr, val);
 	cpu->last_cycles = 6;
@@ -2464,7 +2464,7 @@ op_ahx_absy(struct cpu *cpu)
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
-		addr = (val << 8) | (addr & 0xFF);
+		addr = (uint16_t)((val << 8) | (addr & 0xFF));
 	}
 	write_byte(cpu, addr, val);
 	cpu->last_cycles = 5;
@@ -2487,7 +2487,7 @@ op_tas(struct cpu *cpu)
 	    (base & 0xFF00) |
 		(addr & 0xFF)); /* cycle 4: dummy read of uncorrected address */
 	if ((base & 0xFF00) != (addr & 0xFF00)) {
-		addr = (val << 8) | (addr & 0xFF);
+		addr = (uint16_t)((val << 8) | (addr & 0xFF));
 	}
 	write_byte(cpu, addr, val);
 	cpu->last_cycles = 5;
@@ -2565,7 +2565,7 @@ op_arr(struct cpu *cpu)
 	m = read_byte(cpu, cpu->pc++);
 	value = cpu->a & m;
 	old_c = (cpu->p & FLAG_CARRY) ? 1 : 0;
-	result = (value >> 1) | (old_c << 7);
+	result = (uint8_t)((value >> 1) | (old_c << 7));
 	/* Compute binary flags first */
 	set_flag(cpu, FLAG_CARRY, (result & 0x40) != 0);
 	set_flag(cpu, FLAG_ZERO, result == 0);

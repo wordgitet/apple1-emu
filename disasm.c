@@ -346,7 +346,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 	case ADDR_ABS: {
 		uint8_t lo = bus_read(bus, pc + 1);
 		uint8_t hi = bus_read(bus, pc + 2);
-		uint16_t val = (hi << 8) | lo;
+		uint16_t val = (uint16_t)((hi << 8) | lo);
 
 		port_snprintf(out_str, 64, "%s $%04X", info.name, val);
 		bytes = 3;
@@ -355,7 +355,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 	case ADDR_ABX: {
 		uint8_t lo = bus_read(bus, pc + 1);
 		uint8_t hi = bus_read(bus, pc + 2);
-		uint16_t val = (hi << 8) | lo;
+		uint16_t val = (uint16_t)((hi << 8) | lo);
 
 		port_snprintf(out_str, 64, "%s $%04X,X", info.name, val);
 		bytes = 3;
@@ -364,7 +364,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 	case ADDR_ABY: {
 		uint8_t lo = bus_read(bus, pc + 1);
 		uint8_t hi = bus_read(bus, pc + 2);
-		uint16_t val = (hi << 8) | lo;
+		uint16_t val = (uint16_t)((hi << 8) | lo);
 
 		port_snprintf(out_str, 64, "%s $%04X,Y", info.name, val);
 		bytes = 3;
@@ -373,7 +373,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 	case ADDR_IND: {
 		uint8_t lo = bus_read(bus, pc + 1);
 		uint8_t hi = bus_read(bus, pc + 2);
-		uint16_t val = (hi << 8) | lo;
+		uint16_t val = (uint16_t)((hi << 8) | lo);
 
 		port_snprintf(out_str, 64, "%s ($%04X)", info.name, val);
 		bytes = 3;
@@ -395,7 +395,7 @@ cpu_disassemble(struct bus *bus, uint16_t pc, char *out_str)
 	}
 	case ADDR_REL: {
 		int8_t offset = (int8_t)bus_read(bus, pc + 1);
-		uint16_t dest = (pc + 2) + offset;
+		uint16_t dest = (uint16_t)((pc + 2) + offset);
 
 		port_snprintf(out_str, 64, "%s $%04X", info.name, dest);
 		bytes = 2;

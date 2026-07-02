@@ -186,14 +186,14 @@ dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 		}
 		for (i = current; i <= current + 15; i++) {
 			if (i <= line_end) {
-				dbg_printf("%02X ", bus_read(dbg->cpu->bus, i));
+				dbg_printf("%02X ", bus_read(dbg->cpu->bus, (uint16_t)i));
 			} else {
 				dbg_printf("   ");
 			}
 		}
 		dbg_printf(" |");
 		for (i = current; i <= line_end; i++) {
-			val = bus_read(dbg->cpu->bus, i);
+			val = bus_read(dbg->cpu->bus, (uint16_t)i);
 			ch = val & 0x7F;
 			dbg_printf("%c", (ch >= 0x20 && ch <= 0x7E) ? ch : '.');
 		}

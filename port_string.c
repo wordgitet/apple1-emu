@@ -485,9 +485,9 @@ format_unsigned(char *buf,
 
 			rem = val % base;
 			if (rem < 10) {
-				temp[i++] = '0' + rem;
+				temp[i++] = (char)('0' + rem);
 			} else {
-				temp[i++] = (is_upper ? 'A' : 'a') + (rem - 10);
+				temp[i++] = (char)((is_upper ? 'A' : 'a') + (rem - 10));
 			}
 			val /= base;
 		}
