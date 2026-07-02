@@ -57,7 +57,9 @@ term_init(void)
 	vram[0][0] = 0x00;
 
 	port_term_raw_enable();
+#ifndef APPLE1_PORT_VXWORKS
 	port_term_write_buf("Apple-1 emulator (VT-100 console)\r\n\r\n", 37);
+#endif
 }
 
 void
@@ -160,6 +162,10 @@ term_poll(void)
 			port_signal_quit();
 			term_shutdown();
 			return (0);
+		}
+		if (ch == 0x0A) {
+			/* Woz Monitor expects CR; modern terminals send LF. */
+			ch = 0x0D;
 		}
 		if (ch == 0x0C) {
 			port_memset(vram, 0x20, sizeof(vram));
