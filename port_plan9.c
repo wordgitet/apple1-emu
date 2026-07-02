@@ -1,26 +1,4 @@
-/* Plan 9 uses standard memory allocators and functions */
-
-#ifndef APPLE1_ZERO_MALLOC
-#ifndef APPLE1_CUSTOM_MALLOC
-void *
-port_malloc(port_size_t sz)
-{
-	return (malloc(sz));
-}
-
-void
-port_free(void *ptr)
-{
-	free(ptr);
-}
-
-void *
-port_realloc(void *ptr, port_size_t sz)
-{
-	return (realloc(ptr, sz));
-}
-#endif
-#endif
+/* Plan 9 uses standard memory allocators via port.c runtime dispatch. */
 
 char *
 port_strdup(const char *str)
@@ -311,15 +289,30 @@ plan9_xWrite(void *file, const void *buf, port_size_t sz, port_size_t *nwritten)
 static int
 plan9_xReadLine(void *file, char *buf, port_size_t size)
 {
+	char ch;
 	int fd;
 	long r;
+	port_size_t i;
 
-	fd = (int)(long)file;
-	r = read(fd, buf, (long)(size - 1));
-	if (r <= 0) {
+	if (file == NULL || buf == NULL || size == 0) {
 		return (0);
 	}
-	buf[r] = '\0';
+	fd = (int)(long)file;
+	for (i = 0; i + 1 < size; i++) {
+		r = read(fd, &ch, 1);
+		if (r <= 0) {
+			break;
+		}
+		buf[i] = ch;
+		if (ch == '\n') {
+			i++;
+			break;
+		}
+	}
+	if (i == 0) {
+		return (0);
+	}
+	buf[i] = '\0';
 	return (1);
 }
 
