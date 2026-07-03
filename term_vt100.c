@@ -1,10 +1,10 @@
 /*
- * term_vt100.c - VT-100-style console backend (teletype, no full-screen ANSI).
+ * term_vt100.c - VT-100-style console backend (40x24 CRT, minimal escapes).
  *
- * Strict VT-100/VT-220 terminals (and Plan 9 native windows) do not handle
- * term_ansi.c's home-cursor plus LF-only row redraw.  This driver keeps the
- * same vram model for the PIA but echoes Woz Monitor output as plain bytes
- * with CR/LF (teletype style).
+ * Same vram model as term_ansi.c: Woz writes update vram only and
+ * term_update() redraws with a blinking '@' in empty cells.  Rows are
+ * painted with CSI cursor addressing (ESC[row;1H) and no LF — the real
+ * Apple-1 display is a fixed matrix, not a scrolling teletype.
  */
 #include "port.h"
 #include "term_apple1.h"
@@ -30,15 +30,115 @@ scroll_up(void)
 }
 
 static void
-vt100_echo_char(char c)
+term_clear_host_screen(void)
 {
-	port_term_write_buf(&c, 1);
+#ifdef __PLAN9__
+	/* Native console: no CSI clear. */
+#else
+#ifdef __plan9__
+	/* Native console: no CSI clear. */
+#else
+	int pos_len;
+	int y;
+	char pos[24];
+
+	port_term_write_buf("\x1b[?25l\x1b[0m\x1b[2J\x1b[H", 14);
+	for (y = 1; y <= 24; y++) {
+		pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H\x1b[2K",
+		    y);
+		port_term_write_buf(pos, (port_size_t)pos_len);
+	}
+	port_term_write_buf("\x1b[1;1H", 6);
+#endif
+#endif
 }
 
 static void
-vt100_echo_crlf(void)
+term_paint_row_plan9(int y, bool blink_on)
 {
+	int x;
+	char line[41];
+	uint8_t c;
+
+	for (x = 0; x < 40; x++) {
+		c = vram[y][x];
+		if (c == 0x00) {
+			if (blink_on != 0) {
+				line[x] = '@';
+			} else {
+				line[x] = ' ';
+			}
+		} else {
+			line[x] = (char)c;
+		}
+	}
+	port_term_write_buf("\r", 1);
+	port_term_write_buf(line, 40);
 	port_term_write_buf("\r\n", 2);
+}
+
+static void
+term_paint_row_csi(int y, bool blink_on)
+{
+	int pos_len;
+	int x;
+	char line[41];
+	char pos[16];
+	uint8_t c;
+
+	pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H", y + 1);
+	port_term_write_buf(pos, (port_size_t)pos_len);
+	port_term_write_buf("\x1b[2K", 4);
+	for (x = 0; x < 40; x++) {
+		c = vram[y][x];
+		if (c == 0x00) {
+			if (blink_on != 0) {
+				line[x] = '@';
+			} else {
+				line[x] = ' ';
+			}
+		} else {
+			line[x] = (char)c;
+		}
+	}
+	port_term_write_buf(line, 40);
+}
+
+static void
+term_paint_row(int y, bool blink_on)
+{
+#ifdef __PLAN9__
+	term_paint_row_plan9(y, blink_on);
+#else
+#ifdef __plan9__
+	term_paint_row_plan9(y, blink_on);
+#else
+	term_paint_row_csi(y, blink_on);
+#endif
+#endif
+}
+
+static void
+term_redraw(void)
+{
+	int y;
+	uint32_t now;
+	bool blink_on;
+
+#ifdef __PLAN9__
+	port_term_write_buf("\x1b[24A", 4);
+#else
+#ifdef __plan9__
+	port_term_write_buf("\x1b[24A", 4);
+#endif
+#endif
+
+	now = port_gettime_us();
+	blink_on = ((now / 250000UL) & 1) != 0;
+
+	for (y = 0; y < 24; y++) {
+		term_paint_row(y, blink_on);
+	}
 }
 
 void
@@ -49,30 +149,36 @@ term_init(void)
 
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
-			vram[y][x] = 0x20;
+			vram[y][x] = ((x + y) & 1) ? 0x5F : 0x00;
 		}
 	}
 	cursor_x = 0;
 	cursor_y = 0;
-	vram[0][0] = 0x00;
 
 	port_term_raw_enable();
-#ifndef APPLE1_PORT_VXWORKS
-	port_term_write_buf("Apple-1 emulator (VT-100 console)\r\n\r\n", 37);
-#endif
+	term_clear_host_screen();
+	term_redraw();
 }
 
 void
 term_shutdown(void)
 {
+#ifdef __PLAN9__
 	port_term_write_buf("\r\n", 2);
+#else
+#ifdef __plan9__
+	port_term_write_buf("\r\n", 2);
+#else
+	term_clear_host_screen();
+	port_term_write_buf("\x1b[?25h", 6);
+#endif
+#endif
 	port_term_raw_disable();
 }
 
 void
 term_write(uint8_t val)
 {
-	char out;
 	uint8_t glyph;
 
 	val &= 0x7F;
@@ -87,7 +193,6 @@ term_write(uint8_t val)
 				cursor_y = 23;
 			}
 			vram[cursor_y][cursor_x] = 0x00;
-			vt100_echo_crlf();
 		}
 	} else if (val >= 0x20 && val <= 0x7E) {
 		glyph = val;
@@ -95,8 +200,6 @@ term_write(uint8_t val)
 			glyph -= 32;
 		}
 		vram[cursor_y][cursor_x] = glyph;
-		out = (char)glyph;
-		vt100_echo_char(out);
 		cursor_x++;
 		if (cursor_x >= 40) {
 			cursor_x = 0;
@@ -105,18 +208,10 @@ term_write(uint8_t val)
 				scroll_up();
 				cursor_y = 23;
 			}
-			vt100_echo_crlf();
 		}
 		vram[cursor_y][cursor_x] = 0x00;
-	} else if (val == 0x08) {
-		if (cursor_x > 0) {
-			cursor_x--;
-			vram[cursor_y][cursor_x] = 0x20;
-			vram[cursor_y][cursor_x + 1] = 0x00;
-			vt100_echo_char('\b');
-			vt100_echo_char(' ');
-			vt100_echo_char('\b');
-		}
+	} else if (val == 0x08 || val == 0x7F || val == 0x5F) {
+		/* Backspace - pass through to emulator, don't display locally. */
 	}
 
 	if (opt_baud > 0) {
@@ -142,7 +237,7 @@ term_dsp_ready(void)
 void
 term_update(void)
 {
-	/* Teletype mode: term_write already echoed output. */
+	term_redraw();
 }
 
 uint8_t
@@ -184,13 +279,6 @@ term_poll(void)
 		return (ch | 0x80);
 	}
 	return (0);
-}
-
-void
-term_set_welcome(const char *msg1, const char *msg2)
-{
-	(void)msg1;
-	(void)msg2;
 }
 
 bool

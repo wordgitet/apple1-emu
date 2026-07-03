@@ -99,6 +99,26 @@ dos_out_char(char c)
 	dos_int86(0x10, &regs, &regs);
 }
 
+static void
+term_paint_poweron(void)
+{
+	int x;
+	int y;
+	uint8_t c;
+
+	for (y = 0; y < 24; y++) {
+		dos_goto(0, y);
+		for (x = 0; x < 40; x++) {
+			c = vram[y][x];
+			if (c == 0x00) {
+				dos_out_char('@');
+			} else {
+				dos_out_char((char)c);
+			}
+		}
+	}
+}
+
 void
 term_init(void)
 {
@@ -113,7 +133,7 @@ term_init(void)
 	cursor_y = 0;
 
 	port_term_raw_enable();
-	dos_clrscr();
+	term_paint_poweron();
 	dos_set_cursor_visible(0);
 }
 
@@ -244,13 +264,6 @@ term_poll(void)
 		return (ch | 0x80);
 	}
 	return (0);
-}
-
-void
-term_set_welcome(const char *msg1, const char *msg2)
-{
-	(void)msg1;
-	(void)msg2;
 }
 
 bool

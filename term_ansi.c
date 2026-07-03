@@ -1,7 +1,13 @@
 #include "port.h"
 #include "term_apple1.h"
 
-#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+/*
+ * term_ansi.c - Hosted POSIX terminal (40x24 CRT via ANSI escapes).
+ *
+ * Woz writes update vram only; term_update() redraws the full screen at
+ * ~30 Hz with a blinking '@' in empty cells (0x00), matching real Apple-1
+ * power-on checkerboard and cursor behavior.
+ */
 
 static uint8_t vram[24][40];
 static int cursor_x = 0;
@@ -12,15 +18,8 @@ static bool bracketed_paste_active = false;
 static int escape_seq_pos = 0;
 static char escape_seq_buf[32];
 
-/* Shared global authentic speed setting - defined in main.c */
 extern uint32_t opt_baud;
 
-/*
- * Timestamp of the most recent character written to the display, in
- * microseconds.  Used by term_dsp_ready() to implement a non-blocking
- * baud-rate delay: the DSP "busy" window expires naturally as the CPU
- * continues to execute, so the main loop never sleeps.
- */
 static uint32_t last_write_us = 0;
 
 static void
@@ -41,15 +40,26 @@ ansi_out(const char *buf, port_size_t len)
 }
 
 static void
-ansi_out_char(char c)
+term_clear_host_screen(void)
 {
-	ansi_out(&c, 1);
+	int pos_len;
+	int y;
+	char pos[24];
+
+	ansi_out("\x1b[?25l\x1b[0m\x1b[2J\x1b[H", 14);
+	for (y = 1; y <= 24; y++) {
+		pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H\x1b[2K",
+		    y);
+		ansi_out(pos, (port_size_t)pos_len);
+	}
+	ansi_out("\x1b[1;1H", 6);
 }
 
 void
 term_init(void)
 {
-	int x, y;
+	int x;
+	int y;
 
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
@@ -62,17 +72,20 @@ term_init(void)
 	port_term_raw_enable();
 	raw_mode_active = true;
 
-	/* Hide cursor and clear physical screen */
-	ansi_out("\x1b[?25l\x1b[2J\x1b[H", 12);
+	term_clear_host_screen();
 }
 
 void
 term_shutdown(void)
 {
-	/* Show cursor, clear screen, reset attributes */
-	ansi_out("\x1b[?25h\x1b[0m\x1b[2J\x1b[H", 16);
+#if !defined(__PLAN9__) && !defined(__plan9__)
+	term_clear_host_screen();
+	port_term_write_buf("\x1b[?25h", 6);
+#else
+	port_term_write_buf("\r\n", 2);
+#endif
 
-	if (raw_mode_active == true) {
+	if (raw_mode_active != 0) {
 		port_term_raw_disable();
 		raw_mode_active = false;
 	}
@@ -81,6 +94,8 @@ term_shutdown(void)
 void
 term_write(uint8_t val)
 {
+	uint8_t glyph;
+
 	val &= 0x7F;
 
 	if (val == 0x0D || val == 0x0A) {
@@ -95,7 +110,7 @@ term_write(uint8_t val)
 			vram[cursor_y][cursor_x] = 0x00;
 		}
 	} else if (val >= 0x20 && val <= 0x7E) {
-		uint8_t glyph = val;
+		glyph = val;
 		if (glyph >= 'a' && glyph <= 'z') {
 			glyph -= 32;
 		}
@@ -111,17 +126,10 @@ term_write(uint8_t val)
 		}
 		vram[cursor_y][cursor_x] = 0x00;
 	} else if (val == 0x08 || val == 0x7F || val == 0x5F) {
-		/* Backspace - pass through to emulator, don't display locally */
-		/* The Apple-1 software will handle backspace */
+		/* Backspace - pass through to emulator, don't display locally. */
 	}
 
 	if (opt_baud > 0) {
-		/*
-		 * Record the time of this write.  The baud-rate delay is
-		 * enforced non-blocking via term_dsp_ready(): the PIA busy
-		 * bit stays clear until the window expires, letting the CPU
-		 * keep running and polling without freezing the main loop.
-		 */
 		last_write_us = port_gettime_us();
 	}
 }
@@ -132,22 +140,26 @@ term_dsp_ready(void)
 	uint32_t now;
 	uint32_t window_us;
 
-	if (opt_baud == 0)
+	if (opt_baud == 0) {
 		return (true);
+	}
 
 	now = port_gettime_us();
-	window_us = 10000000UL / opt_baud; /* 10 bits per character */
+	window_us = 10000000UL / opt_baud;
 	return ((now - last_write_us) >= window_us);
 }
 
 void
 term_update(void)
 {
-	int x, y;
+	int pos_len;
+	int x;
+	int y;
 	uint32_t now;
 	bool blink_on;
+	char line[41];
+	char pos[16];
 
-	/* Skip display updates during bracketed paste to prevent interference */
 	if (bracketed_paste_active != 0) {
 		return;
 	}
@@ -155,21 +167,25 @@ term_update(void)
 	now = port_gettime_us();
 	blink_on = ((now / 250000UL) & 1) != 0;
 
-	ansi_out("\x1b[H", 3);
 	for (y = 0; y < 24; y++) {
+		pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H", y + 1);
+		ansi_out(pos, (port_size_t)pos_len);
+		ansi_out("\x1b[2K", 4);
 		for (x = 0; x < 40; x++) {
-			uint8_t c = vram[y][x];
+			uint8_t c;
+
+			c = vram[y][x];
 			if (c == 0x00) {
 				if (blink_on != 0) {
-					ansi_out_char('@');
+					line[x] = '@';
 				} else {
-					ansi_out_char(' ');
+					line[x] = ' ';
 				}
 			} else {
-				ansi_out_char((char)c);
+				line[x] = (char)c;
 			}
 		}
-		ansi_out_char('\n');
+		ansi_out(line, 40);
 	}
 }
 
@@ -186,7 +202,6 @@ term_poll(void)
 	}
 
 	if (ch != 0) {
-		/* Handle escape sequences for bracketed paste mode */
 		if (ch == 0x1B) {
 			escape_seq_pos = 0;
 			escape_seq_buf[escape_seq_pos++] = (char)ch;
@@ -195,12 +210,10 @@ term_poll(void)
 		if (escape_seq_pos > 0) {
 			escape_seq_buf[escape_seq_pos++] = (char)ch;
 			if (escape_seq_pos >= 6) {
-				/* Check for bracketed paste start: ESC[200~ */
 				if (port_strcmp(escape_seq_buf, "\x1b[200~") ==
 				    0) {
 					bracketed_paste_active = true;
 				}
-				/* Check for bracketed paste end: ESC[201~ */
 				if (port_strcmp(escape_seq_buf, "\x1b[201~") ==
 				    0) {
 					bracketed_paste_active = false;
@@ -211,13 +224,17 @@ term_poll(void)
 		}
 
 		if (ch == 0x03) {
-			/* Ctrl-C: quit */
 			port_signal_quit();
 			term_shutdown();
 			return (0);
 		}
+		if (bracketed_paste_active != 0) {
+			return (0);
+		}
+		if (ch == 0x0A) {
+			ch = 0x0D;
+		}
 		if (ch == 0x0C) {
-			/* Ctrl-L (clear screen) */
 			port_memset(vram, 0x20, sizeof(vram));
 			cursor_x = 0;
 			cursor_y = 0;
@@ -225,7 +242,6 @@ term_poll(void)
 			return (0);
 		}
 		if (ch == 0x12) {
-			/* Ctrl-R (Reset) */
 			reset_pending = true;
 			return (0);
 		}
@@ -235,13 +251,6 @@ term_poll(void)
 		return (ch | 0x80);
 	}
 	return (0);
-}
-
-void
-term_set_welcome(const char *msg1, const char *msg2)
-{
-	(void)msg1;
-	(void)msg2;
 }
 
 bool
