@@ -6,7 +6,7 @@ After cloning:
 ```bash
 ./configure
 make              # produces ./apple1
-make check        # eight unit tests
+make check        # nine unit tests
 make check-single # verify amalgamation links (posix)
 ```
 
@@ -49,7 +49,7 @@ See `apple1limit.h` for all available options and limits.
 ./configure
 make clean
 make              # produces ./apple1
-make check        # build and run eight unit tests
+make check        # build and run nine unit tests
 ```
 
 If you changed `Makefile.am` or `configure.ac`, run `autoreconf -fi` first, then
@@ -100,6 +100,7 @@ flags; if neither is set, they auto-detect from compiler predefined macros.
 | Host | Default port | Default terminal |
 |------|--------------|------------------|
 | Linux, macOS, *BSD, Haiku, … | `port_posix.c` | `term_ansi.c` |
+| UnixWare 7 / OpenUNIX (`Makefile.uw`) | `port_posix.c` (`__USLC__` shims) | `term_vt100.c` |
 | Windows (`Makefile.msc`) | `port_win.c` | `term_ansi.c` |
 | Plan 9 / 9front (`mkfile`) | `port_plan9.c` | `term_vt100.c` |
 | MS-DOS (`make dos-*`) | `port_msdos.c` | `term_dos.c` |
@@ -115,6 +116,73 @@ make
 
 See [configuration.md](configuration.md) for the full `APPLE1_PORT_*` and
 `APPLE1_TERM_*` registry.
+
+## UnixWare / OpenUNIX
+
+UnixWare ships **native `make` and `cc`** (USL C), not GNU make or GCC.  Use the
+standalone **`Makefile.uw`** in the repository root — do not run `./configure` on
+the target unless you have ported GNU autotools yourself.
+
+The USL compiler predefines **`__USLC__`**.  No separate `APPLE1_PORT_*` flag is
+required for platform detection: `port.h` and `port_posix.c` key off `__USLC__` for
+small libc/termios shims (see below).  The build still sets **`APPLE1_PORT_POSIX`**
+explicitly so [`port.c`](../port.c) selects `port_posix.c`.
+
+### Build
+
+Copy the source tree to the UnixWare machine, then:
+
+```bash
+make -f Makefile.uw clean
+make -f Makefile.uw
+```
+
+This produces **`./apple1`** with:
+
+```text
+-DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_VT100
+```
+
+[`term_vt100.c`](../term_vt100.c) is used instead of `term_ansi.c` because the
+console and telnet sessions handle **CSI cursor positioning** (`ESC[row;1H`) more
+reliably than a full ANSI home/clear plus LF-based redraw.  The display is still a
+fixed **40×24** matrix with the power-on `_@_@_` checkerboard and blinking `@`
+cursor; rows are repainted in place (no scrolling teletype).
+
+### Run
+
+```bash
+./apple1
+```
+
+Interactive mode waits for **Ctrl+R** before CPU reset (authentic power-on), same
+as other POSIX builds.  **Ctrl+C** quits; the terminal driver clears the host
+screen and restores the cursor on exit.
+
+Headless tests (no terminal UI):
+
+```bash
+./apple1 -H -F 6502_functional_test.bin
+```
+
+### USL C / POSIX notes
+
+When `__USLC__` is defined, shared sources adjust as follows:
+
+| Area | Behaviour on UnixWare |
+|------|------------------------|
+| `port.h` | Uses system `<sys/types.h>` typedefs instead of local `uint8_t` shims |
+| `port_posix_inc.h` | `_XOPEN_SOURCE 500`, `_POSIX_C_SOURCE 199506L` (not POSIX.1-2008) |
+| `port_posix.c` timing | `gettimeofday()` / `usleep()` instead of `clock_gettime` / `nanosleep` |
+| `port_posix.c` signals | `signal()` instead of `sigaction()` |
+| `port_posix.c` terminal | No bracketed-paste ANSI (`ESC[?2004h`) on startup |
+
+`term_vt100.c` is also built on Plan 9; any `#ifdef` in that file must stay
+**nested** (`#ifdef` / `#else` / `#endif` only) because Plan 9 `6c` does not
+support `#if` or `defined()`.  See [configuration.md](configuration.md).
+
+Unit tests are not wired through `Makefile.uw`; run `make check` on a GNU
+autotools host (Linux, macOS, *BSD) before deploying sources to UnixWare.
 
 ## Single-file amalgamation (`make single`)
 
@@ -239,7 +307,7 @@ xattr -dr com.apple.quarantine ~/djgpp
 
 | Target | Description |
 |--------|-------------|
-| `make check` | All eight unit tests (pass/fail summary) |
+| `make check` | All nine unit tests (pass/fail summary) |
 | `make test-official` | Klaus Dormann 6502 functional test (headless) |
 
 Individual test binaries (not installed — built in repo root):
@@ -271,6 +339,7 @@ a 134-byte `version https://git-lfs...` pointer.
 - `test_interrupts` — IRQ/NMI/BRK behaviour
 - `test_vfs` — `port_vfs` swap and Woz monitor text load via VFS
 - `test_config` — human-readable `.conf` parsing
+- `test_mem` — port memory allocator dispatch
 
 Functional test (downloads test ROM):
 
@@ -310,6 +379,9 @@ nmake -f Makefile.msc
 **MS-DOS (DJGPP or Open Watcom):**
 - DJGPP: `make dos-djgpp` (needs `CWSDPMI.EXE` in DOSBox)
 - Open Watcom: `make dos-watcom` (CauseWay stub embedded; no extra EXE in DOSBox)
+
+**UnixWare 7 / OpenUNIX:** `make -f Makefile.uw` on the target (native `cc` +
+`make`).  See [UnixWare / OpenUNIX](#unixware--openunix) above.
 
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr):**
 - **FreeRTOS (POSIX simulator):** `make freertos` for a host binary; full scheduler test via `documentation/FREERTOS_DEMO.md` and `freertos_demo_test.sh` from `FreeRTOS/Demo/Posix_GCC`.
