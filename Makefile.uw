@@ -3,7 +3,12 @@
 # __USLC__ is predefined by the USL C compiler; no extra APPLE1_PORT_* flag.
 # Uses the POSIX port (port_posix.c) with __USLC__ shims in port.h / port_posix.c.
 #
+# Multi-file build:
 #   make -f Makefile.uw
+#
+# Single-file amalgamation (no Python — uses awk):
+#   make -f Makefile.uw amalg
+#   make -f Makefile.uw single
 
 CC = cc
 CFLAGS = -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_VT100 -O2
@@ -11,8 +16,18 @@ CFLAGS = -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_VT100 -O2
 SRCS = main.c cli_config.c cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c \
 	term.c port.c
 
+AMALG_AWK = tools/amalgamate_unixware.awk
+
 apple1: $(SRCS)
 	$(CC) $(CFLAGS) -o apple1 $(SRCS)
 
+apple1.c apple1.h: $(AMALG_AWK)
+	awk -f $(AMALG_AWK)
+
+amalg: apple1.c apple1.h
+
+single: apple1.c apple1.h
+	$(CC) $(CFLAGS) -o apple1 apple1.c
+
 clean:
-	rm -f apple1 *.o
+	rm -f apple1 apple1.c apple1.h *.o
