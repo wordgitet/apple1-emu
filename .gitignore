@@ -20,6 +20,7 @@ test_interrupts
 
 
 # runtime generated files
+apple1.conf
 apple1_trace.txt
 recorded_tape.aci
 *.wav
