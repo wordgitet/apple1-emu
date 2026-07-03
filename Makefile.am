@@ -53,7 +53,9 @@ test_mem_CFLAGS = $(AM_CFLAGS)
 
 EXTRA_DIST = $(PORT_SHIM) $(TERM_SHIM) port_attrs.h port_stdarg.h \
              port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
-             port_posix_inc.h mkfile Makefile.msc Makefile.uw tools/amalgamate.py \
+             port_posix_inc.h mkfile Makefile.msc Makefile.uw \
+             tools/amalgamate.py tools/amalgamate_plan9.awk \
+             tools/amalgamate_unixware.awk \
              tests/term_dummy.c tests/test_cpu.c tests/test_aci.c \
              tests/test_dualram.c tests/test_bus.c tests/test_tomharte.c \
              tests/test_interrupts.c tests/test_vfs.c tests/test_config.c \
@@ -93,6 +95,9 @@ amalgamation-win:
 amalgamation-plan9:
 	python3 tools/amalgamate.py --port port_plan9.c --term term_vt100.c
 
+amalgamation-uw:
+	python3 tools/amalgamate.py
+
 single:
 	@case "$(HOST)" in \
 	posix) $(MAKE) single-posix ;; \
@@ -100,7 +105,8 @@ single:
 	watcom) $(MAKE) single-watcom ;; \
 	win|mingw) $(MAKE) single-win ;; \
 	plan9|9front) $(MAKE) single-plan9 ;; \
-	*) echo "Unknown HOST=$(HOST). Use: posix dos watcom win plan9" >&2; exit 1 ;; \
+	unixware|uw) $(MAKE) single-uw ;; \
+	*) echo "Unknown HOST=$(HOST). Use: posix dos watcom win plan9 unixware" >&2; exit 1 ;; \
 	esac
 
 single-posix: amalgamation
@@ -124,12 +130,22 @@ single-plan9: amalgamation-plan9
 	@echo "On Plan 9: mk amalg && mk amal-single   (no Python)"
 	@echo "Or: 6c -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100 apple1.c"
 
+single-uw: amalgamation-uw
+	$(CC) $(AM_CFLAGS) -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX \
+	    -DAPPLE1_TERM_VT100 apple1.c -o apple1
+
 check-single:
 	@$(MAKE) amalgamation
 	$(CC) $(AM_CFLAGS) -DAPPLE1_OMIT_CHARMAP $(AM_CPPFLAGS) \
 	    apple1.c -o apple1_amal_test
 	@echo "PASS: amalgamation links (HOST=posix)"
 	@rm -f apple1_amal_test
+
+check-single-uw: amalgamation-uw
+	$(CC) $(AM_CFLAGS) -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX \
+	    -DAPPLE1_TERM_VT100 apple1.c -o apple1_uw_amal_test
+	@echo "PASS: UnixWare amalgamation links"
+	@rm -f apple1_uw_amal_test
 
 DOS_CC ?= i586-pc-msdosdjgpp-gcc
 DOS_CFLAGS = -O2 -Wall -std=gnu99 -D__MSDOS__ -DAPPLE1_OMIT_CHARMAP \
@@ -258,6 +274,7 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 	    `test -f 'term.c' || echo '$(srcdir)/'`term.c
 
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
-        single single-posix single-dos single-watcom single-win check-single \
-        dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe apple1.exe \
-        cwsdpmi.exe tcc pcc lacc freertos
+        amalgamation-plan9 amalgamation-uw check-single check-single-uw \
+        single single-posix single-dos single-watcom single-win single-plan9 \
+        single-uw dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
+        apple1.exe cwsdpmi.exe tcc pcc lacc freertos

@@ -184,6 +184,26 @@ support `#if` or `defined()`.  See [configuration.md](configuration.md).
 Unit tests are not wired through `Makefile.uw`; run `make check` on a GNU
 autotools host (Linux, macOS, *BSD) before deploying sources to UnixWare.
 
+### Single-file amalgamation
+
+UnixWare may not have Python.  From the repo root on the target:
+
+```bash
+make -f Makefile.uw amalg
+make -f Makefile.uw single
+```
+
+That runs `awk -f tools/amalgamate_unixware.awk` (no Python), then links
+`apple1.c` with the same `-D` flags as the multi-file build.
+
+On a POSIX host with Python you can cross-check the same preset:
+
+```bash
+make amalgamation-uw
+make check-single-uw
+# or: make single HOST=unixware
+```
+
 ## Single-file amalgamation (`make single`)
 
 `tools/amalgamate.py` concatenates sources into `apple1.c` + `apple1.h`.
@@ -197,6 +217,7 @@ target platform (build host must be POSIX — Linux, macOS, or *BSD with `make`)
 | `make single HOST=watcom` | `apple1.exe` | Open Watcom |
 | `make single HOST=win` | `apple1.exe` | MinGW cross-compiler (`WIN_CC`) |
 | `make single HOST=plan9` | `apple1.c` + `apple1.h` | amalgamate only; compile on Plan 9 |
+| `make single HOST=unixware` | `./apple1` | POSIX port + `term_vt100.c` preset |
 
 Plan 9 / 9front: **`mk all`** (multi-file, recommended) or **`mk amalg`** (single-file,
 no Python — uses `tools/amalgamate.rc` + `awk`). POSIX hosts can run
@@ -222,6 +243,7 @@ cc -std=c89 -O2 -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
 | `dos`, `watcom` | `port_msdos.c` / `term_dos.c` |
 | `win` | `port_win.c` / `term_ansi.c` |
 | `plan9` | `port_plan9.c` / `term_vt100.c` |
+| `unixware` | `port.c` / `term.c` + `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_VT100` |
 
 On Plan 9 without Python: `mk amalg` (runs `rc tools/amalgamate.rc`) or
 `awk -f tools/amalgamate_plan9.awk` from the repo root.
