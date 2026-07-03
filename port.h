@@ -22,6 +22,10 @@
 
 #include "port_stdarg.h"
 
+#ifdef __USLC__
+#include <sys/types.h>
+#endif
+
 /* ================================================================== */
 /* Integer type definitions -- zero dependency on <stdint.h>          */
 /* ================================================================== */
@@ -36,6 +40,7 @@
  *   long  -- 32 bits on ILP32 / LLP64; 64 bits on LP64.
  */
 
+#ifndef __USLC__
 #ifndef uint8_t
 typedef unsigned char uint8_t;
 #endif
@@ -54,6 +59,7 @@ typedef unsigned int uint32_t;
 #ifndef int32_t
 typedef signed int int32_t;
 #endif
+#endif /* !__USLC__ */
 
 #ifndef UINT8_MAX
 #define UINT8_MAX 255U

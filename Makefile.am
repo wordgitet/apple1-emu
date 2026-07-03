@@ -53,7 +53,7 @@ test_mem_CFLAGS = $(AM_CFLAGS)
 
 EXTRA_DIST = $(PORT_SHIM) $(TERM_SHIM) port_attrs.h port_stdarg.h \
              port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
-             port_posix_inc.h mkfile Makefile.msc tools/amalgamate.py \
+             port_posix_inc.h mkfile Makefile.msc Makefile.uw tools/amalgamate.py \
              tests/term_dummy.c tests/test_cpu.c tests/test_aci.c \
              tests/test_dualram.c tests/test_bus.c tests/test_tomharte.c \
              tests/test_interrupts.c tests/test_vfs.c tests/test_config.c \

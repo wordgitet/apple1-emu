@@ -21,6 +21,15 @@
 #undef _BSD_SOURCE
 #undef _SVID_SOURCE
 #undef _POSIX_C_SOURCE
+#ifdef __USLC__
+/*
+ * UnixWare 7 USL C: POSIX.1-2008 feature tests break <signal.h> and
+ * omit CLOCK_MONOTONIC.  Request only what the libc actually ships.
+ */
+#define _XOPEN_SOURCE 500
+#define _POSIX_C_SOURCE 199506L
+#else
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #endif /* PORT_POSIX_INC_H */

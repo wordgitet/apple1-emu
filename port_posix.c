@@ -1,5 +1,5 @@
-#include "port.h"
 #include "port_posix_inc.h"
+#include "port.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -10,6 +10,9 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef __USLC__
+#include <sys/time.h>
+#endif
 
 
 
@@ -39,6 +42,15 @@ port_strdup(const char *str)
 uint32_t
 port_gettime_us(void)
 {
+#ifdef __USLC__
+	struct timeval tv;
+
+	if (gettimeofday(&tv, NULL) == 0) {
+		return ((uint32_t)tv.tv_sec * 1000000 +
+		    (uint32_t)tv.tv_usec);
+	}
+	return (0);
+#else
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
@@ -46,16 +58,31 @@ port_gettime_us(void)
 		    (uint32_t)(ts.tv_nsec / 1000));
 	}
 	return (0);
+#endif
 }
 
 void
 port_sleep_us(uint32_t us)
 {
+#ifdef __USLC__
+	unsigned sec;
+	useconds_t rem;
+
+	sec = (unsigned)(us / 1000000);
+	rem = (useconds_t)(us % 1000000);
+	if (sec > 0) {
+		sleep(sec);
+	}
+	if (rem > 0) {
+		usleep(rem);
+	}
+#else
 	struct timespec req;
 
 	req.tv_sec = (time_t)(us / 1000000);
 	req.tv_nsec = (long)((us % 1000000) * 1000);
 	nanosleep(&req, NULL);
+#endif
 }
 
 #endif /* timing: not FreeRTOS demo override */
@@ -82,8 +109,10 @@ port_term_raw_enable(void)
 		raw.c_cc[VTIME] = 0;
 		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 0) {
 			posix_raw_mode_active = 1;
-			/* Enable bracketed paste mode */
+#ifndef __USLC__
+			/* Bracketed paste — xterm-like hosts only. */
 			port_term_write_buf("\x1b[?2004h", 8);
+#endif
 		}
 	}
 }
@@ -92,8 +121,9 @@ void
 port_term_raw_disable(void)
 {
 	if (posix_raw_mode_active != 0) {
-		/* Disable bracketed paste mode */
+#ifndef __USLC__
 		port_term_write_buf("\x1b[?2004l", 8);
+#endif
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 		posix_raw_mode_active = 0;
 	}
@@ -174,14 +204,18 @@ handle_sigint(int sig)
 void
 port_signal_setup(port_sig_flag *flag)
 {
+	g_sig_flag = flag;
+#ifdef __USLC__
+	signal(SIGINT, handle_sigint);
+#else
 	struct sigaction sa;
 
-	g_sig_flag = flag;
 	port_memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = handle_sigint;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0; /* Don't restart fgets — Ctrl-C reaches dbg prompt */
 	sigaction(SIGINT, &sa, NULL);
+#endif
 }
 
 void
