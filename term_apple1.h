@@ -21,8 +21,6 @@ void
 term_update(void);
 uint8_t
 term_poll(void);
-void
-term_set_welcome(const char *msg1, const char *msg2);
 bool
 term_reset_pending(void);
 

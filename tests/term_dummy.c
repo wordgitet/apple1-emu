@@ -39,13 +39,6 @@ term_poll(void)
 	return (0);
 }
 
-void
-term_set_welcome(const char *msg1, const char *msg2)
-{
-	(void)msg1;
-	(void)msg2;
-}
-
 bool
 term_reset_pending(void)
 {

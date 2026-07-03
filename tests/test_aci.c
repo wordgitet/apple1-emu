@@ -69,13 +69,6 @@ io_write_display(uint8_t value)
 	(void)value;
 }
 
-void
-io_set_welcome(const char *msg1, const char *msg2)
-{
-	(void)msg1;
-	(void)msg2;
-}
-
 bool
 io_reset_pending(void)
 {

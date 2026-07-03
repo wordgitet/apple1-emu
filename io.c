@@ -59,12 +59,6 @@ io_write_display(uint8_t value)
 	term_write(value);
 }
 
-void
-io_set_welcome(const char *msg1, const char *msg2)
-{
-	term_set_welcome(msg1, msg2);
-}
-
 bool
 io_reset_pending(void)
 {

@@ -24,10 +24,6 @@ io_read_keyboard(void);
 void
 io_write_display(uint8_t value);
 
-/* Set welcome messages to display at the bottom of the alternate screen */
-void
-io_set_welcome(const char *msg1, const char *msg2);
-
 /* Returns true (once) if Ctrl-R was pressed - caller should call cpu_reset() */
 bool
 io_reset_pending(void);
