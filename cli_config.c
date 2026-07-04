@@ -1,6 +1,5 @@
-#include "cli_config.h"
-
 #include "apple1limit.h"
+#include "cli_config.h"
 
 static void
 config_warn(const char *fmt, ...)

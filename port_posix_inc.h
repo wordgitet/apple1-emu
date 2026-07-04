@@ -26,7 +26,7 @@
  * UnixWare 7 USL C: POSIX.1-2008 feature tests break <signal.h> and
  * omit CLOCK_MONOTONIC.  Request only what the libc actually ships.
  */
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE	500
 #define _POSIX_C_SOURCE 199506L
 #else
 #define _POSIX_C_SOURCE 200809L

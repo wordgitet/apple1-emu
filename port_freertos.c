@@ -10,8 +10,8 @@
 
 #if defined(__linux__) || defined(__APPLE__)
 
-#include "port_posix_inc.h"
 #include "port_posix.c"
+#include "port_posix_inc.h"
 
 #ifdef FREERTOS_DEMO
 
@@ -67,9 +67,13 @@ freertos_shutdown(void *app_data)
 	(void)app_data;
 }
 
-#define PORT_DEFAULT_MEM_METHODS \
-	{ freertos_malloc, freertos_free, freertos_realloc, \
-	freertos_init, freertos_shutdown, NULL }
+#define PORT_DEFAULT_MEM_METHODS   \
+	{ freertos_malloc,         \
+		freertos_free,     \
+		freertos_realloc,  \
+		freertos_init,     \
+		freertos_shutdown, \
+		NULL }
 
 #endif
 #endif
@@ -99,11 +103,13 @@ port_exit(int code)
 {
 	(void)code;
 	vTaskDelete(NULL);
-	for (;;);
+	for (;;)
+		;
 }
 
 #endif /* FREERTOS_DEMO */
 
 #else
-#error "APPLE1_PORT_FREERTOS requires a POSIX host (FreeRTOS Posix_GCC simulator)"
+#error \
+    "APPLE1_PORT_FREERTOS requires a POSIX host (FreeRTOS Posix_GCC simulator)"
 #endif

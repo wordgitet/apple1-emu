@@ -7,8 +7,6 @@
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
-
-
 char *
 port_strdup(const char *str)
 {

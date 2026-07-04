@@ -28,9 +28,9 @@ struct cli_config_opts {
 	bool opt_trace;
 };
 
-#define CLI_CONFIG_OK	  0
+#define CLI_CONFIG_OK	    0
 #define CLI_CONFIG_CANTOPEN 1
-#define CLI_CONFIG_PARSE  2
+#define CLI_CONFIG_PARSE    2
 
 void
 cli_config_init_defaults(struct cli_config_opts *opts);

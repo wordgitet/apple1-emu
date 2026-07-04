@@ -44,8 +44,8 @@ term_clear_host_screen(void)
 
 	port_term_write_buf("\x1b[?25l\x1b[0m\x1b[2J\x1b[H", 14);
 	for (y = 1; y <= 24; y++) {
-		pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H\x1b[2K",
-		    y);
+		pos_len =
+		    port_snprintf(pos, sizeof(pos), "\x1b[%d;1H\x1b[2K", y);
 		port_term_write_buf(pos, (port_size_t)pos_len);
 	}
 	port_term_write_buf("\x1b[1;1H", 6);

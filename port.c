@@ -2,6 +2,9 @@
  * port.c - Portable selector for platform-specific port implementations.
  *
  * This file is part of the Apple-1 emulator.
+ *
+ * Not passed through clang-format: nested #include "*.c" shims hang the
+ * formatter.  Format the included port_*.c files instead.
  */
 
 #include "port.h"

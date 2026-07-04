@@ -4,15 +4,14 @@
  */
 
 #include "FreeRTOS.h"
+#include "console.h"
 #include "task.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "console.h"
-
 /* Forward declare the actual emulator main */
-extern int emulator_main(int argc, char *argv[]);
+extern int
+emulator_main(int argc, char *argv[]);
 
 /* FreeRTOS hooks */
 void
@@ -31,7 +30,7 @@ vApplicationDaemonTaskStartupHook(void)
 }
 
 void
-vAssertCalled(const char * const file, unsigned long line)
+vAssertCalled(const char *const file, unsigned long line)
 {
 	printf("ASSERT: %s:%lu\n", file, line);
 	abort();
@@ -45,7 +44,8 @@ vApplicationMallocFailedHook(void)
 }
 
 void
-vApplicationGetIdleTaskMemory(StaticTask_t **ppxTCB, StackType_t **ppxStack,
+vApplicationGetIdleTaskMemory(StaticTask_t **ppxTCB,
+    StackType_t **ppxStack,
     uint32_t *pulSize)
 {
 	static StaticTask_t xTCB;
@@ -57,7 +57,8 @@ vApplicationGetIdleTaskMemory(StaticTask_t **ppxTCB, StackType_t **ppxStack,
 }
 
 void
-vApplicationGetTimerTaskMemory(StaticTask_t **ppxTCB, StackType_t **ppxStack,
+vApplicationGetTimerTaskMemory(StaticTask_t **ppxTCB,
+    StackType_t **ppxStack,
     uint32_t *pulSize)
 {
 	static StaticTask_t xTCB;
@@ -85,9 +86,14 @@ main(void)
 {
 	printf("Starting Apple-1 FreeRTOS demo\n");
 	console_init();
-	xTaskCreate(apple1_task, "Apple1", 8192, NULL, tskIDLE_PRIORITY + 2,
+	xTaskCreate(apple1_task,
+	    "Apple1",
+	    8192,
+	    NULL,
+	    tskIDLE_PRIORITY + 2,
 	    NULL);
 	vTaskStartScheduler();
-	for (;;);
+	for (;;)
+		;
 	return (0);
 }

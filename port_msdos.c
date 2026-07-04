@@ -10,8 +10,6 @@
 #include <string.h>
 #include <time.h>
 
-
-
 char *
 port_strdup(const char *str)
 {

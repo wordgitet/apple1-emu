@@ -185,7 +185,8 @@ dump_memory(debugger_t *dbg, uint16_t start, uint16_t end)
 		}
 		for (i = current; i <= current + 15; i++) {
 			if (i <= line_end) {
-				dbg_printf("%02X ", bus_read(dbg->cpu->bus, (uint16_t)i));
+				dbg_printf("%02X ",
+				    bus_read(dbg->cpu->bus, (uint16_t)i));
 			} else {
 				dbg_printf("   ");
 			}

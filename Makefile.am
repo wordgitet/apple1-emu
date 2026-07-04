@@ -258,6 +258,28 @@ distclean-local:
 	-rm -f Makefile.in aclocal.m4 configure
 	-rm -rf autom4te.cache
 
+# clang-format — uses .clang-format (KNF / style(9)).  Skips generated amalgamation
+# and port.c (nested #include "*.c" shims make clang-format hang).
+CLANG_FORMAT ?= clang-format
+
+CLANG_FORMAT_SKIP = ! -name apple1.c ! -name apple1.h ! -name port.c
+
+clang-format:
+	@find . -type f \( -name '*.c' -o -name '*.h' \) \
+	    $(CLANG_FORMAT_SKIP) ! -path './.git/*' -print0 | \
+	    while IFS= read -r -d '' f; do \
+	        printf 'clang-format %s\n' "$$f"; \
+	        $(CLANG_FORMAT) -i "$$f"; \
+	    done
+
+clang-format-check:
+	@find . -type f \( -name '*.c' -o -name '*.h' \) \
+	    $(CLANG_FORMAT_SKIP) ! -path './.git/*' -print0 | \
+	    while IFS= read -r -d '' f; do \
+	        printf 'clang-format-check %s\n' "$$f"; \
+	        $(CLANG_FORMAT) --dry-run -Werror "$$f" || exit 1; \
+	    done
+
 
 # port.c / term.c #include shim sources — explicit rules (automake cannot
 # express included-file dependencies without overriding its own recipes).
@@ -275,6 +297,7 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
         amalgamation-plan9 amalgamation-uw check-single check-single-uw \
+        clang-format clang-format-check \
         single single-posix single-dos single-watcom single-win single-plan9 \
         single-uw dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
         apple1.exe cwsdpmi.exe tcc pcc lacc freertos

@@ -15,8 +15,8 @@
  */
 #ifdef APPLE1_PORT_PLAN9
 #ifndef APPLE1_PORT_PLAN9_APE
-#include <u.h>
 #include <libc.h>
+#include <u.h>
 #endif
 #endif
 

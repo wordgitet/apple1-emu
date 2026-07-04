@@ -9,19 +9,18 @@
 
 #if defined(__RTP__) || defined(_WRS_KERNEL)
 
-#include <sys/select.h>
-#include <sys/time.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <ioLib.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <taskLib.h>
 #include <termios.h>
 #include <tickLib.h>
-#include <signal.h>
 #include <unistd.h>
 
 char *
@@ -215,14 +214,17 @@ vxworks_tty_ioctl_raw_enable_all(void)
 	ctl = vxworks_term_ctl_fd();
 
 	vxworks_tty_ioctl_raw_one(in,
-	    &vxworks_saved_in_options, &vxworks_ioctl_in_active);
+	    &vxworks_saved_in_options,
+	    &vxworks_ioctl_in_active);
 	if (out != in) {
 		vxworks_tty_ioctl_raw_one(out,
-		    &vxworks_saved_out_options, &vxworks_ioctl_out_active);
+		    &vxworks_saved_out_options,
+		    &vxworks_ioctl_out_active);
 	}
 	if (ctl >= 0 && ctl != in && ctl != out) {
 		vxworks_tty_ioctl_raw_one(ctl,
-		    &vxworks_saved_ctl_options, &vxworks_ioctl_ctl_active);
+		    &vxworks_saved_ctl_options,
+		    &vxworks_ioctl_ctl_active);
 	}
 }
 
@@ -247,15 +249,18 @@ vxworks_tty_ioctl_raw_disable_all(void)
 	out = vxworks_term_out_fd();
 	ctl = vxworks_term_ctl_fd();
 
-	vxworks_tty_ioctl_raw_one_disable(in, vxworks_saved_in_options,
+	vxworks_tty_ioctl_raw_one_disable(in,
+	    vxworks_saved_in_options,
 	    &vxworks_ioctl_in_active);
 	if (out != in) {
 		vxworks_tty_ioctl_raw_one_disable(out,
-		    vxworks_saved_out_options, &vxworks_ioctl_out_active);
+		    vxworks_saved_out_options,
+		    &vxworks_ioctl_out_active);
 	}
 	if (ctl >= 0 && ctl != in && ctl != out) {
 		vxworks_tty_ioctl_raw_one_disable(ctl,
-		    vxworks_saved_ctl_options, &vxworks_ioctl_ctl_active);
+		    vxworks_saved_ctl_options,
+		    &vxworks_ioctl_ctl_active);
 	}
 	vxworks_saved_in_options = -1;
 	vxworks_saved_out_options = -1;
@@ -335,7 +340,6 @@ port_term_dbg_disable(void)
 	}
 }
 
-
 int
 port_term_read_char(void)
 {
@@ -368,7 +372,6 @@ port_term_read_char(void)
 	}
 	return (PORT_TERM_NODATA);
 }
-
 
 void
 port_term_write_buf(const char *buf, port_size_t n)
@@ -512,7 +515,9 @@ vxworks_vfs_seek(port_file_t f, int32_t offset, int whence)
 }
 
 static int
-vxworks_vfs_write(port_file_t f, const void *buf, port_size_t sz,
+vxworks_vfs_write(port_file_t f,
+    const void *buf,
+    port_size_t sz,
     port_size_t *nwritten)
 {
 	size_t w;

@@ -425,11 +425,13 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 				port_vfs_default.close(f);
 				return (PORT_IO);
 			}
-			audio_format = (uint16_t)(fmt_data[0] | (fmt_data[1] << 8));
+			audio_format =
+			    (uint16_t)(fmt_data[0] | (fmt_data[1] << 8));
 			channels = (uint16_t)(fmt_data[2] | (fmt_data[3] << 8));
 			sample_rate = fmt_data[4] | (fmt_data[5] << 8) |
 			    (fmt_data[6] << 16) | (fmt_data[7] << 24);
-			bits_per_sample = (uint16_t)(fmt_data[14] | (fmt_data[15] << 8));
+			bits_per_sample =
+			    (uint16_t)(fmt_data[14] | (fmt_data[15] << 8));
 
 			if (chunk_size > 16) {
 				port_vfs_default.seek(f,
@@ -534,7 +536,8 @@ load_wav_tape(struct aci_card *aci, const char *tape_path)
 			value = 0.0f;
 
 			if (audio_format == 1 && bits_per_sample == 8) {
-				value = ((float)((int)sample_ptr[0] - 128)) / 128.0f;
+				value = ((float)((int)sample_ptr[0] - 128)) /
+				    128.0f;
 			} else if (audio_format == 1 && bits_per_sample == 16) {
 				int16_t s = (int16_t)(sample_ptr[0] |
 				    (sample_ptr[1] << 8));

@@ -1,6 +1,6 @@
+#include "../apple1limit.h"
 #include "../cli_config.h"
 #include "../port.h"
-#include "../apple1limit.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -162,21 +162,20 @@ test_sample_config(void)
 
 	cli_config_init_defaults(&opts);
 
-	mock_install(
-	    "# comment\n"
-	    "rom = wozmon.bin\n"
-	    "ram_kb = 16\n"
-	    "load = myprog.bin @ 0300\n"
-	    "speed_cap = yes\n"
-	    "flat_bus = true\n"
-	    "dram_refresh = on\n"
-	    "keyboard_bounce = off\n"
-	    "aci_rom = aci.bin\n"
-	    "tape_in = in.wav\n"
-	    "tape_out = out.wav\n"
-	    "krusader = k.rom\n"
-	    "baud = 1200\n"
-	    "trace = 0\n");
+	mock_install("# comment\n"
+		     "rom = wozmon.bin\n"
+		     "ram_kb = 16\n"
+		     "load = myprog.bin @ 0300\n"
+		     "speed_cap = yes\n"
+		     "flat_bus = true\n"
+		     "dram_refresh = on\n"
+		     "keyboard_bounce = off\n"
+		     "aci_rom = aci.bin\n"
+		     "tape_in = in.wav\n"
+		     "tape_out = out.wav\n"
+		     "krusader = k.rom\n"
+		     "baud = 1200\n"
+		     "trace = 0\n");
 
 	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
 	assert(rc == CLI_CONFIG_OK);

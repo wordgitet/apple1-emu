@@ -60,7 +60,8 @@ mock_alloc_slot(const char *path)
 	for (i = 0; i < MOCK_MAX_FILES; i++) {
 		if (mock_files[i].used == 0) {
 			mock_files[i].used = 1;
-			port_strncpy(mock_files[i].path, path,
+			port_strncpy(mock_files[i].path,
+			    path,
 			    sizeof(mock_files[i].path));
 			mock_files[i].size = 0;
 			return (i);
@@ -220,7 +221,10 @@ mock_vfs_seek(port_file_t f, int32_t offset, int whence)
 }
 
 static int
-mock_vfs_write(port_file_t f, const void *buf, port_size_t sz, port_size_t *nwritten)
+mock_vfs_write(port_file_t f,
+    const void *buf,
+    port_size_t sz,
+    port_size_t *nwritten)
 {
 	struct mock_handle *mh;
 	struct mock_slot *slot;

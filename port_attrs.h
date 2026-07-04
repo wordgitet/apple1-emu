@@ -15,8 +15,8 @@
 #if defined(__MSDOS__) || defined(MSDOS) || defined(__dos__)
 typedef unsigned int port_size_t;
 #elif defined(__x86_64__) || defined(__aarch64__) || defined(__mips64__) || \
-    defined(__riscv) || defined(__powerpc64__) || defined(__s390x__) || \
-    defined(__ia64__) || defined(_M_X64) || defined(_M_AMD64) || \
+    defined(__riscv) || defined(__powerpc64__) || defined(__s390x__) ||     \
+    defined(__ia64__) || defined(_M_X64) || defined(_M_AMD64) ||            \
     defined(__LP64__) || defined(_LP64)
 typedef unsigned long port_size_t;
 #else

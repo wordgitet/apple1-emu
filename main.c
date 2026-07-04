@@ -134,21 +134,26 @@ print_usage(const char *prog)
 		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 		  "  -l <file>@<hex>      Load binary at hex address\n"
 		  "  -c                   Cap emulation speed to 1.023 MHz\n"
-		  "  -u                   Run uncapped (as fast as host allows)\n"
+		  "  -u                   Run uncapped (as fast as host "
+		  "allows)\n"
 		  "  -p                   Disable PIA I/O throttling\n"
 		  "  -d                   Emulate DRAM refresh cycle stealing\n"
 		  "  -b                   Emulate keyboard bounce\n"
 		  "  -s                   Disable cold-boot RAM randomisation\n"
 		  "  -F, --flat-bus       Map 0x0000-0xFFFF as plain RAM\n"
-		  "  -H                   Headless mode (no terminal rendering)\n"
+		  "  -H                   Headless mode (no terminal "
+		  "rendering)\n"
 		  "  -g                   Enable debugger (pauses on start)\n",
-	    prog, prog);
+	    prog,
+	    prog);
 	cli_error("  -t                   Enable CPU trace to stdout\n"
 		  "  -w <txt>             Load Woz Monitor text file\n"
 		  "  -a <rom>             Load ACI cassette card ROM\n"
 		  "  -e <wav>             Load WAV tape for ACI playback\n"
-		  "  -E <wav>             Save recorded ACI tape to WAV on exit\n"
-		  "  -B <baud>            Emulate terminal baud rate (e.g. 1200)\n"
+		  "  -E <wav>             Save recorded ACI tape to WAV on "
+		  "exit\n"
+		  "  -B <baud>            Emulate terminal baud rate (e.g. "
+		  "1200)\n"
 		  "  -k <rom>             Load Krusader assembler ROM\n"
 		  "  -h                   Show this help\n");
 #else
@@ -421,10 +426,8 @@ main(int argc, char *argv[])
 		}
 
 		cli_config_init_defaults(&cfg);
-		cfg_rc = load_config_file(config_path,
-		    &cfg,
-		    errbuf,
-		    sizeof(errbuf));
+		cfg_rc =
+		    load_config_file(config_path, &cfg, errbuf, sizeof(errbuf));
 		if (cfg_rc == CLI_CONFIG_PARSE) {
 			cli_error("Error: config '%s': %s\n",
 			    config_path,
@@ -958,7 +961,8 @@ main(int argc, char *argv[])
 		}
 
 		/* Speed throttle (capped mode) */
-		if (opt_uncapped == false && cycle_accumulator >= CYCLES_PER_MS) {
+		if (opt_uncapped == false &&
+		    cycle_accumulator >= CYCLES_PER_MS) {
 			uint32_t current_time;
 			uint32_t elapsed_us;
 			uint32_t expected_us;

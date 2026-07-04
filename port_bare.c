@@ -55,7 +55,10 @@ bare_vfs_seek(port_file_t f, int32_t offset, int whence)
 }
 
 static int
-bare_vfs_write(port_file_t f, const void *buf, port_size_t sz, port_size_t *nwritten)
+bare_vfs_write(port_file_t f,
+    const void *buf,
+    port_size_t sz,
+    port_size_t *nwritten)
 {
 	(void)f;
 	(void)buf;

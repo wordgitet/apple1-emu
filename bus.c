@@ -278,10 +278,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				/* run command */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
-					val = (uint8_t)(
-					    (hex_val(cleaned[hex_start + j])
-						  << 4) |
-					    hex_val(cleaned[hex_start + j + 1]));
+					val = (uint8_t)((hex_val(
+							     cleaned[hex_start +
+								 j])
+							    << 4) |
+					    hex_val(
+						cleaned[hex_start + j + 1]));
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
 						bus->ram[bus_translate_ram_address(
@@ -312,10 +314,12 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 				/* Address change (and possibly some data bytes before it in merged strings) */
 				data_len = hex_len > 4 ? hex_len - 4 : 0;
 				for (j = 0; j + 1 < data_len; j += 2) {
-					val = (uint8_t)(
-					    (hex_val(cleaned[hex_start + j])
-						  << 4) |
-					    hex_val(cleaned[hex_start + j + 1]));
+					val = (uint8_t)((hex_val(
+							     cleaned[hex_start +
+								 j])
+							    << 4) |
+					    hex_val(
+						cleaned[hex_start + j + 1]));
 					if (bus_is_ram_address(bus,
 						current_addr) != 0) {
 						bus->ram[bus_translate_ram_address(
@@ -341,8 +345,8 @@ bus_load_wozmon_txt_buf(struct bus *bus,
 
 			/* Data bytes */
 			for (j = 0; j + 1 < hex_len; j += 2) {
-				val = (uint8_t)(
-				    (hex_val(cleaned[hex_start + j]) << 4) |
+				val = (uint8_t)((hex_val(cleaned[hex_start + j])
+						    << 4) |
 				    hex_val(cleaned[hex_start + j + 1]));
 				if (bus_is_ram_address(bus, current_addr) !=
 				    0) {

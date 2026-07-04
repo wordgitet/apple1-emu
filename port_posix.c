@@ -1,6 +1,5 @@
-#include "port_posix_inc.h"
 #include "port.h"
-
+#include "port_posix_inc.h"
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -13,8 +12,6 @@
 #ifdef __USLC__
 #include <sys/time.h>
 #endif
-
-
 
 char *
 port_strdup(const char *str)
@@ -46,8 +43,7 @@ port_gettime_us(void)
 	struct timeval tv;
 
 	if (gettimeofday(&tv, NULL) == 0) {
-		return ((uint32_t)tv.tv_sec * 1000000 +
-		    (uint32_t)tv.tv_usec);
+		return ((uint32_t)tv.tv_sec * 1000000 + (uint32_t)tv.tv_usec);
 	}
 	return (0);
 #else
@@ -317,7 +313,10 @@ posix_vfs_seek(port_file_t f, int32_t offset, int whence)
 }
 
 static int
-posix_vfs_write(port_file_t f, const void *buf, port_size_t sz, port_size_t *nwritten)
+posix_vfs_write(port_file_t f,
+    const void *buf,
+    port_size_t sz,
+    port_size_t *nwritten)
 {
 	size_t w;
 
