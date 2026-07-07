@@ -87,17 +87,10 @@ HOST ?= posix
 amalgamation:
 	python3 tools/amalgamate.py
 
-amalgamation-dos:
-	python3 tools/amalgamate.py --port port_msdos.c --term term_dos.c
-
-amalgamation-win:
-	python3 tools/amalgamate.py --port port_win.c --term term_ansi.c
-
-amalgamation-plan9:
-	python3 tools/amalgamate.py --port port_plan9.c --term term_vt100.c
-
-amalgamation-uw:
-	python3 tools/amalgamate.py
+amalgamation-dos: amalgamation
+amalgamation-win: amalgamation
+amalgamation-plan9: amalgamation
+amalgamation-uw: amalgamation
 
 single:
 	@case "$(HOST)" in \
@@ -148,7 +141,7 @@ check-single-uw: amalgamation-uw
 	@echo "PASS: UnixWare amalgamation links"
 	@rm -f apple1_uw_amal_test
 
-DOS_CC ?= i586-pc-msdosdjgpp-gcc
+DOS_CC ?= $(shell which i586-pc-msdosdjgpp-gcc 2>/dev/null || which i686-pc-msdosdjgpp-gcc 2>/dev/null || echo i586-pc-msdosdjgpp-gcc)
 DOS_CFLAGS = -O2 -Wall -std=gnu99 -D__MSDOS__ -DAPPLE1_OMIT_CHARMAP \
              -DAPPLE1_PORT_MSDOS -DAPPLE1_TERM_DOS -march=i386 -mtune=i386
 
