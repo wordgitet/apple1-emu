@@ -149,7 +149,7 @@ term_init(void)
 
 	for (y = 0; y < 24; y++) {
 		for (x = 0; x < 40; x++) {
-			vram[y][x] = 0x20;
+			vram[y][x] = ((x + y) & 1) ? 0x5F : 0x00;
 		}
 	}
 	cursor_x = 0;
