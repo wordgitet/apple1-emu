@@ -88,6 +88,13 @@ port_term_write_buf(const char *buf, port_size_t n)
 	port_size_t i;
 
 	for (i = 0; i < n; i++) {
+		if (buf[i] == '\n') {
+#if defined(__WATCOMC__) && !defined(_M_I86)
+			msdos_putc('\r');
+#else
+			putch('\r');
+#endif
+		}
 #if defined(__WATCOMC__) && !defined(_M_I86)
 		msdos_putc(buf[i]);
 #else
