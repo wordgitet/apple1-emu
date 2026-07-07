@@ -45,6 +45,9 @@
 #ifdef APPLE1_PORT_OS2
 #include "port_os2.c"
 #else
+#ifdef APPLE1_PORT_NSPIRE
+#include "port_nspire.c"
+#else
 #ifdef APPLE1_PORT_VXWORKS
 #include "port_vxworks.c"
 #else
@@ -79,6 +82,9 @@
 #else
 #ifdef __os2__
 #include "port_os2.c"
+#else
+#ifdef __TINSPIRE__
+#include "port_nspire.c"
 #else
 #ifdef __RTP__
 #include "port_vxworks.c"
@@ -120,6 +126,8 @@
 #include "port_posix.c"
 #else
 #include "port_bare.c"
+#endif
+#endif
 #endif
 #endif
 #endif

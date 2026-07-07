@@ -20,6 +20,23 @@
 #endif
 #endif
 
+#ifdef APPLE1_PORT_NSPIRE
+#ifndef __TINSPIRE__
+#define __TINSPIRE__
+#endif
+#endif
+
+#ifdef __TINSPIRE__
+#include <stdint.h>
+#define uint8_t uint8_t
+#define int8_t int8_t
+#define uint16_t uint16_t
+#define int16_t int16_t
+#define uint32_t uint32_t
+#define int32_t int32_t
+#endif
+
+
 #include "port_stdarg.h"
 
 #ifdef __USLC__

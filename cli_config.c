@@ -84,20 +84,31 @@ cli_path_is_config_file(const char *path)
 {
 	port_size_t len;
 	const char *suf;
+	int i;
 
-	if (path == NULL) {
+	if (path == NULL)
 		return (0);
-	}
 	len = port_strlen(path);
-	if (len < 5) {
-		return (0);
+	if (len >= 9) {
+		suf = path + len - 9;
+		if (port_tolower((unsigned char)suf[0]) == '.' &&
+		    port_tolower((unsigned char)suf[1]) == 'c' &&
+		    port_tolower((unsigned char)suf[2]) == 'o' &&
+		    port_tolower((unsigned char)suf[3]) == 'n' &&
+		    port_tolower((unsigned char)suf[4]) == 'f' &&
+		    port_tolower((unsigned char)suf[5]) == '.' &&
+		    port_tolower((unsigned char)suf[6]) == 't' &&
+		    port_tolower((unsigned char)suf[7]) == 'n' &&
+		    port_tolower((unsigned char)suf[8]) == 's')
+			return (1);
 	}
-	suf = path + len - 5;
-	if (port_tolower((unsigned char)suf[0]) == '.' &&
-	    port_tolower((unsigned char)suf[1]) == 'c' &&
-	    port_tolower((unsigned char)suf[2]) == 'o' &&
-	    port_tolower((unsigned char)suf[3]) == 'n' &&
-	    port_tolower((unsigned char)suf[4]) == 'f') {
+	if (len >= 5) {
+		suf = path + len - 5;
+		for (i = 0; i < 5; i++) {
+			if (port_tolower((unsigned char)suf[i]) !=
+			    (unsigned char)".conf"[i])
+				return (0);
+		}
 		return (1);
 	}
 	return (0);

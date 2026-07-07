@@ -4,9 +4,9 @@ AM_CFLAGS = -Wall -Wextra -std=c89
 # Included by port.c / term.c — not separate translation units.
 PORT_SHIM = port_string.c port_posix.c port_win.c port_msdos.c port_plan9.c \
             port_freertos.c port_zephyr.c port_bare.c port_os2.c \
-            port_vxworks.c port_tcc_va.c
+            port_vxworks.c port_tcc_va.c port_nspire.c
 
-TERM_SHIM = term_ansi.c term_dos.c term_vt100.c
+TERM_SHIM = term_ansi.c term_dos.c term_vt100.c term_nspire.c
 
 CORE_SRC = cpu.c bus.c io.c aci.c krusader.c disasm.c dbg.c
 CORE_NO_IO = cpu.c bus.c aci.c krusader.c disasm.c dbg.c
@@ -56,6 +56,7 @@ EXTRA_DIST = $(PORT_SHIM) $(TERM_SHIM) port_attrs.h port_stdarg.h \
              port_posix_inc.h mkfile Makefile.msc Makefile.uw \
              tools/amalgamate.py tools/amalgamate_plan9.awk \
              tools/amalgamate_unixware.awk \
+             main_nspire.c \
              tests/term_dummy.c tests/test_cpu.c tests/test_aci.c \
              tests/test_dualram.c tests/test_bus.c tests/test_tomharte.c \
              tests/test_interrupts.c tests/test_vfs.c tests/test_config.c \
@@ -247,12 +248,76 @@ freertos-main.o: main.c
 	$(CC) $(FREERTOS_CFLAGS) -c -o $@ main.c
 
 
+# ---------------------------------------------------------------------------
+# TI-Nspire (Ndless) build
+#
+#   make nspire
+#   make nspire NDLESS_SDK=/path/to/ndless-sdk
+#
+# Requires nspire-gcc, nspire-ld, genzehn, make-prg in PATH (or NDLESS_SDK/bin).
+# Output: apple1.tns  — copy to /documents/ndless/ on the calculator.
+# Config: /documents/ndless/apple1.conf.tns  (optional, uses defaults if absent).
+# ---------------------------------------------------------------------------
+
+NDLESS_SDK ?= /home/mario/git/Ndless/ndless-sdk
+NSPIRE_BIN  = $(NDLESS_SDK)/bin
+NSPIRE_GCC  = $(NSPIRE_BIN)/nspire-gcc
+NSPIRE_LD   = $(NSPIRE_BIN)/nspire-ld
+GENZEHN     = $(NSPIRE_BIN)/genzehn
+MAKEPRG     = $(NSPIRE_BIN)/make-prg
+
+export PATH := $(NSPIRE_BIN):$(PATH)
+
+NSPIRE_CFLAGS = -Wall -Wextra -std=gnu89 -marm -Os \
+	-DAPPLE1_PORT_NSPIRE -DAPPLE1_TERM_NSPIRE \
+	-DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI \
+	-DAPPLE1_OMIT_KRUSADER -DAPPLE1_OMIT_DISASM \
+	-DAPPLE1_OMIT_CHARMAP -DAPPLE1_OMIT_PIA_THROTTLE \
+	-DAPPLE1_DEFAULT_RAM_KB=8 \
+	-DAPPLE1_STATIC_RAM_SIZE=65536 \
+	-I.
+
+NSPIRE_OBJS = nspire-port.o nspire-term.o nspire-bus.o nspire-cpu.o nspire-io.o \
+	nspire-cli_config.o nspire-main.o
+
+nspire: apple1.tns
+
+apple1.tns: apple1.elf
+	$(GENZEHN) --input apple1.elf --output apple1.zehn --name "Apple1"
+	$(MAKEPRG) apple1.zehn apple1.tns
+	@rm -f apple1.zehn
+
+apple1.elf: $(NSPIRE_OBJS)
+	$(NSPIRE_LD) $(NSPIRE_OBJS) -o apple1.elf -Wl,--gc-sections
+
+nspire-port.o: port.c $(PORT_SHIM) font5x7.h
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ port.c
+
+nspire-term.o: term.c $(TERM_SHIM) term_apple1.h font5x7.h
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ term.c
+
+nspire-bus.o: bus.c
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ bus.c
+
+nspire-cpu.o: cpu.c
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ cpu.c
+
+nspire-io.o: io.c
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ io.c
+
+nspire-cli_config.o: cli_config.c
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ cli_config.c
+
+nspire-main.o: main_nspire.c term_nspire.c
+	$(NSPIRE_GCC) $(NSPIRE_CFLAGS) -c -o $@ main_nspire.c
+
 clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
 	-rm -f apple1_freertos freertos-*.o
 	-rm -f apple1.vxe apple1_full.vxe
 	-rm -f /tmp/apple1-vx-*.o
+	-rm -f apple1.tns apple1.elf apple1.zehn nspire-*.o
 
 distclean-local:
 	-rm -f Makefile.in aclocal.m4 configure
@@ -300,4 +365,4 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
         clang-format clang-format-check \
         single single-posix single-dos single-watcom single-win single-plan9 \
         single-uw dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
-        apple1.exe cwsdpmi.exe tcc pcc lacc freertos
+        apple1.exe cwsdpmi.exe tcc pcc lacc freertos nspire

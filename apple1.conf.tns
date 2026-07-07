@@ -1,0 +1,24 @@
+# Apple-1 emulator — TI-Nspire config
+#
+# Install as:  <documents>/ndless/apple1.conf.tns
+# (same folder as apple1.tns)
+#
+# Ndless file transfer only accepts the .tns extension.  You can rename a
+# raw ROM dump (e.g. basic.bin -> basic.tns) for upload; the emulator reads
+# the file bytes as-is via fopen() — it is not a Ndless program unless you
+# built it with genzehn/make-prg.
+#
+# Paths are relative to apple1.tns unless you use /documents/...
+
+# Woz Monitor: omit rom = to use the built-in 256-byte ROM.
+# rom = roms/wozmon.tns
+
+ram_kb = 8
+
+# Integer BASIC (4096 bytes) at $E000-$EFFF.
+load = roms/basic.tns @ E000
+# Absolute path also works:
+# load = /documents/ndless/roms/basic.tns @ E000
+
+# speed_cap = yes
+# dram_refresh = no

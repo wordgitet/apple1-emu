@@ -76,4 +76,10 @@ POM1/
 /apple1.c
 /apple1.h
 
+# TI-Nspire (Ndless) build artifacts
+/apple1.tns
+/apple1.elf
+/apple1.zehn
+/nspire-*.o
+
 

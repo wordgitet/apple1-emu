@@ -7,6 +7,9 @@
 #include "port.h"
 #include "term_apple1.h"
 
+#ifdef APPLE1_TERM_NSPIRE
+#include "term_nspire.c"
+#else
 #ifdef APPLE1_TERM_VT100
 #include "term_vt100.c"
 #else
@@ -37,6 +40,7 @@
 #include "term_vt100.c"
 #else
 #include "term_ansi.c"
+#endif
 #endif
 #endif
 #endif
