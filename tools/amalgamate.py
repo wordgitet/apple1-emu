@@ -60,8 +60,8 @@ C_SOURCES = [
 
 # Public headers that go into apple1.h (order matters for deps)
 PUBLIC_HEADERS = [
-    "port.h",
     "port_stdarg.h",
+    "port.h",
     "bus.h",
     "cpu.h",
     "dbg.h",
@@ -93,6 +93,11 @@ INTERNAL_HEADERS = {
     "term_ansi.c",
     "term_dos.c",
     "term_vt100.c",
+    "port_posix_inc.h",
+    "port_attrs.h",
+    "port_stdarg_libc.h",
+    "apple1limit.h",
+    "apple1limit_checks.h",
 }
 
 # ---------------------------------------------------------------------------
@@ -187,18 +192,9 @@ def build(srcdir, outdir, port_sources, term_src):
             print("WARNING: header not found: {}".format(path), file=sys.stderr)
             continue
         h_parts.append("\n/* ======== begin {f} ======== */\n".format(f=hdr))
-        # Strip the header guard and local includes we've already emitted
-        lines = read(path).splitlines(keepends=True)
-        for line in lines:
-            m = LOCAL_INCLUDE_RE.match(line)
-            if m:
-                inc_base = os.path.basename(m.group(1))
-                if inc_base in already_included:
-                    h_parts.append(
-                        "/* amalgamation: omit #include \"{h}\" */\n"
-                        .format(h=m.group(1)))
-                    continue
-            h_parts.append(line)
+        text, already_included = embed_file(
+            srcdir, hdr, already_included, public_header_set)
+        h_parts.append(text)
         already_included.add(hdr)
         h_parts.append("/* ======== end {f} ======== */\n".format(f=hdr))
 

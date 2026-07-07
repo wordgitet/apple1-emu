@@ -26,7 +26,7 @@ apple1.c apple1.h: $(AMALG_AWK)
 
 amalg: apple1.c apple1.h
 
-single: apple1.c apple1.h
+single:
 	$(CC) $(CFLAGS) -o apple1 apple1.c
 
 clean:
