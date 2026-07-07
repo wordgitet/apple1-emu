@@ -1,51 +1,57 @@
 Apple-1 Emulator Documentation
 ================================
 
-Portable, terminal-based Apple-1 emulator written in C. Core emulation code talks
-only to port.h; platform I/O lives in port_*.c shims (POSIX, MS-DOS, Windows,
-and others).
+Portable Apple-1 emulator in C.  Core code talks only to port.h; each host
+gets a port_*.c shim and a term_*.c display backend.
 
-Quick start
------------
+Quick start (POSIX)
+-------------------
 
-    make                  # build ./apple1
-    make check            # run unit tests
-    cp apple1.conf.example apple1.conf   # optional: edit and run with config
+    ./configure && make
+    make check
     ./apple1 -r wozmon.bin
 
-Headless CPU test (no terminal UI):
+Headless CPU test:
 
     ./apple1 -H -F wozmon.bin
 
-Documentation index
--------------------
+Documentation map
+-----------------
 
-    building.md       Makefile targets, amalgamation, cross-compilation (MS-DOS), tests
-    configuration.md  Compile-time limits, APPLE1_OMIT_* flags, port layer, malloc modes
-    usage.md          Command-line options, config files, keyboard shortcuts, examples
-    debugger.md       Interactive debugger commands
-    hardware.md       Memory map, PIA, expansion cards, timing
-    plan9-terminal.md Plan 9 / 9front console model (why ANSI display fails)
+Core (all hosts)
+    usage.md            CLI options, .conf files, keyboard (POSIX/MS-DOS)
+    configuration.md    Compile-time limits, APPLE1_OMIT_*, port registry
+    hardware.md         Memory map, PIA, expansion cards
+    debugger.md         Interactive debugger (-g)
 
-Project layout (essentials)
----------------------------
+Build
+    building.md         Autotools, tests, amalgamation, cross-compiles
 
-    main.c              CLI entry point
-    cpu.c bus.c         6502 CPU and system bus
-    term_ansi.c         Terminal UI (ANSI escapes — POSIX/macOS/Linux)
-    term_dos.c          Terminal UI (conio — MS-DOS/DJGPP)
-    port.h              Portability interface (types + shims)
+Platforms (pick your host)
+    platforms.md        All ports — POSIX, DOS, Windows, Plan 9, Nspire,
+                          VxWorks, FreeRTOS, UnixWare, bare metal
+    FREERTOS_DEMO.md    FreeRTOS Posix_GCC simulator
+    VXWORKS_RTP.md      VxWorks 7 RTP on QEMU
+
+Deprecated
+    manual.md           Legacy GUI-era index — do not use
+
+Project layout
+--------------
+
+    main.c              POSIX / Windows / Plan 9 / MS-DOS CLI entry
+    main_nspire.c       TI-Nspire entry (no argv parsing)
+    cpu.c  bus.c        6502 and system bus
+    port.c  term.c      Select port_*.c / term_*.c at compile time
     port_string.c       Freestanding string/format helpers (all builds)
-    port_posix.c        POSIX platform implementation (default on Unix)
-    port_msdos.c        MS-DOS platform implementation
     apple1limit.h       Compile-time limits and defaults
     tools/amalgamate.py Single-file apple1.c generator
 
-What this emulator is (and is not)
-------------------------------------
+What this is
+------------
 
-Is: a cycle-oriented Apple-1 model with Woz Monitor, optional ACI cassette
-card, optional Krusader ROM, CLI debugger, and a 40×24 terminal display.
+Cycle-oriented Apple-1 with Woz Monitor, optional ACI cassette card, optional
+Krusader ROM, CLI debugger, and a 40-column terminal display.
 
-Is not: the old SDL3 GUI build (removed). All interaction is via the terminal
-and command line.
+Not included: the old SDL3 GUI (removed).  All interaction is terminal or
+host-specific UI (Nspire LCD, DOS conio, etc.).

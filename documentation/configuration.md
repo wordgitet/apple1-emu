@@ -119,6 +119,7 @@ casual `cc apple1.c` builds).
 | `APPLE1_PORT_PLAN9` | `port_plan9.c` | `__PLAN9__`, `__plan9__` |
 | `APPLE1_PORT_OS2` | `port_os2.c` | `__OS2__`, `__os2__` |
 | `APPLE1_PORT_VXWORKS` | `port_vxworks.c` | `__RTP__`, `_WRS_KERNEL` (wr-cc -rtp) |
+| `APPLE1_PORT_NSPIRE` | `port_nspire.c` | (none — explicit `-D` only) |
 | `APPLE1_PORT_FREERTOS` | `port_freertos.c` | POSIX host + `-D`; see `documentation/FREERTOS_DEMO.md` |
 | `APPLE1_PORT_ZEPHYR` | `port_zephyr.c` | (none — explicit `-D` only) |
 | `APPLE1_PORT_BARE` | `port_bare.c` | fallback when host is unknown |
@@ -146,7 +147,8 @@ docs](https://9p.io/sys/doc/comp.html)).  Shared sources (`main.c`,
 |-------|-------------|---------------------|
 | `APPLE1_TERM_ANSI` | `term_ansi.c` | default (non-DOS, non-Plan 9) |
 | `APPLE1_TERM_DOS` | `term_dos.c` | MS-DOS |
-| `APPLE1_TERM_VT100` | `term_vt100.c` | Plan 9 / 9front |
+| `APPLE1_TERM_VT100` | `term_vt100.c` | Plan 9 / 9front, UnixWare, VxWorks RTP |
+| `APPLE1_TERM_NSPIRE` | `term_nspire.c` | TI-Nspire (Ndless) — explicit `-D` only |
 
 CI-maintained paths: **`port_posix.c`** + **`term_ansi.c`**, and **`port_msdos.c`**
 + **`term_dos.c`**. Other ports are experimental or stub implementations.
@@ -189,7 +191,8 @@ blobs) on bare-metal targets.
 |------|-------|----------|
 | `term_ansi.c` | `APPLE1_TERM_ANSI` | ANSI terminal (macOS Terminal, Linux, iTerm, Windows) |
 | `term_dos.c` | `APPLE1_TERM_DOS` | MS-DOS (`make dos-djgpp` or `make dos-watcom`) |
-| `term_vt100.c` | `APPLE1_TERM_VT100` | Plan 9 teletype console — see `documentation/plan9-terminal.md` |
+| `term_vt100.c` | `APPLE1_TERM_VT100` | VT100 cursor positioning (Plan 9, UnixWare, VxWorks) |
+| `term_nspire.c` | `APPLE1_TERM_NSPIRE` | TI-Nspire RGB565 LCD |
 
 ### Platform port files
 
@@ -201,6 +204,7 @@ blobs) on bare-metal targets.
 | `port_plan9.c` | `APPLE1_PORT_PLAN9` | Plan 9 / 9front |
 | `port_os2.c` | `APPLE1_PORT_OS2` | OS/2 (includes POSIX subset) |
 | `port_vxworks.c` | `APPLE1_PORT_VXWORKS` | VxWorks 7 RTP — see `documentation/VXWORKS_RTP.md` |
+| `port_nspire.c` | `APPLE1_PORT_NSPIRE` | TI-Nspire (Ndless) |
 | `port_freertos.c` | `APPLE1_PORT_FREERTOS` | FreeRTOS Posix_GCC simulator (POSIX host) |
 | `port_zephyr.c` | `APPLE1_PORT_ZEPHYR` | Zephyr RTOS (stub) |
 | `port_bare.c` | `APPLE1_PORT_BARE` | Bare-metal fallback (no filesystem) |

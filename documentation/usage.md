@@ -1,8 +1,8 @@
 # Usage
 
-The emulator runs as a **terminal application**. It renders a 40×24 character
-Apple-1 display in the terminal (unless `-H` headless mode is used) and accepts
-keyboard input through the PIA.
+The emulator runs as a **terminal application** on POSIX, MS-DOS, and Windows.
+Other hosts (Nspire LCD, VxWorks serial, Plan 9 console) use their own UI —
+see **[platforms.md](platforms.md)**.
 
 ```bash
 ./apple1 [options] [flat_binary]

@@ -7,8 +7,10 @@ After cloning:
 ./configure
 make              # produces ./apple1
 make check        # nine unit tests
-make check-single # verify amalgamation links (posix)
 ```
+
+**Other hosts** (MS-DOS, Windows, Plan 9, Nspire, VxWorks, FreeRTOS, UnixWare):
+see **[platforms.md](platforms.md)** for the full port index and build commands.
 
 `configure` and `Makefile.in` are committed; `Makefile` is generated locally by
 `./configure` and is not in git.
@@ -391,6 +393,8 @@ For non-POSIX platforms, use the alternatives below.
 
 ### Non-POSIX platform alternatives
 
+See **[platforms.md](platforms.md)** for a single index of every port.
+
 **Windows (MSVC):**
 ```bash
 nmake -f Makefile.msc
@@ -405,8 +409,9 @@ nmake -f Makefile.msc
 **UnixWare 7 / OpenUNIX:** `make -f Makefile.uw` on the target (native `cc` +
 `make`).  See [UnixWare / OpenUNIX](#unixware--openunix) above.
 
-**Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr):**
-- **FreeRTOS (POSIX simulator):** `make freertos` for a host binary; full scheduler test via `documentation/FREERTOS_DEMO.md` and `freertos_demo_test.sh` from `FreeRTOS/Demo/Posix_GCC`.
-- **VxWorks 7 RTP (QEMU SDK):** `source path/to/vxworks/sdk/sdkenv.sh`, then `bash vxworks_rtp_build.sh`; see `documentation/VXWORKS_RTP.md`.
-- **Plan 9 / 9front:** `dircp` tree to `$home`, `rm -f apple1`, then `mk all`. Run `./6.out` (no `vt` needed). Headless: `./6.out -H`. See `documentation/plan9-terminal.md`.
-- Other ports: amalgamation with explicit flags, e.g. `python3 tools/amalgamate.py --port port_plan9.c` and `-DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100`
+**Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr, TI-Nspire):**
+- **TI-Nspire:** `make nspire` — see [platforms.md](platforms.md#ti-nspire-ndless)
+- **FreeRTOS (POSIX simulator):** `make freertos` — [FREERTOS_DEMO.md](FREERTOS_DEMO.md)
+- **VxWorks 7 RTP (QEMU SDK):** `bash vxworks_rtp_build.sh` — [VXWORKS_RTP.md](VXWORKS_RTP.md)
+- **Plan 9 / 9front:** `mk all` — [plan9-terminal.md](plan9-terminal.md)
+- Zephyr / OS/2 / bare metal: amalgamation with explicit `-DAPPLE1_PORT_*` flags
