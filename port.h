@@ -46,8 +46,8 @@
  */
 #ifdef APPLE1_PORT_PLAN9
 #ifndef APPLE1_PORT_PLAN9_APE
-#include <libc.h>
 #include <u.h>
+#include <libc.h>
 #endif
 #endif
 
@@ -128,17 +128,25 @@
 # endif
 #endif
 #ifndef INT64_TYPE
-# if defined(_MSC_VER) || defined(__BORLANDC__)
+# ifdef _MSC_VER
 #  define INT64_TYPE __int64
 # else
-#  define INT64_TYPE long long int
+#  ifdef __BORLANDC__
+#   define INT64_TYPE __int64
+#  else
+#   define INT64_TYPE long long int
+#  endif
 # endif
 #endif
 #ifndef UINT64_TYPE
-# if defined(_MSC_VER) || defined(__BORLANDC__)
+# ifdef _MSC_VER
 #  define UINT64_TYPE unsigned __int64
 # else
-#  define UINT64_TYPE unsigned long long int
+#  ifdef __BORLANDC__
+#   define UINT64_TYPE unsigned __int64
+#  else
+#   define UINT64_TYPE unsigned long long int
+#  endif
 # endif
 #endif
 
@@ -148,8 +156,11 @@ typedef UINT16_TYPE  u16;
 typedef INT16_TYPE   i16;
 typedef UINT32_TYPE  u32;
 typedef INT32_TYPE   i32;
+/* Plan 9 u.h already defines u64/i64; skip redeclaration. */
+#ifndef APPLE1_PORT_PLAN9
 typedef UINT64_TYPE  u64;
 typedef INT64_TYPE   i64;
+#endif
 
 #ifndef HAVE_UINT8_T
 typedef u8 uint8_t;
