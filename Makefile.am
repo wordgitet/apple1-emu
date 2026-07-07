@@ -187,8 +187,11 @@ apple1-djgpp.exe: dos-djgpp
 
 cwsdpmi.exe:
 	curl -L -o cwsdpmi.zip https://www.delorie.com/pub/djgpp/current/v2misc/csdpmi7b.zip
-	unzip -o cwsdpmi.zip cwsdpmi.exe
+	unzip -o cwsdpmi.zip bin/CWSDPMI.EXE
+	mv bin/CWSDPMI.EXE cwsdpmi.exe
+	rmdir bin
 	rm -f cwsdpmi.zip
+
 
 apple1.exe: dos-djgpp
 
