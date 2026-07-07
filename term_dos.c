@@ -133,6 +133,7 @@ term_init(void)
 	cursor_y = 0;
 
 	port_term_raw_enable();
+	dos_clrscr();
 	term_paint_poweron();
 	dos_set_cursor_visible(0);
 }
