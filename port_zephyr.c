@@ -128,7 +128,8 @@ zephyr_xReadLine(void *file, char *buf, port_size_t size)
 	return (0);
 }
 
-static struct port_vfs zephyr_vfs = { zephyr_xOpen,
+static struct port_vfs zephyr_vfs = { 1,
+	zephyr_xOpen,
 	zephyr_xClose,
 	zephyr_xRead,
 	zephyr_xSize,

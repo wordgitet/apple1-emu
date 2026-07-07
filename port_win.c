@@ -265,7 +265,8 @@ win_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs win_vfs = { win_xOpen,
+static struct port_vfs win_vfs = { 1,
+	win_xOpen,
 	win_xClose,
 	win_xRead,
 	win_xSize,

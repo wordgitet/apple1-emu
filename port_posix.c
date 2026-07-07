@@ -345,7 +345,8 @@ posix_vfs_read_line(port_file_t f, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs posix_vfs = { posix_vfs_open,
+static struct port_vfs posix_vfs = { 1,
+	posix_vfs_open,
 	posix_vfs_close,
 	posix_vfs_read,
 	posix_vfs_size,

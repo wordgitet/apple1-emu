@@ -316,7 +316,8 @@ plan9_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs plan9_vfs = { plan9_xOpen,
+static struct port_vfs plan9_vfs = { 1,
+	plan9_xOpen,
 	plan9_xClose,
 	plan9_xRead,
 	plan9_xSize,

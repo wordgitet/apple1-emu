@@ -1,6 +1,37 @@
 #ifndef PORT_H
 #define PORT_H
 
+#ifdef APPLE1_PORT_POSIX
+#include "port_posix_inc.h"
+#else
+#ifndef APPLE1_PORT_PLAN9
+#ifndef APPLE1_PORT_BARE
+#ifndef __MSDOS__
+#ifndef __OS2__
+#ifndef APPLE1_PORT_PLAN9_APE
+#ifndef APPLE1_PORT_WIN
+#ifndef _WIN32
+#ifndef _WIN64
+#ifndef APPLE1_PORT_ZEPHYR
+#ifndef APPLE1_PORT_FREERTOS
+#ifndef APPLE1_PORT_VXWORKS
+#ifndef APPLE1_PORT_NSPIRE
+#include "port_posix_inc.h"
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+
+
 /*
  * port.h -- Apple-1 emulator portability interface
  *
@@ -20,22 +51,124 @@
 #endif
 #endif
 
-#ifdef APPLE1_PORT_NSPIRE
-#ifndef __TINSPIRE__
-#define __TINSPIRE__
+#ifndef APPLE1_PORT_PLAN9
+#ifndef APPLE1_PORT_BARE
+#ifndef __MSDOS__
+#ifndef __OS2__
+#ifndef APPLE1_PORT_PLAN9_APE
+# ifndef HAVE_UINT8_T
+#  define HAVE_UINT8_T 1
+# endif
+# ifndef HAVE_INT8_T
+#  define HAVE_INT8_T 1
+# endif
+# ifndef HAVE_UINT16_T
+#  define HAVE_UINT16_T 1
+# endif
+# ifndef HAVE_INT16_T
+#  define HAVE_INT16_T 1
+# endif
+# ifndef HAVE_UINT32_T
+#  define HAVE_UINT32_T 1
+# endif
+# ifndef HAVE_INT32_T
+#  define HAVE_INT32_T 1
+# endif
+#endif
+#endif
+#endif
 #endif
 #endif
 
-#ifdef __TINSPIRE__
-#include <stdint.h>
-#define uint8_t uint8_t
-#define int8_t int8_t
-#define uint16_t uint16_t
-#define int16_t int16_t
-#define uint32_t uint32_t
-#define int32_t int32_t
+/* HAVE_UINT8_T is only set on hosted platforms that ship <stdint.h>. */
+#ifdef HAVE_UINT8_T
+# include <stdint.h>
 #endif
 
+#ifndef UINT8_TYPE
+# ifdef HAVE_UINT8_T
+#  define UINT8_TYPE uint8_t
+# else
+#  define UINT8_TYPE unsigned char
+# endif
+#endif
+#ifndef INT8_TYPE
+# ifdef HAVE_INT8_T
+#  define INT8_TYPE int8_t
+# else
+#  define INT8_TYPE signed char
+# endif
+#endif
+#ifndef UINT16_TYPE
+# ifdef HAVE_UINT16_T
+#  define UINT16_TYPE uint16_t
+# else
+#  define UINT16_TYPE unsigned short
+# endif
+#endif
+#ifndef INT16_TYPE
+# ifdef HAVE_INT16_T
+#  define INT16_TYPE int16_t
+# else
+#  define INT16_TYPE short
+# endif
+#endif
+#ifndef UINT32_TYPE
+# ifdef HAVE_UINT32_T
+#  define UINT32_TYPE uint32_t
+# else
+#  define UINT32_TYPE unsigned int
+# endif
+#endif
+#ifndef INT32_TYPE
+# ifdef HAVE_INT32_T
+#  define INT32_TYPE int32_t
+# else
+#  define INT32_TYPE int
+# endif
+#endif
+#ifndef INT64_TYPE
+# if defined(_MSC_VER) || defined(__BORLANDC__)
+#  define INT64_TYPE __int64
+# else
+#  define INT64_TYPE long long int
+# endif
+#endif
+#ifndef UINT64_TYPE
+# if defined(_MSC_VER) || defined(__BORLANDC__)
+#  define UINT64_TYPE unsigned __int64
+# else
+#  define UINT64_TYPE unsigned long long int
+# endif
+#endif
+
+typedef UINT8_TYPE   u8;
+typedef INT8_TYPE    i8;
+typedef UINT16_TYPE  u16;
+typedef INT16_TYPE   i16;
+typedef UINT32_TYPE  u32;
+typedef INT32_TYPE   i32;
+typedef UINT64_TYPE  u64;
+typedef INT64_TYPE   i64;
+
+#ifndef HAVE_UINT8_T
+typedef u8 uint8_t;
+#endif
+#ifndef HAVE_INT8_T
+typedef i8 int8_t;
+#endif
+#ifndef HAVE_UINT16_T
+typedef u16 uint16_t;
+#endif
+#ifndef HAVE_INT16_T
+typedef i16 int16_t;
+#endif
+#ifndef HAVE_UINT32_T
+typedef u32 uint32_t;
+#endif
+#ifndef HAVE_INT32_T
+typedef i32 int32_t;
+#endif
 
 #include "port_stdarg.h"
 
@@ -56,27 +189,6 @@
  *             (some old Cray/SPARC variants) is not supported.
  *   long  -- 32 bits on ILP32 / LLP64; 64 bits on LP64.
  */
-
-#ifndef __USLC__
-#ifndef uint8_t
-typedef unsigned char uint8_t;
-#endif
-#ifndef int8_t
-typedef signed char int8_t;
-#endif
-#ifndef uint16_t
-typedef unsigned short uint16_t;
-#endif
-#ifndef int16_t
-typedef signed short int16_t;
-#endif
-#ifndef uint32_t
-typedef unsigned int uint32_t;
-#endif
-#ifndef int32_t
-typedef signed int int32_t;
-#endif
-#endif /* !__USLC__ */
 
 #ifndef UINT8_MAX
 #define UINT8_MAX 255U
@@ -195,6 +307,9 @@ port_result_t
 port_mem_get_config(struct port_mem_methods *methods);
 #endif
 #endif
+
+void *
+port_malloc_zero(port_size_t sz);
 
 char *
 port_strdup(const char *str);
@@ -416,6 +531,8 @@ typedef void *port_file_t;
 #define PORT_FILE_INVALID ((void *)0)
 
 struct port_vfs {
+	int iVersion; /* Structure version number (currently 1). */
+
 	/*
      * open: open a file.  Returns an opaque handle on success,
      * PORT_FILE_INVALID on failure.

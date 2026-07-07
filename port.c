@@ -333,3 +333,16 @@ port_mem_get_config(struct port_mem_methods *methods)
 
 #endif /* APPLE1_CUSTOM_MALLOC */
 #endif /* APPLE1_ZERO_MALLOC */
+
+void *
+port_malloc_zero(port_size_t sz)
+{
+	void *p;
+
+	p = port_malloc(sz);
+	if (p != NULL) {
+		port_memset(p, 0, sz);
+	}
+	return (p);
+}
+

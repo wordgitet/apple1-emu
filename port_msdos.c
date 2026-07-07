@@ -236,7 +236,8 @@ msdos_xReadLine(void *file, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs msdos_vfs = { msdos_xOpen,
+static struct port_vfs msdos_vfs = { 1,
+	msdos_xOpen,
 	msdos_xClose,
 	msdos_xRead,
 	msdos_xSize,
