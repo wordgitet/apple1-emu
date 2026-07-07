@@ -50,13 +50,42 @@ port_sleep_us(uint32_t us)
 /* ================================================================== */
 
 static DWORD orig_console_mode;
-static int raw_mode_active = 0;
+static int win_raw_mode_active = 0;
+
+static void
+check_win_version(void)
+{
+	const char *msg;
+	DWORD major;
+	DWORD minor;
+	DWORD version;
+
+	version = GetVersion();
+	major = (DWORD)(LOBYTE(LOWORD(version)));
+	minor = (DWORD)(HIBYTE(LOWORD(version)));
+
+	if (major < 6 || (major == 6 && minor <= 1)) {
+		if (GetEnvironmentVariableA("ANSICON", NULL, 0) == 0 &&
+		    GetEnvironmentVariableA("ConEmuANSI", NULL, 0) == 0 &&
+		    GetEnvironmentVariableA("TERM", NULL, 0) == 0) {
+			msg = "\r\nERROR: Windows 7 or older detected without an ANSI-compatible terminal.\r\n"
+			    "The default command prompt on this version of Windows does not\r\n"
+			    "support native ANSI escapes.\r\n\r\n"
+			    "Please use a terminal emulator that supports ANSI escapes (e.g. ConEmu)\r\n"
+			    "or run the emulator through a console wrapper like ANSICON.\r\n\r\n";
+			port_term_write_buf(msg, port_strlen(msg));
+			exit(1);
+		}
+	}
+}
 
 void
 port_term_raw_enable(void)
 {
 	HANDLE h_out;
 	DWORD mode;
+
+	check_win_version();
 
 	h_out = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (h_out == INVALID_HANDLE_VALUE)
@@ -66,7 +95,7 @@ port_term_raw_enable(void)
 	mode = orig_console_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	if (SetConsoleMode(h_out, mode) == 0)
 		return;
-	raw_mode_active = 1;
+	win_raw_mode_active = 1;
 }
 
 void
@@ -74,12 +103,12 @@ port_term_raw_disable(void)
 {
 	HANDLE h_out;
 
-	if (raw_mode_active != 0) {
+	if (win_raw_mode_active != 0) {
 		h_out = GetStdHandle(STD_OUTPUT_HANDLE);
 		if (h_out != INVALID_HANDLE_VALUE) {
 			SetConsoleMode(h_out, orig_console_mode);
 		}
-		raw_mode_active = 0;
+		win_raw_mode_active = 0;
 	}
 }
 
@@ -147,6 +176,20 @@ port_signal_setup(port_sig_flag *flag)
 {
 	g_sig_flag = flag;
 	SetConsoleCtrlHandler(ctrl_handler, TRUE);
+}
+
+void
+port_signal_quit(void)
+{
+	if (g_sig_flag != NULL) {
+		*g_sig_flag = 1;
+	}
+}
+
+void
+port_exit(int code)
+{
+	exit(code);
 }
 
 /* ================================================================== */
