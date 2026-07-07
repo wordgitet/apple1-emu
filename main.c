@@ -762,23 +762,11 @@ main(int argc, char *argv[])
 
 	/* Debugger init */
 	cpu_init(&cpu, &bus);
-	/* Headless runs immediately; -g should break at the Woz Monitor
-	 * entry point, not power-on garbage at $0000.  Interactive play
-	 * still waits for Ctrl+R (authentic no-reset power-on), except on
-	 * Plan 9 where /dev/cons line buffering would block before reset,
-	 * and on VxWorks RTP where the cmd shell does not deliver raw
-	 * Ctrl+R to the process unless launched with "rtp exec -i". */
-#ifdef APPLE1_PORT_PLAN9
-	cpu_reset(&cpu);
-#else
-#ifdef APPLE1_PORT_VXWORKS
-	cpu_reset(&cpu);
-#else
+	/* Headless/debug runs reset immediately; interactive play waits
+	 * for Ctrl+R (authentic Apple-1 power-on behaviour). */
 	if (opt_headless != false || opt_debug != false) {
 		cpu_reset(&cpu);
 	}
-#endif
-#endif
 #ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
 	g_dbg = &dbg;
