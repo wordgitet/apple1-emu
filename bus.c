@@ -72,8 +72,12 @@ bus_init(struct bus *bus, uint8_t *ram_buf, uint32_t ram_size)
 	 * Initialize PIA control registers as Woz Monitor does:
 	 * KBD control: 0xA7 (input with handshake)
 	 * DSP control: 0xA7 (output with handshake, bit 2 set for data mode)
+	 *
+	 * Bit 7 of kbd_control is the CA1 strobe (read-only); it must start
+	 * clear — only bus->pia.kbd_control |= 0x80 in bus_update_keyboard()
+	 * may assert it when a key is ready.
 	 */
-	bus->pia.kbd_control = 0xA7;
+	bus->pia.kbd_control = 0x27;
 	bus->pia.dsp_control = 0xA7;
 
 	return (PORT_OK);
