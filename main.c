@@ -260,13 +260,14 @@ cleanup_cards(struct bus *bus, const char *save_tape_path)
 				}
 			}
 			aci_free(bus->cards[i]);
+			bus->cards[i] = NULL;
 		}
 #endif
-	}
-	for (i = 0; i < bus->num_cards; i++) {
 #ifndef APPLE1_OMIT_KRUSADER
-		if (port_strcmp(bus->cards[i]->name, "Krusader") == 0) {
+		if (bus->cards[i] != NULL &&
+		    port_strcmp(bus->cards[i]->name, "Krusader") == 0) {
 			krusader_free(bus->cards[i]);
+			bus->cards[i] = NULL;
 		}
 #else
 		(void)0;
@@ -331,6 +332,17 @@ main(int argc, char *argv[])
 	char *save_tape_path;
 	char *tape_path;
 	char *wozmon_txt_path;
+
+	/* Initialize all path pointers to NULL */
+	aci_path = NULL;
+	bin_path = NULL;
+	config_path = NULL;
+	flat_bin_path = NULL;
+	krusader_path = NULL;
+	rom_path = NULL;
+	save_tape_path = NULL;
+	tape_path = NULL;
+	wozmon_txt_path = NULL;
 
 	g_argv0 = argv[0];
 
@@ -978,6 +990,30 @@ main(int argc, char *argv[])
 
 	cleanup_cards(&bus, save_tape_path);
 	bus_free(&bus);
+	
+	/* Free allocated path strings */
+	if (rom_path != NULL) {
+		port_free(rom_path);
+	}
+	if (bin_path != NULL) {
+		port_free(bin_path);
+	}
+	if (wozmon_txt_path != NULL) {
+		port_free(wozmon_txt_path);
+	}
+	if (aci_path != NULL) {
+		port_free(aci_path);
+	}
+	if (tape_path != NULL) {
+		port_free(tape_path);
+	}
+	if (save_tape_path != NULL) {
+		port_free(save_tape_path);
+	}
+	if (krusader_path != NULL) {
+		port_free(krusader_path);
+	}
+	
 	if (opt_headless == false) {
 		io_cleanup();
 	}
