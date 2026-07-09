@@ -467,11 +467,11 @@ port_memmove(void *dst, const void *src, port_size_t n)
 	}
 	d = (char *)dst;
 	s = (const char *)src;
-	if ((unsigned long)d < (unsigned long)s) {
+	if ((port_uintptr)d < (port_uintptr)s) {
 		for (i = 0; i < n; i++) {
 			d[i] = s[i];
 		}
-	} else if ((unsigned long)d > (unsigned long)s) {
+	} else if ((port_uintptr)d > (port_uintptr)s) {
 		for (i = n; i > 0; i--) {
 			d[i - 1] = s[i - 1];
 		}

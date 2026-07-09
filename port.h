@@ -181,6 +181,16 @@ typedef u32 uint32_t;
 typedef i32 int32_t;
 #endif
 
+#ifdef HAVE_UINT8_T
+typedef uintptr_t port_uintptr;
+#else
+#ifdef APPLE1_PORT_PLAN9
+typedef uintptr port_uintptr;
+#else
+typedef unsigned long port_uintptr;
+#endif
+#endif
+
 #include "port_stdarg.h"
 
 #ifdef __USLC__
