@@ -26,7 +26,7 @@ autoreconf -fi
 
 ## Requirements
 
-- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [nwcc](https://nwcc.sourceforge.net/), [lacc](https://github.com/larme/lacc), …)
+- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [nwcc](https://nwcc.sourceforge.net/), [antcc](https://github.com/thesamesam/antcc), [lacc](https://github.com/larme/lacc), …)
 - Python 3 (for amalgamation / `make single`)
 - GNU autotools (`autoconf`, `automake`) only when changing `configure.ac` / `Makefile.am`
 - POSIX-like shell for `make check`
@@ -83,6 +83,7 @@ make tcc    # TinyCC (clears -Wall/-std=c89 for the rebuild)
 make pcc    # PCC
 make lacc   # lacc
 make nwcc   # nwcc 0.8.3 (clears -Wall/-Wextra for the rebuild)
+make antcc  # antcc 0.3.x (zero warnings, zero errors)
 ```
 
 Each runs `make clean` then rebuilds `apple1`.  To pick the compiler at
