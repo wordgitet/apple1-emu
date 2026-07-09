@@ -28,7 +28,7 @@
 static void
 cli_error(const char *fmt, ...)
 {
-	char buf[512];
+	char buf[2048];
 	va_list args;
 	va_start(args, fmt);
 	port_vsnprintf(buf, sizeof(buf), fmt, args);
@@ -39,7 +39,7 @@ cli_error(const char *fmt, ...)
 static void PORT_UNUSED
 cli_warn(const char *fmt, ...)
 {
-	char buf[512];
+	char buf[2048];
 	va_list args;
 	va_start(args, fmt);
 	port_vsnprintf(buf, sizeof(buf), fmt, args);
@@ -50,7 +50,7 @@ cli_warn(const char *fmt, ...)
 static void PORT_UNUSED
 cli_printf(const char *fmt, ...)
 {
-	char buf[512];
+	char buf[2048];
 	va_list args;
 	va_start(args, fmt);
 	port_vsnprintf(buf, sizeof(buf), fmt, args);
@@ -80,7 +80,7 @@ uint32_t opt_baud = 0;
 
 port_sig_flag g_quit_flag = 0;
 
-/* Ctrl-C / SIGINT always requests emulator exit. */
+/* Ctrl-C / SIGINT: request emulator exit (no debugger path). */
 static int
 process_sigint(void)
 {
@@ -90,6 +90,28 @@ process_sigint(void)
 	g_quit_flag = 0;
 	return (1);
 }
+
+#ifndef APPLE1_OMIT_DEBUGGER
+/*
+ * Ctrl-C while the debugger is enabled: break back into the debugger
+ * rather than exiting.  Sets step_mode and returns 0 so the main loop
+ * continues and hits the debugger check on the next iteration.
+ * Returns 1 (exit) only when g_debug_enabled is false.
+ */
+static int
+process_sigint_dbg(debugger_t *dbg)
+{
+	if (g_quit_flag == 0) {
+		return (0);
+	}
+	g_quit_flag = 0;
+	if (g_debug_enabled != 0) {
+		dbg->step_mode = true;
+		return (0);
+	}
+	return (1);
+}
+#endif
 
 /* ------------------------------------------------------------------ */
 /*  stderr log callback                                                 */
@@ -823,9 +845,15 @@ main(int argc, char *argv[])
 					cpu_reset(&cpu);
 				}
 			}
+#ifndef APPLE1_OMIT_DEBUGGER
+			if (process_sigint_dbg(&dbg) != 0) {
+				break;
+			}
+#else
 			if (process_sigint() != 0) {
 				break;
 			}
+#endif
 		}
 
 		/* Debugger: pause before run (-g) or at breakpoint */
@@ -846,9 +874,15 @@ main(int argc, char *argv[])
 		}
 #endif
 
+#ifndef APPLE1_OMIT_DEBUGGER
+		if (process_sigint_dbg(&dbg) != 0) {
+			break;
+		}
+#else
 		if (process_sigint() != 0) {
 			break;
 		}
+#endif
 
 		/* Optional CPU trace */
 #ifndef APPLE1_OMIT_DISASM

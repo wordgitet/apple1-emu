@@ -849,10 +849,10 @@ port_term_read_line_dbg(char *buf, port_size_t size, port_sig_flag *quit_flag)
 			continue;
 		}
 		if (c == 0x03) {
-			if (quit_flag != (void *)0) {
-				*quit_flag = 1;
-			}
-			return ((void *)0);
+			/* Ctrl-C: cancel this input line, re-prompt. */
+			port_term_write_buf("^C\r\n", 4);
+			buf[0] = '\0';
+			return (buf);
 		}
 		if (c == '\r' || c == '\n') {
 			buf[n] = '\0';
