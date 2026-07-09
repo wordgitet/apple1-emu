@@ -223,7 +223,8 @@ port_strstr(const char *hay, const char *needle)
 long
 port_strtol(const char *s, char **endptr, int base)
 {
-	long result;
+	unsigned long result;
+	unsigned long limit;
 	int sign;
 
 	if (s == (void *)0) {
@@ -266,10 +267,14 @@ port_strtol(const char *s, char **endptr, int base)
 			s += 2;
 		}
 	}
+	if (sign == 1) {
+		limit = (unsigned long)LONG_MAX;
+	} else {
+		limit = (unsigned long)LONG_MAX + 1UL;
+	}
 	while (*s != '\0') {
 		int digit;
 		char c;
-		long new_result;
 
 		c = *s;
 		if (port_isdigit((unsigned char)c)) {
@@ -284,22 +289,44 @@ port_strtol(const char *s, char **endptr, int base)
 		if (digit >= base) {
 			break;
 		}
-		new_result = result * base + digit;
-		if (sign == 1 && new_result < result) {
-			result = LONG_MAX;
+		if (result > (limit - digit) / base) {
+			result = limit;
+			s++;
+			while (*s != '\0') {
+				c = *s;
+				if (port_isdigit((unsigned char)c)) {
+					digit = c - '0';
+				} else if (c >= 'a' && c <= 'f') {
+					digit = c - 'a' + 10;
+				} else if (c >= 'A' && c <= 'F') {
+					digit = c - 'A' + 10;
+				} else {
+					break;
+				}
+				if (digit >= base) {
+					break;
+				}
+				s++;
+			}
 			break;
 		}
-		if (sign == -1 && new_result < result) {
-			result = LONG_MIN;
-			break;
-		}
-		result = new_result;
+		result = result * base + digit;
 		s++;
 	}
 	if (endptr != (void *)0) {
 		*endptr = (char *)s;
 	}
-	return (result * sign);
+	if (sign == 1) {
+		if (result >= (unsigned long)LONG_MAX) {
+			return (LONG_MAX);
+		}
+		return ((long)result);
+	} else {
+		if (result >= (unsigned long)LONG_MAX + 1UL) {
+			return (LONG_MIN);
+		}
+		return (-(long)result);
+	}
 }
 
 unsigned long
@@ -346,7 +373,6 @@ port_strtoul(const char *s, char **endptr, int base)
 	while (*s != '\0') {
 		int digit;
 		char c;
-		unsigned long new_result;
 
 		c = *s;
 		if (port_isdigit((unsigned char)c)) {
@@ -361,12 +387,28 @@ port_strtoul(const char *s, char **endptr, int base)
 		if (digit >= base) {
 			break;
 		}
-		new_result = result * base + digit;
-		if (new_result < result) {
+		if (result > (ULONG_MAX - digit) / base) {
 			result = ULONG_MAX;
+			s++;
+			while (*s != '\0') {
+				c = *s;
+				if (port_isdigit((unsigned char)c)) {
+					digit = c - '0';
+				} else if (c >= 'a' && c <= 'f') {
+					digit = c - 'a' + 10;
+				} else if (c >= 'A' && c <= 'F') {
+					digit = c - 'A' + 10;
+				} else {
+					break;
+				}
+				if (digit >= base) {
+					break;
+				}
+				s++;
+			}
 			break;
 		}
-		result = new_result;
+		result = result * base + digit;
 		s++;
 	}
 	if (endptr != (void *)0) {
@@ -425,11 +467,11 @@ port_memmove(void *dst, const void *src, port_size_t n)
 	}
 	d = (char *)dst;
 	s = (const char *)src;
-	if (d < s) {
+	if ((unsigned long)d < (unsigned long)s) {
 		for (i = 0; i < n; i++) {
 			d[i] = s[i];
 		}
-	} else if (d > s) {
+	} else if ((unsigned long)d > (unsigned long)s) {
 		for (i = n; i > 0; i--) {
 			d[i - 1] = s[i - 1];
 		}
@@ -581,6 +623,7 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 			case 'd':
 			case 'i': {
 				long val;
+				unsigned long uval;
 
 				if (is_long != 0) {
 					val = va_arg(ap, long);
@@ -591,12 +634,14 @@ port_vsnprintf(char *buf, port_size_t n, const char *fmt, va_list ap)
 					if (written < limit) {
 						buf[written++] = '-';
 					}
-					val = -val;
+					uval = -(unsigned long)val;
+				} else {
+					uval = (unsigned long)val;
 				}
 				format_unsigned(buf,
 				    &written,
 				    limit,
-				    (unsigned long)val,
+				    uval,
 				    10,
 				    0,
 				    min_width,
