@@ -10,6 +10,9 @@
  */
 
 static uint8_t vram[24][40];
+static uint8_t shadow_vram[24][40];
+static bool shadow_blink_on = false;
+static bool shadow_valid = false;
 static int cursor_x = 0;
 static int cursor_y = 0;
 static bool raw_mode_active = false;
@@ -45,6 +48,8 @@ term_clear_host_screen(void)
 	int pos_len;
 	int y;
 	char pos[24];
+
+	shadow_valid = false;
 
 	ansi_out("\x1b[?25l\x1b[0m\x1b[2J\x1b[H", 14);
 	for (y = 1; y <= 24; y++) {
@@ -149,6 +154,30 @@ term_dsp_ready(void)
 	return ((now - last_write_us) >= window_us);
 }
 
+static bool
+row_needs_repaint(int y, bool blink_on)
+{
+	int x;
+	bool has_blinking;
+
+	has_blinking = false;
+	if (shadow_valid == 0) {
+		return (true);
+	}
+	for (x = 0; x < 40; x++) {
+		if (vram[y][x] != shadow_vram[y][x]) {
+			return (true);
+		}
+		if (vram[y][x] == 0x00 || shadow_vram[y][x] == 0x00) {
+			has_blinking = true;
+		}
+	}
+	if (has_blinking != 0 && blink_on != shadow_blink_on) {
+		return (true);
+	}
+	return (false);
+}
+
 void
 term_update(void)
 {
@@ -168,25 +197,30 @@ term_update(void)
 	blink_on = ((now / 250000UL) & 1) != 0;
 
 	for (y = 0; y < 24; y++) {
-		pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H", y + 1);
-		ansi_out(pos, (port_size_t)pos_len);
-		ansi_out("\x1b[2K", 4);
-		for (x = 0; x < 40; x++) {
-			uint8_t c;
+		if (row_needs_repaint(y, blink_on) != 0) {
+			pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H", y + 1);
+			ansi_out(pos, (port_size_t)pos_len);
+			for (x = 0; x < 40; x++) {
+				uint8_t c;
 
-			c = vram[y][x];
-			if (c == 0x00) {
-				if (blink_on != 0) {
-					line[x] = '@';
+				c = vram[y][x];
+				if (c == 0x00) {
+					if (blink_on != 0) {
+						line[x] = '@';
+					} else {
+						line[x] = ' ';
+					}
 				} else {
-					line[x] = ' ';
+					line[x] = (char)c;
 				}
-			} else {
-				line[x] = (char)c;
 			}
+			ansi_out(line, 40);
+			port_memcpy(shadow_vram[y], vram[y], 40);
 		}
-		ansi_out(line, 40);
 	}
+
+	shadow_blink_on = blink_on;
+	shadow_valid = true;
 }
 
 uint8_t

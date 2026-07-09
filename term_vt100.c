@@ -10,6 +10,9 @@
 #include "term_apple1.h"
 
 static uint8_t vram[24][40];
+static uint8_t shadow_vram[24][40];
+static bool shadow_blink_on = false;
+static bool shadow_valid = false;
 static int cursor_x = 0;
 static int cursor_y = 0;
 static bool reset_pending = false;
@@ -32,16 +35,18 @@ scroll_up(void)
 static void
 term_clear_host_screen(void)
 {
+	int pos_len;
+	int y;
+	char pos[24];
+
+	shadow_valid = false;
+
 #ifdef __PLAN9__
 	/* Native console: no CSI clear. */
 #else
 #ifdef __plan9__
 	/* Native console: no CSI clear. */
 #else
-	int pos_len;
-	int y;
-	char pos[24];
-
 	port_term_write_buf("\x1b[?25l\x1b[0m\x1b[2J\x1b[H", 14);
 	for (y = 1; y <= 24; y++) {
 		pos_len =
@@ -88,7 +93,6 @@ term_paint_row_csi(int y, bool blink_on)
 
 	pos_len = port_snprintf(pos, sizeof(pos), "\x1b[%d;1H", y + 1);
 	port_term_write_buf(pos, (port_size_t)pos_len);
-	port_term_write_buf("\x1b[2K", 4);
 	for (x = 0; x < 40; x++) {
 		c = vram[y][x];
 		if (c == 0x00) {
@@ -118,6 +122,30 @@ term_paint_row(int y, bool blink_on)
 #endif
 }
 
+static bool
+row_needs_repaint(int y, bool blink_on)
+{
+	int x;
+	bool has_blinking;
+
+	has_blinking = false;
+	if (shadow_valid == 0) {
+		return (true);
+	}
+	for (x = 0; x < 40; x++) {
+		if (vram[y][x] != shadow_vram[y][x]) {
+			return (true);
+		}
+		if (vram[y][x] == 0x00 || shadow_vram[y][x] == 0x00) {
+			has_blinking = true;
+		}
+	}
+	if (has_blinking != 0 && blink_on != shadow_blink_on) {
+		return (true);
+	}
+	return (false);
+}
+
 static void
 term_redraw(void)
 {
@@ -137,8 +165,22 @@ term_redraw(void)
 	blink_on = ((now / 250000UL) & 1) != 0;
 
 	for (y = 0; y < 24; y++) {
+#ifdef __PLAN9__
 		term_paint_row(y, blink_on);
+#else
+#ifdef __plan9__
+		term_paint_row(y, blink_on);
+#else
+		if (row_needs_repaint(y, blink_on) != 0) {
+			term_paint_row(y, blink_on);
+			port_memcpy(shadow_vram[y], vram[y], 40);
+		}
+#endif
+#endif
 	}
+
+	shadow_blink_on = blink_on;
+	shadow_valid = true;
 }
 
 void
