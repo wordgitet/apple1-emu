@@ -100,6 +100,7 @@ single:
 	win|mingw) $(MAKE) single-win ;; \
 	plan9|9front) $(MAKE) single-plan9 ;; \
 	unixware|uw) $(MAKE) single-uw ;; \
+	qnx|neutrino) $(MAKE) single-qnx ;; \
 	*) echo "Unknown HOST=$(HOST). Use: posix dos watcom win plan9 unixware" >&2; exit 1 ;; \
 	esac
 
@@ -127,6 +128,16 @@ single-plan9: amalgamation-plan9
 single-uw: amalgamation-uw
 	$(CC) $(AM_CFLAGS) -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX \
 	    -DAPPLE1_TERM_VT100 apple1.c -o apple1
+
+QNX_SDP   ?= $(HOME)/qnx800
+QNX_CC    ?= $(QNX_SDP)/host/linux/x86_64/usr/bin/ntox86_64-gcc
+QNX_CFLAGS = -O2 -Wall -Wextra -std=gnu89 -DAPPLE1_OMIT_CHARMAP \
+             -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_VT100
+
+amalgamation-qnx: amalgamation
+
+single-qnx: amalgamation-qnx
+	$(QNX_CC) $(QNX_CFLAGS) -o apple1-qnx apple1.c
 
 check-single:
 	@$(MAKE) amalgamation
@@ -357,8 +368,8 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
 	    `test -f 'term.c' || echo '$(srcdir)/'`term.c
 
 .PHONY: test-official amalgamation amalgamation-dos amalgamation-win \
-        amalgamation-plan9 amalgamation-uw check-single check-single-uw \
-        clang-format clang-format-check \
+        amalgamation-plan9 amalgamation-uw amalgamation-qnx \
+        check-single check-single-uw \
         single single-posix single-dos single-watcom single-win single-plan9 \
-        single-uw dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
+        single-uw single-qnx dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
         apple1.exe cwsdpmi.exe tcc pcc lacc freertos nspire

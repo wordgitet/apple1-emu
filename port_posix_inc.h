@@ -29,7 +29,17 @@
 #define _XOPEN_SOURCE	500
 #define _POSIX_C_SOURCE 199506L
 #else
+#ifdef __QNXNTO__
+/*
+ * QNX Neutrino: the system headers expose the full POSIX.1-2008 and
+ * QNX extension surface by default.  Forcing _POSIX_C_SOURCE hides
+ * QNX-specific declarations that the POSIX port relies on (e.g.
+ * CLOCK_MONOTONIC, inline helpers in <stdlib.h>).  Leave the feature
+ * macros at their defaults.
+ */
+#else
 #define _POSIX_C_SOURCE 200809L
+#endif
 #endif
 
 #endif /* PORT_POSIX_INC_H */
