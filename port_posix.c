@@ -200,12 +200,14 @@ handle_sigint(int sig)
 void
 port_signal_setup(port_sig_flag *flag)
 {
+#ifndef __USLC__
+	struct sigaction sa;
+#endif
+
 	g_sig_flag = flag;
 #ifdef __USLC__
 	signal(SIGINT, handle_sigint);
 #else
-	struct sigaction sa;
-
 	port_memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = handle_sigint;
 	sigemptyset(&sa.sa_mask);

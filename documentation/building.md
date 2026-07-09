@@ -26,7 +26,7 @@ autoreconf -fi
 
 ## Requirements
 
-- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [lacc](https://github.com/larme/lacc), …)
+- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [nwcc](https://nwcc.sourceforge.net/), [lacc](https://github.com/larme/lacc), …)
 - Python 3 (for amalgamation / `make single`)
 - GNU autotools (`autoconf`, `automake`) only when changing `configure.ac` / `Makefile.am`
 - POSIX-like shell for `make check`
@@ -82,10 +82,15 @@ All use the same multi-file build with `CC` set — no gcc-only flags:
 make tcc    # TinyCC (clears -Wall/-std=c89 for the rebuild)
 make pcc    # PCC
 make lacc   # lacc
+make nwcc   # nwcc 0.8.3 (clears -Wall/-Wextra for the rebuild)
 ```
 
 Each runs `make clean` then rebuilds `apple1`.  To pick the compiler at
 configure time instead: `./configure CC=pcc`.
+
+nwcc 0.8.3 issues one harmless warning about `unsigned long long` not being
+ISO C90; the `u64` type in `port.h` is only used for timing and the emulator
+works correctly.
 
 Optional gcc-style header dependencies (maintainers only):
 
