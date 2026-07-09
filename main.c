@@ -75,6 +75,13 @@ bool g_debug_enabled = false;
 uint32_t opt_baud = 0;
 
 /* ------------------------------------------------------------------ */
+/*  Log file globals                                                     */
+/* ------------------------------------------------------------------ */
+
+static port_file_t g_log_file = NULL;
+static int g_log_level = 1; /* 0=errors, 1=warn+errors, 2=info+all */
+
+/* ------------------------------------------------------------------ */
 /*  Signal handler                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -114,9 +121,40 @@ process_sigint_dbg(debugger_t *dbg)
 #endif
 
 /* ------------------------------------------------------------------ */
-/*  stderr log callback                                                 */
+/*  Log callbacks                                                        */
 /* ------------------------------------------------------------------ */
 
+/*
+ * file_log -- write a timestamped entry to the open log file.
+ * Called via bus.log; silently skipped when g_log_file is NULL
+ * or the message level is below g_log_level.
+ */
+static void
+file_log(void *ctx, int level, const char *msg)
+{
+	char buf[2048];
+	port_size_t n;
+	const char *prefix;
+
+	(void)ctx;
+	if (g_log_file == NULL) {
+		return;
+	}
+	if (level > g_log_level) {
+		return;
+	}
+	prefix = (level == BUS_LOG_ERROR) ? "ERROR"
+	    : (level == BUS_LOG_WARN)	  ? "WARN"
+					  : "INFO";
+	port_snprintf(buf, sizeof(buf), "[%s] %s\n", prefix, msg);
+	n = port_strlen(buf);
+	g_port_vfs->write(g_log_file, buf, n, NULL);
+}
+
+/*
+ * stderr_log -- fallback used when no log file is open.
+ * Errors and warnings only (respects g_log_level).
+ */
 static void
 stderr_log(void *ctx, int level, const char *msg)
 {
@@ -124,6 +162,9 @@ stderr_log(void *ctx, int level, const char *msg)
 	const char *prefix;
 
 	(void)ctx;
+	if (level > g_log_level) {
+		return;
+	}
 	prefix = (level == BUS_LOG_ERROR) ? "Error"
 	    : (level == BUS_LOG_WARN)	  ? "Warning"
 					  : "Info";
@@ -133,6 +174,13 @@ stderr_log(void *ctx, int level, const char *msg)
 	(void)level;
 	(void)msg;
 #endif
+}
+
+/* Emit an INFO message through the bus log (no-op if level < 2). */
+static void
+log_info(struct bus *bus, const char *msg)
+{
+	BUS_LOG(bus, BUS_LOG_INFO, msg);
 }
 
 /* ------------------------------------------------------------------ */
@@ -177,6 +225,9 @@ print_usage(const char *prog)
 		  "  -B <baud>            Emulate terminal baud rate (e.g. "
 		  "1200)\n"
 		  "  -k <rom>             Load Krusader assembler ROM\n"
+		  "  -L <file>            Write log to file\n"
+		  "  -V <0|1|2>           Log verbosity: 0=errors, 1=warn "
+		  "(default), 2=info\n"
 		  "  -h                   Show this help\n");
 #else
 	(void)prog;
@@ -224,7 +275,9 @@ apply_loaded_config(struct cli_config_opts *cfg,
     char **tape_path,
     char **save_tape_path,
     char **krusader_path,
-    uint32_t *baud)
+    uint32_t *baud,
+    char **log_path,
+    int *log_level)
 {
 	*rom_path = cfg->rom_path;
 	cfg->rom_path = NULL;
@@ -252,6 +305,9 @@ apply_loaded_config(struct cli_config_opts *cfg,
 	*opt_randomize_cold = cfg->opt_randomize_cold;
 	*opt_flat_bus = cfg->opt_flat_bus;
 	*opt_trace = cfg->opt_trace;
+	*log_path = cfg->log_path;
+	cfg->log_path = NULL;
+	*log_level = cfg->log_level;
 	return (0);
 }
 
@@ -350,10 +406,12 @@ main(int argc, char *argv[])
 	char *config_path;
 	char *flat_bin_path;
 	char *krusader_path;
+	char *log_path;
 	char *rom_path;
 	char *save_tape_path;
 	char *tape_path;
 	char *wozmon_txt_path;
+	int  log_level;
 
 	/* Initialize all path pointers to NULL */
 	aci_path = NULL;
@@ -361,6 +419,7 @@ main(int argc, char *argv[])
 	config_path = NULL;
 	flat_bin_path = NULL;
 	krusader_path = NULL;
+	log_path = NULL;
 	rom_path = NULL;
 	save_tape_path = NULL;
 	tape_path = NULL;
@@ -398,6 +457,7 @@ main(int argc, char *argv[])
 	config_path = NULL;
 	flat_bin_path = NULL;
 	krusader_path = NULL;
+	log_path = NULL;
 	rom_path = NULL;
 	save_tape_path = NULL;
 	tape_path = NULL;
@@ -415,6 +475,7 @@ main(int argc, char *argv[])
 	opt_uncapped = false;
 	opt_set_capped = false;
 	opt_set_uncapped = false;
+	log_level = 1; /* warn+errors by default */
 
 	/* Scan for .conf path, runtime flags (-H/-g/-h), and config mode. */
 	{
@@ -491,12 +552,14 @@ main(int argc, char *argv[])
 		    &tape_path,
 		    &save_tape_path,
 		    &krusader_path,
-		    &opt_baud);
+		    &opt_baud,
+		    &log_path,
+		    &log_level);
 		cli_config_free_strings(&cfg);
 	} else {
 		while ((opt = port_getopt(argc,
 			    argv,
-			    "r:m:l:w:a:e:E:B:k:cFpdbsHgthu")) != -1) {
+			    "r:m:l:w:a:e:E:B:k:L:V:cFpdbsHgthu")) != -1) {
 			switch (opt) {
 			case 'r':
 				if (rom_path != NULL) {
@@ -603,6 +666,22 @@ main(int argc, char *argv[])
 			case 't':
 				opt_trace = true;
 				break;
+			case 'L':
+				if (log_path != NULL) {
+					port_free(log_path);
+				}
+				log_path = port_strdup(port_optarg);
+				break;
+			case 'V': {
+				int lv;
+
+				lv = (int)port_strtoul(port_optarg,
+				    NULL, 10);
+				if (lv >= 0 && lv <= 2) {
+					log_level = lv;
+				}
+				break;
+			}
 			case 'h':
 				print_usage(argv[0]);
 				return (0);
@@ -647,6 +726,17 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
+	/* Open log file (if requested) before bus init so all messages land */
+	g_log_level = log_level;
+	if (log_path != NULL) {
+		g_log_file = g_port_vfs->open(log_path, PORT_VFS_WRITE);
+		if (g_log_file == PORT_FILE_INVALID) {
+			cli_error("Warning: cannot open log file '%s'\n",
+			    log_path);
+			g_log_file = NULL;
+		}
+	}
+
 	/* Install signal handler */
 	port_signal_setup(&g_quit_flag);
 
@@ -660,8 +750,20 @@ main(int argc, char *argv[])
 			return (1);
 		}
 	}
-	bus.log = stderr_log;
+	bus.log = (g_log_file != NULL) ? file_log : stderr_log;
 	bus.log_ctx = NULL;
+
+	/* Emit startup config summary (INFO; only visible at log_level 2) */
+	{
+		char msg[256];
+
+		port_snprintf(msg, sizeof(msg),
+		    "apple1-emu starting: RAM=%uKB speed=%s baud=%u",
+		    (unsigned)(ram_size / 1024),
+		    opt_uncapped != 0 ? "uncapped" : "capped",
+		    (unsigned)opt_baud);
+		log_info(&bus, msg);
+	}
 
 	g_bus = &bus;
 
@@ -693,6 +795,15 @@ main(int argc, char *argv[])
 			bus_free(&bus);
 			return (1);
 		}
+		if (rom_path != NULL) {
+			char msg[512];
+
+			port_snprintf(msg, sizeof(msg),
+			    "ROM loaded: %s", rom_path);
+			log_info(&bus, msg);
+		} else {
+			log_info(&bus, "ROM: using embedded Woz Monitor");
+		}
 	}
 
 	/* Load flat binary */
@@ -722,6 +833,14 @@ main(int argc, char *argv[])
 			    port_error_string(rc));
 			bus_free(&bus);
 			return (1);
+		}
+		{
+			char msg[512];
+
+			port_snprintf(msg, sizeof(msg),
+			    "Binary loaded: %s at $%04X",
+			    bin_path, (unsigned)bin_address);
+			log_info(&bus, msg);
 		}
 		port_free(bin_path);
 		bin_path = NULL;
@@ -758,6 +877,13 @@ main(int argc, char *argv[])
 	if (aci_path != NULL) {
 		aci_card = aci_create(&bus, aci_path);
 		if (aci_card != NULL) {
+			{
+				char msg[512];
+
+				port_snprintf(msg, sizeof(msg),
+				    "ACI ROM loaded: %s", aci_path);
+				log_info(&bus, msg);
+			}
 			if (tape_path != NULL) {
 				port_result_t rc;
 				rc = aci_load_tape(aci_card, tape_path);
@@ -768,6 +894,14 @@ main(int argc, char *argv[])
 					aci_free(aci_card);
 					bus_free(&bus);
 					return (1);
+				}
+				{
+					char msg[512];
+
+					port_snprintf(msg, sizeof(msg),
+					    "ACI tape loaded: %s",
+					    tape_path);
+					log_info(&bus, msg);
 				}
 			}
 			bus_add_card(&bus, aci_card);
@@ -787,19 +921,26 @@ main(int argc, char *argv[])
 		struct expansion_card *kcard;
 		kcard = krusader_create(&bus, krusader_path);
 		if (kcard != NULL) {
+			char msg[512];
+
 			bus_add_card(&bus, kcard);
+			port_snprintf(msg, sizeof(msg),
+			    "Krusader ROM loaded: %s", krusader_path);
+			log_info(&bus, msg);
 		}
 		port_free(krusader_path);
 		krusader_path = NULL;
 	}
 #endif /* APPLE1_OMIT_KRUSADER */
 
-	/* Debugger init */
+	/* CPU init */
 	cpu_init(&cpu, &bus);
+	log_info(&bus, "CPU initialized");
 	/* Headless/debug runs reset immediately; interactive play waits
 	 * for Ctrl+R (authentic Apple-1 power-on behaviour). */
 	if (opt_headless != false || opt_debug != false) {
 		cpu_reset(&cpu);
+		log_info(&bus, "CPU reset");
 	}
 #ifndef APPLE1_OMIT_DEBUGGER
 	dbg_init(&dbg, &cpu);
@@ -1047,9 +1188,19 @@ main(int argc, char *argv[])
 	if (krusader_path != NULL) {
 		port_free(krusader_path);
 	}
-	
+	if (log_path != NULL) {
+		port_free(log_path);
+	}
+
 	if (opt_headless == false) {
 		io_cleanup();
+	}
+
+	/* Final log entry and close */
+	if (g_log_file != NULL) {
+		BUS_LOG((&bus), BUS_LOG_INFO, "Emulator exited normally");
+		g_port_vfs->close(g_log_file);
+		g_log_file = NULL;
 	}
 	return (0);
 }

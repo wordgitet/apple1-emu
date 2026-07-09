@@ -37,6 +37,8 @@ cli_config_init_defaults(struct cli_config_opts *opts)
 	opts->opt_randomize_cold = true;
 	opts->opt_flat_bus = false;
 	opts->opt_trace = false;
+	opts->log_path = NULL;
+	opts->log_level = 1; /* warn+errors by default */
 }
 
 void
@@ -76,6 +78,10 @@ cli_config_free_strings(struct cli_config_opts *opts)
 	if (opts->krusader_path != NULL) {
 		port_free(opts->krusader_path);
 		opts->krusader_path = NULL;
+	}
+	if (opts->log_path != NULL) {
+		port_free(opts->log_path);
+		opts->log_path = NULL;
 	}
 }
 
@@ -363,6 +369,24 @@ apply_key(const char *key,
 		}
 		opts->opt_trace = bval;
 		return (1);
+	}
+	if (key_eq(key, "log_file")) {
+		return (set_string(&opts->log_path, val));
+	}
+	if (key_eq(key, "log_level")) {
+		int lvl;
+
+		lvl = (int)port_strtoul(val, NULL, 10);
+		if (lvl >= 0 && lvl <= 2) {
+			opts->log_level = lvl;
+			return (1);
+		}
+		if (errbuf_sz > 0) {
+			port_snprintf(errbuf,
+			    errbuf_sz,
+			    "log_level must be 0, 1, or 2");
+		}
+		return (0);
 	}
 	if (key_eq(key, "headless") || key_eq(key, "debugger")) {
 		if (errbuf_sz > 0) {

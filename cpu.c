@@ -2369,11 +2369,11 @@ op_jam(struct cpu *cpu)
 		char msg[128];
 		port_snprintf(msg,
 		    sizeof(msg),
-		    "\nJAM: struct cpu halted by opcode 0x%02X at PC=0x%04X. "
-		    "RESET required.\n",
+		    "JAM: halted by opcode 0x%02X at PC=0x%04X. "
+		    "RESET required.",
 		    opcode,
 		    (uint16_t)cpu->pc);
-		port_term_write_buf(msg, port_strlen(msg));
+		BUS_LOG(cpu->bus, BUS_LOG_WARN, msg);
 	}
 	cpu->last_cycles = 1;
 }
@@ -2960,11 +2960,11 @@ cpu_step(struct cpu *cpu)
 			char msg[128];
 			port_snprintf(msg,
 			    sizeof(msg),
-			    "\nJAM: unimplemented opcode 0x%02X at PC=0x%04X. "
-			    "RESET required.\n",
+			    "JAM: unimplemented opcode 0x%02X at PC=0x%04X. "
+			    "RESET required.",
 			    opcode,
 			    (uint16_t)cpu->pc);
-			port_term_write_buf(msg, port_strlen(msg));
+			BUS_LOG(cpu->bus, BUS_LOG_WARN, msg);
 		}
 		cpu->last_cycles = 1;
 	}

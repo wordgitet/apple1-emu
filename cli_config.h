@@ -26,6 +26,8 @@ struct cli_config_opts {
 	bool opt_randomize_cold;
 	bool opt_flat_bus;
 	bool opt_trace;
+	char *log_path;
+	int  log_level; /* 0=errors, 1=warn+errors, 2=info+warn+errors */
 };
 
 #define CLI_CONFIG_OK	    0
