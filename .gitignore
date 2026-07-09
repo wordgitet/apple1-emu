@@ -4,6 +4,8 @@ apple1
 apple1.exe
 apple1.vxe
 apple1_freertos
+apple1_qnx
+apple1_ubsan
 freertos-*.o
 cwsdpmi.exe
 
@@ -47,6 +49,7 @@ POM1/
 
 # Autotools — generated locally by ./configure (do not commit)
 /Makefile
+/Makefile.in
 /aclocal.m4
 /config.status
 /config.log
@@ -55,12 +58,17 @@ POM1/
 .dirstamp
 *.log
 *.trs
+/configure
 
 # Test binaries
 /test_cpu
 /test_aci
 /test_dualram
 /test_bus
+/test_config
+/test_mem
+/test_vfs
+/test_interrupts
 
 # macOS debug symbols
 *.dSYM/
@@ -75,6 +83,13 @@ POM1/
 # Amalgamation
 /apple1.c
 /apple1.h
+
+# Debug/testing files
+/apple1.err
+/ubsan_errors.txt
+/valgrind.log
+/OLXTALAV
+/scripts/
 
 # TI-Nspire (Ndless) build artifacts
 /apple1.tns
