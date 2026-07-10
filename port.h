@@ -1,6 +1,10 @@
 #ifndef PORT_H
 #define PORT_H
 
+#ifdef __cproc__
+#define volatile
+#endif
+
 #ifdef APPLE1_PORT_POSIX
 #include "port_posix_inc.h"
 #else

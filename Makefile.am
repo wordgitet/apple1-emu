@@ -223,6 +223,11 @@ antcc:
 	$(MAKE) clean
 	$(MAKE) CC=antcc apple1
 
+cproc:
+	$(MAKE) clean
+	$(MAKE) CC=cproc AM_CFLAGS= CFLAGS="-D__cproc__ -g -O2" apple1
+
+
 # ---------------------------------------------------------------------------
 # FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
 # ---------------------------------------------------------------------------
