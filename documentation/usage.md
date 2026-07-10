@@ -24,7 +24,6 @@ Run `./apple1 -h` for a summary.
 | Option | Description |
 |--------|-------------|
 | `-r <rom>` | Path to 256-byte Woz Monitor ROM (default: embedded ROM if compiled in) |
-| `-m <kb>` | RAM size in kilobytes (4–64, default 8). Cannot exceed `APPLE1_STATIC_RAM_SIZE`. |
 | `-l <file>@<hex>` | Load binary at hex address (e.g. `-l program.bin@0300`) |
 | `-w <txt>` | Load Woz Monitor hex text file |
 | `-a <rom>` | ACI cassette interface 256-byte ROM |
@@ -72,7 +71,7 @@ file that contains only comments, or is empty, is valid.
 
 **Invalid config:** parsing stops on the first bad line. The emulator prints
 `Error: config '<path>': <reason>` (for example `line 5: unknown key 'foo'`,
-`ram_kb must be 4-64`, or `'headless' is CLI-only; use -H or -g'`) and exits
+or `'headless' is CLI-only; use -H or -g'`) and exits
 with code **1**. No settings from that file are applied after an error. If the
 file cannot be opened, a warning is printed and the emulator also exits with
 code **1**.
@@ -80,9 +79,8 @@ code **1**.
 Example `apple1.conf`:
 
 ```
-# Woz Monitor and 16 KB RAM
+# Woz Monitor
 rom = wozmon.bin
-ram_kb = 16
 
 # Load a program at $0300
 load = myprog.bin @ 0300
@@ -99,7 +97,6 @@ tape_out = recorded.wav
 | Key | Description |
 |-----|-------------|
 | `rom` | Woz Monitor ROM path |
-| `ram_kb` | RAM size 4–64 |
 | `load` | Binary load: `file @ hexaddr` |
 | `wozmon_txt` | Woz Monitor hex text dump |
 | `flat_bin` | Flat binary at `$0000` (enables flat bus) |

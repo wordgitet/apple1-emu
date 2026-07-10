@@ -125,7 +125,6 @@ apply_cfg(struct cli_config_opts *cfg,
     char **rom_path,
     char **bin_path,
     uint16_t *bin_address,
-    uint32_t *ram_size,
     bool *opt_uncapped,
     bool *opt_throttle_pia,
     bool *opt_emulate_dram,
@@ -154,8 +153,6 @@ apply_cfg(struct cli_config_opts *cfg,
 		*bin_address = 0x0000;
 		*opt_flat_bus = true;
 	}
-	if (cfg->ram_size != 0)
-		*ram_size = cfg->ram_size;
 	*opt_uncapped = cfg->opt_uncapped;
 	*opt_throttle_pia = cfg->opt_throttle_pia;
 	*opt_emulate_dram = cfg->opt_emulate_dram;
@@ -237,7 +234,6 @@ main(int argc, char **argv)
 	char *rom_path;
 	char *bin_path;
 	uint16_t bin_address;
-	uint32_t ram_size;
 	uint32_t k;
 	uint32_t cycle_accumulator;
 	uint32_t last_time;
@@ -262,7 +258,6 @@ main(int argc, char **argv)
 	rom_path          = NULL;
 	bin_path          = NULL;
 	bin_address       = 0;
-	ram_size          = (uint32_t)(APPLE1_DEFAULT_RAM_KB * 1024);
 	opt_uncapped      = false;
 	opt_throttle_pia  = true;
 	opt_emulate_dram  = false;
@@ -281,7 +276,6 @@ main(int argc, char **argv)
 		    &rom_path,
 		    &bin_path,
 		    &bin_address,
-		    &ram_size,
 		    &opt_uncapped,
 		    &opt_throttle_pia,
 		    &opt_emulate_dram,
@@ -303,7 +297,7 @@ main(int argc, char **argv)
 	{
 		port_result_t rc;
 
-		rc = bus_init(&bus, static_ram, ram_size);
+		rc = bus_init(&bus, static_ram, APPLE1_STATIC_RAM_SIZE);
 		if (rc != PORT_OK) {
 			port_term_write_buf("bus_init failed\r\n", 17);
 			wait_key_pressed();
@@ -324,10 +318,10 @@ main(int argc, char **argv)
 
 	/* Cold-boot RAM randomisation */
 	if (opt_randomize_cold) {
-		for (k = 0; k < ram_size; k++)
+		for (k = 0; k < APPLE1_STATIC_RAM_SIZE; k++)
 			static_ram[k] = (uint8_t)(port_gettime_us() & 0xFF);
 	} else {
-		port_memset(static_ram, 0, ram_size);
+		port_memset(static_ram, 0, APPLE1_STATIC_RAM_SIZE);
 	}
 
 	/* Load ROM (NULL = use embedded WozMon) */

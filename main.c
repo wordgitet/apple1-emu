@@ -201,7 +201,6 @@ print_usage(const char *prog)
 		  "\n"
 		  "Options:\n"
 		  "  -r <rom>             Path to 256-byte Woz Monitor ROM\n"
-		  "  -m <kb>              RAM size in KB (4-64, default 8)\n"
 		  "  -l <file>@<hex>      Load binary at hex address\n"
 		  "  -c                   Cap emulation speed to 1.023 MHz\n"
 		  "  -u                   Run uncapped (as fast as host "
@@ -259,7 +258,6 @@ cli_arg_is_runtime_only(const char *arg)
 static int
 apply_loaded_config(struct cli_config_opts *cfg,
     char **rom_path,
-    uint32_t *ram_size,
     char **bin_path,
     uint16_t *bin_address,
     char **wozmon_txt_path,
@@ -281,7 +279,6 @@ apply_loaded_config(struct cli_config_opts *cfg,
 {
 	*rom_path = cfg->rom_path;
 	cfg->rom_path = NULL;
-	*ram_size = cfg->ram_size;
 	*bin_path = cfg->bin_path;
 	cfg->bin_path = NULL;
 	*bin_address = cfg->bin_address;
@@ -382,7 +379,6 @@ main(int argc, char *argv[])
 	struct expansion_card *aci_card;
 	uint32_t cycle_accumulator;
 	uint32_t k;
-	uint32_t ram_size;
 	uint16_t bin_address;
 	uint16_t prev_pc;
 	uint16_t run_addr;
@@ -463,7 +459,6 @@ main(int argc, char *argv[])
 	tape_path = NULL;
 	wozmon_txt_path = NULL;
 	bin_address = 0;
-	ram_size = 8 * 1024; /* 8 KB default */
 	opt_debug = false;
 	opt_emulate_bounce = false;
 	opt_emulate_dram = false;
@@ -536,7 +531,6 @@ main(int argc, char *argv[])
 		}
 		apply_loaded_config(&cfg,
 		    &rom_path,
-		    &ram_size,
 		    &bin_path,
 		    &bin_address,
 		    &wozmon_txt_path,
@@ -559,7 +553,7 @@ main(int argc, char *argv[])
 	} else {
 		while ((opt = port_getopt(argc,
 			    argv,
-			    "r:m:l:w:a:e:E:B:k:L:V:cFpdbsHgthu")) != -1) {
+			    "r:l:w:a:e:E:B:k:L:V:cFpdbsHgthu")) != -1) {
 			switch (opt) {
 			case 'r':
 				if (rom_path != NULL) {
@@ -567,17 +561,6 @@ main(int argc, char *argv[])
 				}
 				rom_path = port_strdup(port_optarg);
 				break;
-			case 'm': {
-				int kb;
-
-				kb = (int)port_strtoul(port_optarg,
-				    (void *)0,
-				    10);
-				if (kb >= 4 && kb <= 64) {
-					ram_size = (uint32_t)(kb * 1024);
-				}
-				break;
-			}
 			case 'l': {
 				char *dup;
 				char *at;
@@ -703,29 +686,6 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Validate RAM size */
-	if (opt_flat_bus != 0) {
-		if (APPLE1_STATIC_RAM_SIZE < 65536) {
-			cli_error("Error: Flat bus option requires 64 KB of "
-				  "RAM, but "
-				  "emulator was compiled with "
-				  "APPLE1_STATIC_RAM_SIZE = %u KB.\n",
-			    APPLE1_STATIC_RAM_SIZE / 1024);
-			return (1);
-		}
-		ram_size = 65536;
-	}
-	if (ram_size == 0) {
-		ram_size = APPLE1_DEFAULT_RAM_KB * 1024;
-	}
-	if (ram_size > APPLE1_STATIC_RAM_SIZE) {
-		cli_error("Error: Requested RAM size (%u KB) exceeds maximum "
-			  "compiled static RAM size (%u KB).\n",
-		    ram_size / 1024,
-		    APPLE1_STATIC_RAM_SIZE / 1024);
-		return (1);
-	}
-
 	/* Open log file (if requested) before bus init so all messages land */
 	g_log_level = log_level;
 	if (log_path != NULL) {
@@ -743,7 +703,7 @@ main(int argc, char *argv[])
 	/* Initialise bus with static buffer — no malloc required */
 	{
 		port_result_t rc;
-		rc = bus_init(&bus, static_ram, ram_size);
+		rc = bus_init(&bus, static_ram, APPLE1_STATIC_RAM_SIZE);
 		if (rc != PORT_OK) {
 			cli_error("Error: bus_init failed: %s\n",
 			    port_error_string(rc));
@@ -759,7 +719,7 @@ main(int argc, char *argv[])
 
 		port_snprintf(msg, sizeof(msg),
 		    "apple1-emu starting: RAM=%uKB speed=%s baud=%u",
-		    (unsigned)(ram_size / 1024),
+		    (unsigned)(APPLE1_STATIC_RAM_SIZE / 1024),
 		    opt_uncapped != 0 ? "uncapped" : "capped",
 		    (unsigned)opt_baud);
 		log_info(&bus, msg);
@@ -778,11 +738,11 @@ main(int argc, char *argv[])
 
 	/* Cold-boot RAM randomisation */
 	if (bus.opts.randomize_cold_boot != 0) {
-		for (k = 0; k < ram_size; k++) {
+		for (k = 0; k < APPLE1_STATIC_RAM_SIZE; k++) {
 			static_ram[k] = (uint8_t)(port_gettime_us() & 0xFF);
 		}
 	} else {
-		port_memset(static_ram, 0, ram_size);
+		port_memset(static_ram, 0, APPLE1_STATIC_RAM_SIZE);
 	}
 
 	/* Load ROM */

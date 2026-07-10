@@ -38,8 +38,4 @@
 #error "APPLE1_STATIC_RAM_SIZE cannot exceed 65536 (64KB)"
 #endif
 
-#if (APPLE1_DEFAULT_RAM_KB * 1024) > APPLE1_STATIC_RAM_SIZE
-#error "APPLE1_DEFAULT_RAM_KB is larger than APPLE1_STATIC_RAM_SIZE"
-#endif
-
 #endif /* APPLE1LIMIT_CHECKS_H */

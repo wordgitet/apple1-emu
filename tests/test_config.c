@@ -147,7 +147,6 @@ test_empty_config(void)
 	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
 	assert(rc == CLI_CONFIG_OK);
 	assert(opts.rom_path == NULL);
-	assert(opts.ram_size == (uint32_t)(APPLE1_DEFAULT_RAM_KB * 1024));
 	assert(opts.opt_uncapped == false);
 
 	cli_config_free_strings(&opts);
@@ -165,7 +164,6 @@ test_sample_config(void)
 
 	mock_install("# comment\n"
 		     "rom = wozmon.bin\n"
-		     "ram_kb = 16\n"
 		     "load = myprog.bin @ 0300\n"
 		     "speed_cap = yes\n"
 		     "flat_bus = true\n"
@@ -181,7 +179,6 @@ test_sample_config(void)
 	rc = load_config_file(MOCK_CFG_PATH, &opts, errbuf, sizeof(errbuf));
 	assert(rc == CLI_CONFIG_OK);
 	assert(port_strcmp(opts.rom_path, "wozmon.bin") == 0);
-	assert(opts.ram_size == 16U * 1024U);
 	assert(port_strcmp(opts.bin_path, "myprog.bin") == 0);
 	assert(opts.bin_address == 0x0300);
 	assert(opts.opt_uncapped == false);

@@ -18,8 +18,7 @@ Define these **before** including headers, or edit `apple1limit.h` directly.
 | `APPLE1_MAX_BREAKPOINTS` | 16 | 1–64 debugger breakpoints |
 | `APPLE1_MAX_WATCHPOINTS` | 8 | 1–32 debugger watchpoints |
 | `APPLE1_MAX_TRACE_LINES` | 64 | 1–4096 PC trace ring buffer |
-| `APPLE1_STATIC_RAM_SIZE` | 65536 | 4096–65536 bytes compiled into `main.c` |
-| `APPLE1_DEFAULT_RAM_KB` | 8 | Default RAM if `-m` not given; must fit in static size |
+| `APPLE1_STATIC_RAM_SIZE` | 8192 | 4096–65536 bytes compiled into `main.c` (default 8KB for BASIC) |
 | `APPLE1_DEFAULT_CPU_HZ` | 1000000 | Reserved default (authentic rate is ~1.023 MHz at runtime) |
 | `APPLE1_DEFAULT_BAUD` | 0 | Default terminal baud (0 = instant) |
 | `APPLE1_ACI_MAX_TAPE_PULSES` | (undefined) | If set, enables fixed-size ACI tape buffer (no heap growth) |
@@ -27,7 +26,7 @@ Define these **before** including headers, or edit `apple1limit.h` directly.
 Example — 4 KB static RAM for tiny embedded builds:
 
 ```bash
-make EXTRA_CFLAGS='-DAPPLE1_STATIC_RAM_SIZE=4096 -DAPPLE1_DEFAULT_RAM_KB=4'
+make EXTRA_CFLAGS='-DAPPLE1_STATIC_RAM_SIZE=4096'
 ```
 
 ---
@@ -218,7 +217,7 @@ maintained paths.
 
 | Setting | Where |
 |---------|-------|
-| RAM size 4–64 KB | `-m` CLI or `ram_kb` in `.conf` (≤ `APPLE1_STATIC_RAM_SIZE`) |
+| RAM size | Compile-time `APPLE1_STATIC_RAM_SIZE` (default 8KB) |
 | Flat 64 KB bus | `-F` or `flat_bin` / positional flat binary |
 | Speed cap (~1.023 MHz) | Default; `-c` or `speed_cap = yes` in `.conf` |
 | Uncapped (full host speed) | `-u` or `speed_cap = no` in `.conf` |

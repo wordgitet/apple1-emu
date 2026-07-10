@@ -183,7 +183,6 @@ unless absolute (`/documents/ndless/...`).  Same `key = value` format as desktop
 Example config:
 
 ```
-ram_kb = 8
 load = roms/basic.tns @ E000
 ```
 

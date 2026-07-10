@@ -9,7 +9,6 @@
  */
 struct cli_config_opts {
 	char *rom_path;
-	uint32_t ram_size;
 	char *bin_path;
 	uint16_t bin_address;
 	char *wozmon_txt_path;

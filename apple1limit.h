@@ -46,20 +46,20 @@
 #endif
 
 /*
- * Maximum static RAM size in bytes for the emulator (default 65536).
- * Can be overridden to compile for memory-constrained targets (e.g. 4096).
+ * Maximum static RAM size in bytes for the emulator (default 8192).
+ * Historically accurate Apple-1 RAM sizes:
+ * - 4096   (4 KB)  - Original Apple-1 (no BASIC capability)
+ * - 8192   (8 KB)  - Standard with BASIC (default)
+ * - 16384  (16 KB) - With expansion cards
+ * - 65536  (64 KB) - Maximum 6502 address space (requires modifications)
  */
 #ifndef APPLE1_STATIC_RAM_SIZE
-#define APPLE1_STATIC_RAM_SIZE 65536
+#define APPLE1_STATIC_RAM_SIZE 8192  /* Default 8KB (standard with BASIC) */
 #endif
 
 /*
  * Default parameters.
  */
-#ifndef APPLE1_DEFAULT_RAM_KB
-#define APPLE1_DEFAULT_RAM_KB 8
-#endif
-
 #ifndef APPLE1_DEFAULT_CPU_HZ
 #define APPLE1_DEFAULT_CPU_HZ 1000000
 #endif

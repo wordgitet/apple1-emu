@@ -8,8 +8,9 @@ with undocumented opcodes emulated for test-suite compatibility.
 ## Memory map (standard Apple-1 layout)
 
 When **flat bus mode** (`-F`) is off, the bus uses the classic Apple-1 decode.
-RAM size is configurable (`-m`, default 8 KB) with optional **split mapping** for
-8 KB: `$0000–$0FFF` and `$E000–$EFFF` map to physical RAM banks.
+RAM size is set at compile time via `APPLE1_STATIC_RAM_SIZE` (default 8 KB for BASIC)
+with optional **split mapping** for 8 KB: `$0000–$0FFF` and `$E000–$EFFF` map to
+physical RAM banks.
 
 | Range | Device |
 |-------|--------|

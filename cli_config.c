@@ -20,7 +20,6 @@ cli_config_init_defaults(struct cli_config_opts *opts)
 		return;
 	}
 	opts->rom_path = NULL;
-	opts->ram_size = (uint32_t)(APPLE1_DEFAULT_RAM_KB * 1024);
 	opts->bin_path = NULL;
 	opts->bin_address = 0;
 	opts->wozmon_txt_path = NULL;
@@ -272,17 +271,6 @@ apply_key(const char *key,
 
 	if (key_eq(key, "rom")) {
 		return (set_string(&opts->rom_path, val));
-	}
-	if (key_eq(key, "ram_kb")) {
-		kb = (int)port_strtoul(val, NULL, 10);
-		if (kb >= 4 && kb <= 64) {
-			opts->ram_size = (uint32_t)(kb * 1024);
-			return (1);
-		}
-		if (errbuf_sz > 0) {
-			port_snprintf(errbuf, errbuf_sz, "ram_kb must be 4-64");
-		}
-		return (0);
 	}
 	if (key_eq(key, "load")) {
 		return (parse_load_value(val,

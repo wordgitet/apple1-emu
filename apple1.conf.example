@@ -31,18 +31,13 @@
 
 
 # ---------------------------------------------------------------------------
-# ROM and RAM
+# ROM and program loading
 # ---------------------------------------------------------------------------
 
 # rom = wozmon.bin
 #   Path to an external 256-byte Woz Monitor ROM image.
 #   Default: built-in embedded ROM when the binary was compiled with one;
 #   otherwise you must supply a ROM via this setting or -r on the CLI.
-
-# ram_kb = 8
-#   Main RAM size in kilobytes (integer 4–64).
-#   Default: 8 (or the compile-time APPLE1_DEFAULT_RAM_KB value).
-#   Cannot exceed APPLE1_STATIC_RAM_SIZE from the build.
 
 
 # ---------------------------------------------------------------------------
@@ -139,6 +134,5 @@
 # ---------------------------------------------------------------------------
 #
 # rom = wozmon.bin
-# ram_kb = 8
 # load = hello.bin @ 0300
 # speed_cap = yes
