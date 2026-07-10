@@ -14,6 +14,7 @@ macro registry.
 | **Plan 9 / 9front** | `mk all` | `main.c` | `port_plan9.c` | `term_vt100.c` | See [plan9-terminal.md](plan9-terminal.md). |
 | **UnixWare / OpenUNIX** | `make -f Makefile.uw` | `main.c` | `port_posix.c` | `term_vt100.c` | Native `cc` + `make`, not autotools. |
 | **MINIX 3.3** | `./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `clang` + `binutils` from pkgin (neither in base). |
+| **Sortix 1.1** | `autoreconf -fi && ./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Compiles out of the box with GCC 14.2.0. |
 | **TI-Nspire** (Ndless) | `make nspire` | `main_nspire.c` | `port_nspire.c` | `term_nspire.c` | No CLI; config via `apple1.conf.tns`. |
 | **VxWorks 7 RTP** | `bash vxworks_rtp_build.sh` | `main.c` | `port_vxworks.c` | `term_vt100.c` | See [VXWORKS_RTP.md](VXWORKS_RTP.md). |
 | **FreeRTOS** (simulator) | `make freertos` | `main.c` | `port_freertos.c` | `term_ansi.c` | See [FREERTOS_DEMO.md](FREERTOS_DEMO.md). |
@@ -123,6 +124,30 @@ the code is strict C89 POSIX and compiles warning-free.
 reverse history search before the byte reaches the SSH stream.  Run the
 emulator on the MINIX console directly, or use `bind -r '\C-r'` in bash
 on the host before connecting, to pass Ctrl+R through.
+
+---
+
+## Sortix 1.1
+
+Tested on **Sortix 1.1.0-dev** (x86_64).  Since autotools (autoreconf, autoconf,
+automake) and GCC 14.2.0 are preinstalled on Sortix, the emulator builds completely
+out of the box.
+
+Generate configure script first:
+
+```sh
+autoreconf -fi
+```
+
+Then build normally:
+
+```sh
+./configure
+make
+./apple1 -r wozmon.bin
+```
+
+No source changes are needed; the C89 POSIX codebase compiles and runs cleanly.
 
 ---
 
