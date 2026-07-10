@@ -231,6 +231,10 @@ cparser:
 	$(MAKE) clean
 	$(MAKE) CC=cparser apple1
 
+chibicc:
+	$(MAKE) clean
+	$(MAKE) CC=chibicc AM_CFLAGS= CFLAGS="-g" apple1
+
 # ---------------------------------------------------------------------------
 # FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
 # ---------------------------------------------------------------------------
