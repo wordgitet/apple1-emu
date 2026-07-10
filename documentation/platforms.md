@@ -13,7 +13,7 @@ macro registry.
 | **Windows** (MSVC) | `nmake -f Makefile.msc` | `main.c` | `port_win.c` | `term_ansi.c` | Or MinGW via autotools. |
 | **Plan 9 / 9front** | `mk all` | `main.c` | `port_plan9.c` | `term_vt100.c` | See [plan9-terminal.md](plan9-terminal.md). |
 | **UnixWare / OpenUNIX** | `make -f Makefile.uw` | `main.c` | `port_posix.c` | `term_vt100.c` | Native `cc` + `make`, not autotools. |
-| **MINIX 3.3** | `./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `binutils` from pkgin; clang 3.4 ships in base. |
+| **MINIX 3.3** | `./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `clang` + `binutils` from pkgin (neither in base). |
 | **TI-Nspire** (Ndless) | `make nspire` | `main_nspire.c` | `port_nspire.c` | `term_nspire.c` | No CLI; config via `apple1.conf.tns`. |
 | **VxWorks 7 RTP** | `bash vxworks_rtp_build.sh` | `main.c` | `port_vxworks.c` | `term_vt100.c` | See [VXWORKS_RTP.md](VXWORKS_RTP.md). |
 | **FreeRTOS** (simulator) | `make freertos` | `main.c` | `port_freertos.c` | `term_ansi.c` | See [FREERTOS_DEMO.md](FREERTOS_DEMO.md). |
@@ -101,11 +101,11 @@ on UnixWare — run tests on a POSIX host first.
 
 ## MINIX 3
 
-Tested on **MINIX 3.3.0** (i386).  The base system ships `clang 3.4` but no
-linker — install `binutils` from pkgin first:
+Tested on **MINIX 3.3.0** (i386).  Neither a compiler nor a linker ships
+in the base system — install both from pkgin:
 
 ```sh
-pkgin -y install binutils
+pkgin -y install clang binutils
 ```
 
 Then build normally:
@@ -116,7 +116,7 @@ make
 ./apple1 -r wozmon.bin
 ```
 
-`configure` detects clang automatically.  No source changes are needed;
+`configure` picks up clang automatically.  No source changes are needed;
 the code is strict C89 POSIX and compiles warning-free.
 
 ---
