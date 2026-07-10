@@ -302,49 +302,72 @@ test_illegal_instructions(struct cpu *cpu, struct bus *bus)
 	assert(!(cpu->p & FLAG_NEGATIVE));
 }
 
+struct dummy_test_card {
+	int writes;
+	int dummy_writes;
+	uint8_t last_val;
+};
+
+static uint8_t
+dummy_test_read(void *ctx, uint16_t addr, bool is_dummy)
+{
+	(void)ctx;
+	(void)addr;
+	(void)is_dummy;
+	return (0x43);
+}
+
+static void
+dummy_test_write(void *ctx, uint16_t addr, uint8_t val, bool is_dummy)
+{
+	struct dummy_test_card *tc = (struct dummy_test_card *)ctx;
+	(void)addr;
+	tc->writes++;
+	if (is_dummy != 0) {
+		tc->dummy_writes++;
+	}
+	tc->last_val = val;
+}
+
 /* Dummy Write Side-Effects Test */
 static void
 test_dummy_write_side_effects(struct cpu *cpu, struct bus *bus)
 {
+	struct dummy_test_card tc;
+	struct expansion_card card;
+
 	/* Disable timing throttling to run test quickly */
 	bus->opts.randomize_cold_boot = false;
 	bus->opts.throttle_pia = false;
 	bus->opts.uncapped = true;
 	memset(bus->ram, 0, bus->ram_size);
 
+	memset(&tc, 0, sizeof(tc));
+	memset(&card, 0, sizeof(card));
+	card.name = "DummyTest";
+	card.base = 0x5000;
+	card.mask = 0xF000;
+	card.read = dummy_test_read;
+	card.write = dummy_test_write;
+	card.ctx = &tc;
+
+	bus_add_card(bus, &card);
+
 	/* Setup vectors and program */
-	/* 0x1000: DCP $D011 (CF 11 D0) - RMW to kbd_control */
-	/* 0x1003: SLO $D012 (0F 12 D0) - RMW to dsp_data */
+	/* 0x1000: DCP $5011 (CF 11 50) - RMW to mock card */
 	bus->ram[0x1000] = 0xCF;
 	bus->ram[0x1001] = 0x11;
-	bus->ram[0x1002] = 0xD0;
-	bus->ram[0x1003] = 0x0F;
-	bus->ram[0x1004] = 0x12;
-	bus->ram[0x1005] = 0xD0;
+	bus->ram[0x1002] = 0x50;
 
-	/* Set key-ready strobe (bit 7) and select DR/OR (bit 2) */
-	bus->pia.kbd_control |= 0x84;
-	assert(bus->pia.kbd_control & 0x80);
+	cpu->pc = 0x1000;
+	cpu->a = 0x42;
 
-	printf("[DEBUG] Before DCP: kbd_control = 0x%02X\n",
-	    bus->pia.kbd_control);
-	cpu_step(cpu); /* Exec DCP $D011 */
-	printf("[DEBUG] After DCP: kbd_control = 0x%02X\n",
-	    bus->pia.kbd_control);
-	/* Dummy write to $D011 must have cleared key-ready strobe! */
-	assert(!(bus->pia.kbd_control & 0x80));
+	cpu_step(cpu); /* Exec DCP $5011 */
 
-	/* Set display busy (bit 7 clear) and select DR/OR (bit 2) */
-	bus->pia.dsp_control = (bus->pia.dsp_control & ~0x80) | 0x04;
-	assert(!(bus->pia.dsp_control & 0x80));
-
-	printf("[DEBUG] Before SLO: dsp_control = 0x%02X\n",
-	    bus->pia.dsp_control);
-	cpu_step(cpu); /* Exec SLO $D012 */
-	printf("[DEBUG] After SLO: dsp_control = 0x%02X\n",
-	    bus->pia.dsp_control);
-	/* Dummy write to $D012 must have triggered display ready (bit 7 set)! */
-	assert(bus->pia.dsp_control & 0x80);
+	/* Verify mock card saw exactly one dummy write and one real write */
+	assert(tc.writes == 2);
+	assert(tc.dummy_writes == 1);
+	assert(tc.last_val == 0x42);
 }
 
 /* test_interrupts() has been moved to tests/test_interrupts.c */

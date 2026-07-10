@@ -10,6 +10,10 @@
 #include <time.h>
 #include <unistd.h>
 #ifdef __USLC__
+#define PORT_USE_GETTIMEOFDAY
+#endif
+
+#ifdef PORT_USE_GETTIMEOFDAY
 #include <sys/time.h>
 #endif
 
@@ -39,7 +43,7 @@ port_strdup(const char *str)
 uint32_t
 port_gettime_us(void)
 {
-#ifdef __USLC__
+#ifdef PORT_USE_GETTIMEOFDAY
 	struct timeval tv;
 
 	if (gettimeofday(&tv, NULL) == 0) {
@@ -60,18 +64,16 @@ port_gettime_us(void)
 void
 port_sleep_us(uint32_t us)
 {
-#ifdef __USLC__
+#ifdef PORT_USE_GETTIMEOFDAY
 	unsigned sec;
-	useconds_t rem;
+	unsigned long rem;
 
 	sec = (unsigned)(us / 1000000);
-	rem = (useconds_t)(us % 1000000);
-	if (sec > 0) {
+	rem = (unsigned long)(us % 1000000);
+	if (sec > 0)
 		sleep(sec);
-	}
-	if (rem > 0) {
+	if (rem > 0)
 		usleep(rem);
-	}
 #else
 	struct timespec req;
 

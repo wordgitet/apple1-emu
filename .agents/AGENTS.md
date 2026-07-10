@@ -380,3 +380,23 @@ function or file, prefer bringing the whole unit into compliance in
 that pass rather than leaving it half-converted — but keep pure
 style-only changes in their own commit, separate from functional
 changes.
+## Git commit messages
+
+Do **not** use conventional-commit-style prefixes (`feat:`, `fix:`,
+`bus:`, `refactor:`, `chore:`, etc.). Write the subject line as a plain
+imperative sentence that describes what the commit does, e.g.:
+
+```
+Fix PIA register logic to match real 6821 hardware
+```
+
+Not:
+
+```
+bus: fix PIA register logic to match real 6821 hardware
+fix(bus): PIA register logic
+```
+
+- Subject line: imperative mood, ≤ 72 characters, no trailing period.
+- Body (optional): wrap at 72 characters. Explain *why*, not *what*.
+- Separate subject from body with a blank line.

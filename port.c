@@ -52,105 +52,117 @@
 #include "port_vxworks.c"
 #else
 /* Auto-detect (nested #ifdef only — Plan 9 6c has no #if / #elif) */
-#ifdef _WIN32
-#include "port_win.c"
-#else
-#ifdef _WIN64
-#include "port_win.c"
-#else
-#ifdef __MSDOS__
-#include "port_msdos.c"
-#else
-#ifdef MSDOS
-#include "port_msdos.c"
-#else
-#ifdef __dos__
-#include "port_msdos.c"
-#else
-#ifdef __WATCOMC__
-#ifdef __DOS__
-#include "port_msdos.c"
-#else
-#ifdef __PLAN9__
-#include "port_plan9.c"
-#else
-#ifdef __plan9__
-#include "port_plan9.c"
-#else
-#ifdef __OS2__
-#include "port_os2.c"
-#else
-#ifdef __os2__
-#include "port_os2.c"
-#else
-#ifdef __TINSPIRE__
-#include "port_nspire.c"
-#else
-#ifdef __RTP__
-#include "port_vxworks.c"
-#else
-#ifdef _WRS_KERNEL
-#include "port_vxworks.c"
-#else
-#ifdef __unix__
-#include "port_posix.c"
-#else
-#ifdef __unix
-#include "port_posix.c"
-#else
-#ifdef __APPLE__
-#include "port_posix.c"
-#else
-#ifdef __linux__
-#include "port_posix.c"
-#else
-#ifdef __FreeBSD__
-#include "port_posix.c"
-#else
-#ifdef __NetBSD__
-#include "port_posix.c"
-#else
-#ifdef __OpenBSD__
-#include "port_posix.c"
-#else
-#ifdef __DragonFly__
-#include "port_posix.c"
-#else
-#ifdef __haiku__
-#include "port_posix.c"
-#else
-#ifdef __QNX__
-#include "port_posix.c"
-#else
-#ifdef __rtems__
-#include "port_posix.c"
-#else
-#include "port_bare.c"
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
+# ifdef _WIN32
+#  define PORT_DETECTED_WIN
+# endif
+# ifdef _WIN64
+#  define PORT_DETECTED_WIN
+# endif
+
+# ifdef __MSDOS__
+#  define PORT_DETECTED_MSDOS
+# endif
+# ifdef MSDOS
+#  define PORT_DETECTED_MSDOS
+# endif
+# ifdef __dos__
+#  define PORT_DETECTED_MSDOS
+# endif
+# ifdef __WATCOMC__
+#  ifdef __DOS__
+#   define PORT_DETECTED_MSDOS
+#  endif
+# endif
+
+# ifdef __PLAN9__
+#  define PORT_DETECTED_PLAN9
+# endif
+# ifdef __plan9__
+#  define PORT_DETECTED_PLAN9
+# endif
+
+# ifdef __OS2__
+#  define PORT_DETECTED_OS2
+# endif
+# ifdef __os2__
+#  define PORT_DETECTED_OS2
+# endif
+
+# ifdef __TINSPIRE__
+#  define PORT_DETECTED_NSPIRE
+# endif
+
+# ifdef __RTP__
+#  define PORT_DETECTED_VXWORKS
+# endif
+# ifdef _WRS_KERNEL
+#  define PORT_DETECTED_VXWORKS
+# endif
+
+# ifdef __unix__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __unix
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __APPLE__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __linux__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __FreeBSD__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __NetBSD__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __OpenBSD__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __DragonFly__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __haiku__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __QNX__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __rtems__
+#  define PORT_DETECTED_POSIX
+# endif
+
+# ifdef PORT_DETECTED_WIN
+#  include "port_win.c"
+# else
+#  ifdef PORT_DETECTED_MSDOS
+#   include "port_msdos.c"
+#  else
+#   ifdef PORT_DETECTED_PLAN9
+#    include "port_plan9.c"
+#   else
+#    ifdef PORT_DETECTED_OS2
+#     include "port_os2.c"
+#    else
+#     ifdef PORT_DETECTED_NSPIRE
+#      include "port_nspire.c"
+#     else
+#      ifdef PORT_DETECTED_VXWORKS
+#       include "port_vxworks.c"
+#      else
+#       ifdef PORT_DETECTED_POSIX
+#        include "port_posix.c"
+#       else
+#        include "port_bare.c"
+#       endif
+#      endif
+#     endif
+#    endif
+#   endif
+#  endif
+# endif
+
 #endif
 #endif
 #endif

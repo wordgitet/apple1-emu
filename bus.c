@@ -679,29 +679,21 @@ pia_read(struct bus *bus, uint16_t address)
 static void
 pia_write(struct bus *bus, uint16_t address, uint8_t value, bool is_dummy)
 {
+	(void)is_dummy;
+
 	switch (address) {
 	case PIA_BASE:
 		/* Keyboard data is read-only */
 		break;
 	case PIA_BASE + 1:
-		if (is_dummy != 0) {
-			/* DCP $D011 dummy write clears key-ready bit (bit 7) */
-			bus->pia.kbd_control &= ~0x80;
-		} else {
-			/* Real writes cannot modify bit 7 (status flag is read-only) */
-			bus->pia.kbd_control = (bus->pia.kbd_control & 0x80) |
-			    (value & 0x7F);
-		}
+		/* Real writes cannot modify bit 7 (status flag is read-only) */
+		bus->pia.kbd_control = (bus->pia.kbd_control & 0x80) |
+		    (value & 0x7F);
 		break;
 	case PIA_BASE + 2:
 		if (bus->pia.dsp_control & 0x04) {
-			if (is_dummy != 0) {
-				/* SLO $D012 dummy write triggers display ready */
-				bus->pia.dsp_control |= 0x80;
-			} else {
-				bus->pia.dsp_data = value;
-				io_write_display(value);
-			}
+			bus->pia.dsp_data = value;
+			io_write_display(value);
 		} else {
 			/* Accessing DDRA (DDR for Port B/Display) */
 		}

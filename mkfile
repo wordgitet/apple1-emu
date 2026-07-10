@@ -58,9 +58,7 @@ amal-single:V: apple1.c apple1.h
 	6l -o $O.$TARG apple1.$O
 	cp $O.$TARG apple1
 
-pcc:V:
-	mk clean
-	CC=pcc LD=pcc LIB=-lape CFLAGS='-DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100 -DAPPLE1_PORT_PLAN9_APE' mk all
+
 
 install:V: all
 	cp $O.$TARG /$objtype/bin/apple1

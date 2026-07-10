@@ -35,7 +35,7 @@ make check
 - **Config:** `apple1.conf` or CLI switches — see [usage.md](usage.md).
 - **Keyboard:** Ctrl+C quit, Ctrl+R reset, Ctrl+L clear screen.
 
-Alternate compilers: `make tcc`, `make pcc`, `make lacc`.
+Alternate compilers: `make antcc`, `make nwcc`, `make tcc`, `make pcc`, `make lacc`.
 
 ---
 
@@ -78,8 +78,8 @@ mk all
 
 Headless: `./6.out -H`.
 
-- **Why VT100, not ANSI:** the console is a teletype; ANSI full-screen redraw
-  scrolls badly.  See [plan9-terminal.md](plan9-terminal.md).
+- **Why VT100, not ANSI:** `vt` in Plan 9 / 9front only emulates a VT-100 or 
+VT-220 terminal. See [plan9-terminal.md](plan9-terminal.md).
 - **Amalgamation:** `mk amalg` (no Python).
 
 ---
