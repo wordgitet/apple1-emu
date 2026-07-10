@@ -34,7 +34,7 @@ make check
 
 - **Display:** 40×24 ANSI terminal; power-on checkerboard (`_` / blinking `@`).
 - **Config:** `apple1.conf` or CLI switches — see [usage.md](usage.md).
-- **Keyboard:** Ctrl+C quit, Ctrl+R reset, Ctrl+L clear screen.
+- **Keyboard:** Ctrl+C quit, Ctrl+R / Ctrl+T reset, Ctrl+L clear screen.
 
 Alternate compilers: `make antcc`, `make cparser`, `make cproc`, `make nwcc`, `make tcc`, `make pcc`, `make lacc`.
 
@@ -118,6 +118,11 @@ make
 
 `configure` picks up clang automatically.  No source changes are needed;
 the code is strict C89 POSIX and compiles warning-free.
+
+**Ctrl+R over SSH:** most local shells (bash, zsh) intercept Ctrl+R for
+reverse history search before the byte reaches the SSH stream.  Run the
+emulator on the MINIX console directly, or use `bind -r '\C-r'` in bash
+on the host before connecting, to pass Ctrl+R through.
 
 ---
 

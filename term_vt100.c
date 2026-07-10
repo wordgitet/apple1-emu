@@ -311,7 +311,7 @@ term_poll(void)
 			vram[0][0] = 0x00;
 			return (0);
 		}
-		if (ch == 0x12) {
+		if (ch == 0x12 || ch == 0x14) { /* Ctrl+R or Ctrl+T resets */
 			reset_pending = true;
 			return (0);
 		}
