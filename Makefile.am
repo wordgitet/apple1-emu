@@ -240,6 +240,58 @@ ccomp:
 	$(MAKE) CC=ccomp AM_CFLAGS="-std=c99 -Wall" apple1
 
 # ---------------------------------------------------------------------------
+# Bare-bones POSIX build (omit flags only — CPU, bus, I/O, terminal, Wozmon)
+#
+#   make bare
+#
+# Output: ./apple1_bare
+# ---------------------------------------------------------------------------
+
+BARE_CFLAGS = -Wall -Wextra -std=c89 -O2 \
+	-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
+	-DAPPLE1_OMIT_CHARMAP \
+	-DAPPLE1_OMIT_DEBUGGER \
+	-DAPPLE1_OMIT_ACI \
+	-DAPPLE1_OMIT_KRUSADER \
+	-DAPPLE1_OMIT_PASTE \
+	-DAPPLE1_OMIT_PIA_THROTTLE \
+	-DAPPLE1_OMIT_KBD_BOUNCE \
+	-DAPPLE1_OMIT_DISKIO \
+	-DAPPLE1_OMIT_BUS_ACCESS_CB
+
+BARE_OBJS = bare-cpu.o bare-bus.o bare-io.o bare-cli_config.o \
+	bare-term.o bare-port.o bare-main.o
+
+bare: apple1_bare
+
+apple1_bare: $(BARE_OBJS)
+	@echo "Linking apple1_bare (minimal omit-flag build)..."
+	$(CC) -o apple1_bare $(BARE_OBJS)
+	@echo "Done: ./apple1_bare"
+
+bare-cpu.o: cpu.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ cpu.c
+
+bare-bus.o: bus.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ bus.c
+
+bare-io.o: io.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ io.c
+
+bare-cli_config.o: cli_config.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ cli_config.c
+
+bare-term.o: term.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ term.c
+
+bare-port.o: port.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ port.c
+
+bare-main.o: main.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ main.c
+
+
+# ---------------------------------------------------------------------------
 # FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
 # ---------------------------------------------------------------------------
 
@@ -345,6 +397,7 @@ clean-local:
 	-rm -f apple1.c apple1.h apple1.exe apple1-djgpp.exe apple1-watcom.exe
 	-rm -f apple1_amal_test cwsdpmi.exe cwsdpmi.zip 6502_functional_test.bin
 	-rm -f apple1_freertos freertos-*.o
+	-rm -f apple1_bare bare-*.o
 	-rm -f apple1.vxe apple1_full.vxe
 	-rm -f /tmp/apple1-vx-*.o
 	-rm -f apple1.tns apple1.elf apple1.zehn nspire-*.o

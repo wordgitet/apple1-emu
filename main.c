@@ -1038,7 +1038,9 @@ main(int argc, char *argv[])
 		{
 			uint8_t cycles = cpu_step(&cpu);
 
+#ifndef APPLE1_OMIT_BUS_ACCESS_CB
 			bus.access_cb = NULL;
+#endif
 			cycle_accumulator += cycles;
 			bus_tick_kbd_bounce(&bus, cycles);
 

@@ -416,6 +416,8 @@ nmake -f Makefile.msc
 `make`).  See [UnixWare / OpenUNIX](#unixware--openunix) above.
 
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr, TI-Nspire):**
+- **Bare-bones:** `make bare` — debugger, ACI, Krusader, disk I/O, paste, and
+  other extras stripped via `APPLE1_OMIT_*` flags (`./apple1_bare`)
 - **TI-Nspire:** `make nspire` — see [platforms.md](platforms.md#ti-nspire-ndless)
 - **FreeRTOS (POSIX simulator):** `make freertos` — [FREERTOS_DEMO.md](FREERTOS_DEMO.md)
 - **VxWorks 7 RTP (QEMU SDK):** `bash vxworks_rtp_build.sh` — [VXWORKS_RTP.md](VXWORKS_RTP.md)
