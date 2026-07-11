@@ -235,6 +235,10 @@ chibicc:
 	$(MAKE) clean
 	$(MAKE) CC=chibicc AM_CFLAGS= CFLAGS="-g" apple1
 
+ccomp:
+	$(MAKE) clean
+	$(MAKE) CC=ccomp AM_CFLAGS="-std=c99 -Wall" apple1
+
 # ---------------------------------------------------------------------------
 # FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
 # ---------------------------------------------------------------------------
