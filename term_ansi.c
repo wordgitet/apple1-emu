@@ -1,5 +1,6 @@
 #include "port.h"
 #include "term_apple1.h"
+#include "apple1limit.h"
 
 /*
  * term_ansi.c - Hosted POSIX terminal (40x24 CRT via ANSI escapes).
@@ -17,9 +18,58 @@ static int cursor_x = 0;
 static int cursor_y = 0;
 static bool raw_mode_active = false;
 static bool reset_pending = false;
+#ifndef APPLE1_OMIT_PASTE
 static bool bracketed_paste_active = false;
 static int escape_seq_pos = 0;
 static char escape_seq_buf[32];
+static uint8_t paste_buffer[APPLE1_PASTE_BUFFER_SIZE];
+static int paste_read_idx = 0;
+static int paste_write_idx = 0;
+
+static void
+paste_buffer_clear(void)
+{
+	paste_read_idx = 0;
+	paste_write_idx = 0;
+}
+
+static void
+paste_buffer_put(uint8_t ch)
+{
+	int next;
+
+	if (ch == 0x0A)
+		ch = 0x0D;
+	if (ch >= 'a' && ch <= 'z')
+		ch -= 32;
+	if (ch < 0x20 || ch > 0x7E)
+		return;
+
+	next = paste_write_idx + 1;
+	if (next >= APPLE1_PASTE_BUFFER_SIZE)
+		next = 0;
+	if (next == paste_read_idx)
+		return;
+
+	paste_buffer[paste_write_idx] = ch;
+	paste_write_idx = next;
+}
+
+static uint8_t
+paste_buffer_get(void)
+{
+	uint8_t ch;
+
+	if (paste_read_idx == paste_write_idx)
+		return (0);
+
+	ch = paste_buffer[paste_read_idx];
+	paste_read_idx++;
+	if (paste_read_idx >= APPLE1_PASTE_BUFFER_SIZE)
+		paste_read_idx = 0;
+	return (ch);
+}
+#endif
 
 extern uint32_t opt_baud;
 
@@ -73,6 +123,12 @@ term_init(void)
 	}
 	cursor_x = 0;
 	cursor_y = 0;
+
+#ifndef APPLE1_OMIT_PASTE
+	paste_buffer_clear();
+	bracketed_paste_active = false;
+	escape_seq_pos = 0;
+#endif
 
 	port_term_raw_enable();
 	raw_mode_active = true;
@@ -189,9 +245,11 @@ term_update(void)
 	char line[41];
 	char pos[16];
 
+#ifndef APPLE1_OMIT_PASTE
 	if (bracketed_paste_active != 0) {
 		return;
 	}
+#endif
 
 	now = port_gettime_us();
 	blink_on = ((now / 250000UL) & 1) != 0;
@@ -229,6 +287,12 @@ term_poll(void)
 	uint8_t ch;
 	int c;
 
+#ifndef APPLE1_OMIT_PASTE
+	ch = paste_buffer_get();
+	if (ch != 0)
+		return (ch | 0x80);
+#endif
+
 	ch = 0;
 	c = port_term_read_char();
 	if (c > 0) {
@@ -236,6 +300,7 @@ term_poll(void)
 	}
 
 	if (ch != 0) {
+#ifndef APPLE1_OMIT_PASTE
 		if (ch == 0x1B) {
 			escape_seq_pos = 0;
 			escape_seq_buf[escape_seq_pos++] = (char)ch;
@@ -246,6 +311,7 @@ term_poll(void)
 			if (escape_seq_pos >= 6) {
 				if (port_strcmp(escape_seq_buf, "\x1b[200~") ==
 				    0) {
+					paste_buffer_clear();
 					bracketed_paste_active = true;
 				}
 				if (port_strcmp(escape_seq_buf, "\x1b[201~") ==
@@ -256,15 +322,19 @@ term_poll(void)
 			}
 			return (0);
 		}
+#endif
 
 		if (ch == 0x03) {
 			port_signal_quit();
 			term_shutdown();
 			return (0);
 		}
+#ifndef APPLE1_OMIT_PASTE
 		if (bracketed_paste_active != 0) {
+			paste_buffer_put(ch);
 			return (0);
 		}
+#endif
 		if (ch == 0x0A) {
 			ch = 0x0D;
 		}

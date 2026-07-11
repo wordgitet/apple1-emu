@@ -38,4 +38,11 @@
 #error "APPLE1_STATIC_RAM_SIZE cannot exceed 65536 (64KB)"
 #endif
 
+#if APPLE1_PASTE_BUFFER_SIZE < 64
+#error "APPLE1_PASTE_BUFFER_SIZE must be at least 64"
+#endif
+#if APPLE1_PASTE_BUFFER_SIZE > 65536
+#error "APPLE1_PASTE_BUFFER_SIZE may not exceed 65536"
+#endif
+
 #endif /* APPLE1LIMIT_CHECKS_H */

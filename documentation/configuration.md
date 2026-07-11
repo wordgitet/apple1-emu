@@ -21,6 +21,8 @@ Define these **before** including headers, or edit `apple1limit.h` directly.
 | `APPLE1_STATIC_RAM_SIZE` | 8192 | 4096–65536 bytes compiled into `main.c` (default 8KB for BASIC) |
 | `APPLE1_DEFAULT_CPU_HZ` | 1000000 | Reserved default (authentic rate is ~1.023 MHz at runtime) |
 | `APPLE1_DEFAULT_BAUD` | 0 | Default terminal baud (0 = instant) |
+| `APPLE1_KBD_BUFFER_SIZE` | 16384 | Keyboard ring buffer in `io.c` |
+| `APPLE1_PASTE_BUFFER_SIZE` | 2048 | Bracketed-paste staging in `term_ansi.c` (ignored with `APPLE1_OMIT_PASTE`) |
 | `APPLE1_ACI_MAX_TAPE_PULSES` | (undefined) | If set, enables fixed-size ACI tape buffer (no heap growth) |
 
 Example — 4 KB static RAM for tiny embedded builds:
@@ -50,6 +52,7 @@ dependencies).
 | `APPLE1_OMIT_BUS_ACCESS_CB` | Bus access callback (watchpoints need this — keep for debugger builds) |
 | `APPLE1_OMIT_PIA_THROTTLE` | Microsecond delay on PIA access when uncapped |
 | `APPLE1_OMIT_KBD_BOUNCE` | Keyboard debounce simulation in `bus.c` |
+| `APPLE1_OMIT_PASTE` | Bracketed-paste mode in `term_ansi.c` / `port_posix.c` (`ESC[?2004h`, paste buffering) |
 
 Typical minimal CLI for embedded:
 

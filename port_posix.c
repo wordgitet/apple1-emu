@@ -108,8 +108,10 @@ port_term_raw_enable(void)
 		if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == 0) {
 			posix_raw_mode_active = 1;
 #ifndef __USLC__
+#ifndef APPLE1_OMIT_PASTE
 			/* Bracketed paste — xterm-like hosts only. */
 			port_term_write_buf("\x1b[?2004h", 8);
+#endif
 #endif
 		}
 	}
@@ -120,7 +122,9 @@ port_term_raw_disable(void)
 {
 	if (posix_raw_mode_active != 0) {
 #ifndef __USLC__
+#ifndef APPLE1_OMIT_PASTE
 		port_term_write_buf("\x1b[?2004l", 8);
+#endif
 #endif
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 		posix_raw_mode_active = 0;

@@ -76,6 +76,14 @@
 #define APPLE1_KBD_BUFFER_SIZE 16384
 #endif
 
+/*
+ * Bracketed-paste staging buffer in term_ansi.c (bytes).  Ignored when
+ * APPLE1_OMIT_PASTE is defined.
+ */
+#ifndef APPLE1_PASTE_BUFFER_SIZE
+#define APPLE1_PASTE_BUFFER_SIZE 2048
+#endif
+
 #ifndef APPLE1_PORT_PLAN9
 #include "apple1limit_checks.h"
 #endif
