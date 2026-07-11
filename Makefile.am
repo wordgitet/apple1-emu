@@ -448,4 +448,4 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
         check-single check-single-uw \
         single single-posix single-dos single-watcom single-win single-plan9 \
         single-uw single-qnx dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
-        apple1.exe cwsdpmi.exe tcc pcc lacc nwcc antcc freertos nspire
+        apple1.exe cwsdpmi.exe tcc pcc lacc nwcc antcc freertos nspire bare

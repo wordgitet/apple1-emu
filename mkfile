@@ -33,6 +33,25 @@ HFILES=\
 
 CFLAGS=-DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100
 
+BARECFLAGS=$CFLAGS\
+	-DAPPLE1_OMIT_DEBUGGER\
+	-DAPPLE1_OMIT_ACI\
+	-DAPPLE1_OMIT_KRUSADER\
+	-DAPPLE1_OMIT_PASTE\
+	-DAPPLE1_OMIT_PIA_THROTTLE\
+	-DAPPLE1_OMIT_KBD_BOUNCE\
+	-DAPPLE1_OMIT_DISKIO\
+	-DAPPLE1_OMIT_BUS_ACCESS_CB
+
+BAREOFILES=\
+	bare_main.$O\
+	bare_cli_config.$O\
+	bare_cpu.$O\
+	bare_bus.$O\
+	bare_io.$O\
+	bare_term.$O\
+	bare_port.$O\
+
 </sys/src/cmd/mkone
 
 # Extra prerequisites (must come after mkone — otherwise plain "mk" only
@@ -45,6 +64,40 @@ term.$O: term.c term_vt100.c
 
 apple1:V: $O.$TARG
 	cp $O.$TARG apple1
+
+# Minimal build: same omit flags as make bare (GNU Makefile).
+apple1_bare:V: $BAREOFILES
+	$LD -o apple1_bare $BAREOFILES
+
+bare:V: apple1_bare
+
+bare_main.$O: main.c $HFILES
+	$CC $BARECFLAGS main.c
+	mv main.$O $@
+
+bare_cli_config.$O: cli_config.c $HFILES
+	$CC $BARECFLAGS cli_config.c
+	mv cli_config.$O $@
+
+bare_cpu.$O: cpu.c $HFILES
+	$CC $BARECFLAGS cpu.c
+	mv cpu.$O $@
+
+bare_bus.$O: bus.c $HFILES
+	$CC $BARECFLAGS bus.c
+	mv bus.$O $@
+
+bare_io.$O: io.c $HFILES
+	$CC $BARECFLAGS io.c
+	mv io.$O $@
+
+bare_term.$O: term.c term_vt100.c $HFILES
+	$CC $BARECFLAGS term.c
+	mv term.$O $@
+
+bare_port.$O: port.c port_string.c port_plan9.c $HFILES
+	$CC $BARECFLAGS port.c
+	mv port.$O $@
 
 # Single-file amalgamation (no Python): rc + awk, then 6c/6l.
 amal:V: apple1.c apple1.h
@@ -64,4 +117,4 @@ install:V: all
 	cp $O.$TARG /$objtype/bin/apple1
 
 clean:V:
-	rm -f *.$O $O.$TARG apple1 apple1.exe
+	rm -f *.$O $O.$TARG apple1 apple1_bare apple1.exe bare_*.$O

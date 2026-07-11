@@ -64,10 +64,12 @@ Details: [building.md](building.md#ms-dos-cross-build).
 
 ```bash
 nmake -f Makefile.msc
+nmake -f Makefile.msc bare
 ```
 
-Produces `apple1.exe` with `port_win.c` + `term_ansi.c`.  MinGW builds can use
-autotools with `CC=x86_64-w64-mingw32-gcc`.
+Produces `apple1.exe` with `port_win.c` + `term_ansi.c`.  `bare` builds
+`apple1_bare.exe` with the same `APPLE1_OMIT_*` strip set as `make bare`.
+MinGW builds can use autotools with `CC=x86_64-w64-mingw32-gcc`.
 
 ---
 
@@ -76,6 +78,8 @@ autotools with `CC=x86_64-w64-mingw32-gcc`.
 ```bash
 mk all
 ./6.out
+mk bare
+./apple1_bare
 ```
 
 Headless: `./6.out -H`.
@@ -92,6 +96,7 @@ On the target machine (native USL `cc`, not GNU make):
 
 ```bash
 make -f Makefile.uw
+make -f Makefile.uw bare
 ./apple1
 ```
 

@@ -145,6 +145,12 @@ make -f Makefile.uw clean
 make -f Makefile.uw
 ```
 
+Minimal build (same `APPLE1_OMIT_*` set as `make bare` on GNU make):
+
+```bash
+make -f Makefile.uw bare
+```
+
 This produces **`./apple1`** with:
 
 ```text
@@ -404,6 +410,7 @@ See **[platforms.md](platforms.md)** for a single index of every port.
 **Windows (MSVC):**
 ```bash
 nmake -f Makefile.msc
+nmake -f Makefile.msc bare
 ```
 - Use the top-level Makefile with MinGW
 - Use amalgamation: `python3 tools/amalgamate.py --port port_win.c`
@@ -413,11 +420,12 @@ nmake -f Makefile.msc
 - Open Watcom: `make dos-watcom` (CauseWay stub embedded; no extra EXE in DOSBox)
 
 **UnixWare 7 / OpenUNIX:** `make -f Makefile.uw` on the target (native `cc` +
-`make`).  See [UnixWare / OpenUNIX](#unixware--openunix) above.
+`make`).  Minimal build: `make -f Makefile.uw bare`.  See
+[UnixWare / OpenUNIX](#unixware--openunix) above.
 
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr, TI-Nspire):**
-- **Bare-bones:** `make bare` — debugger, ACI, Krusader, disk I/O, paste, and
-  other extras stripped via `APPLE1_OMIT_*` flags (`./apple1_bare`)
+- **Bare-bones (GNU autotools):** `make bare` — `./apple1_bare`
+- **Bare-bones (Plan 9):** `mk bare` — `./apple1_bare`
 - **TI-Nspire:** `make nspire` — see [platforms.md](platforms.md#ti-nspire-ndless)
 - **FreeRTOS (POSIX simulator):** `make freertos` — [FREERTOS_DEMO.md](FREERTOS_DEMO.md)
 - **VxWorks 7 RTP (QEMU SDK):** `bash vxworks_rtp_build.sh` — [VXWORKS_RTP.md](VXWORKS_RTP.md)
