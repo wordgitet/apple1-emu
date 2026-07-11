@@ -5,7 +5,7 @@ CC = cl
 CFLAGS = -O2 -W3 -nologo -TC -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 CFLAGS = $(CFLAGS) -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_WIN -DAPPLE1_TERM_ANSI
 
-BARE_CFLAGS = $(CFLAGS) -DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI \
+MINIMAL_CFLAGS = $(CFLAGS) -DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI \
 	-DAPPLE1_OMIT_KRUSADER -DAPPLE1_OMIT_PASTE -DAPPLE1_OMIT_PIA_THROTTLE \
 	-DAPPLE1_OMIT_KBD_BOUNCE -DAPPLE1_OMIT_DISKIO -DAPPLE1_OMIT_BUS_ACCESS_CB \
 	-DAPPLE1_ZERO_MALLOC
@@ -24,18 +24,18 @@ CORE_OBJ = cpu.obj bus.obj io.obj aci.obj krusader.obj disasm.obj dbg.obj
 PORT_OBJ = $(PORT_STRING:.c=.obj) $(PORT_SRC:.c=.obj)
 OBJ = main.obj cli_config.obj $(CORE_OBJ) term.obj $(PORT_OBJ)
 
-BARE_OBJ = bare_main.obj bare_cli_config.obj bare_cpu.obj bare_bus.obj \
-	bare_io.obj bare_term.obj bare_port_string.obj bare_port_win.obj
+MINIMAL_OBJ = minimal_main.obj minimal_cli_config.obj minimal_cpu.obj minimal_bus.obj \
+	minimal_io.obj minimal_term.obj minimal_port_string.obj minimal_port_win.obj
 
 all: apple1.exe
 
 apple1.exe: $(OBJ)
 	$(CC) $(CFLAGS) -Fe$@ $(OBJ)
 
-apple1_bare.exe: $(BARE_OBJ)
-	$(CC) $(CFLAGS) -Fe$@ $(BARE_OBJ)
+apple1_minimal.exe: $(MINIMAL_OBJ)
+	$(CC) $(CFLAGS) -Fe$@ $(MINIMAL_OBJ)
 
-bare: apple1_bare.exe
+minimal: apple1_minimal.exe
 
 main.obj: main.c $(HEADERS)
 	$(CC) $(CFLAGS) -c main.c
@@ -73,31 +73,31 @@ port_string.obj: $(PORT_STRING) port.h
 port_win.obj: $(PORT_SRC) port.h
 	$(CC) $(CFLAGS) -c $(PORT_SRC)
 
-bare_main.obj: main.c $(HEADERS)
-	$(CC) $(BARE_CFLAGS) -Fobare_main.obj -c main.c
+minimal_main.obj: main.c $(HEADERS)
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_main.obj -c main.c
 
-bare_cli_config.obj: cli_config.c cli_config.h port.h apple1limit.h
-	$(CC) $(BARE_CFLAGS) -Fobare_cli_config.obj -c cli_config.c
+minimal_cli_config.obj: cli_config.c cli_config.h port.h apple1limit.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_cli_config.obj -c cli_config.c
 
-bare_cpu.obj: cpu.c cpu.h bus.h port.h
-	$(CC) $(BARE_CFLAGS) -Fobare_cpu.obj -c cpu.c
+minimal_cpu.obj: cpu.c cpu.h bus.h port.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_cpu.obj -c cpu.c
 
-bare_bus.obj: bus.c bus.h cpu.h port.h
-	$(CC) $(BARE_CFLAGS) -Fobare_bus.obj -c bus.c
+minimal_bus.obj: bus.c bus.h cpu.h port.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_bus.obj -c bus.c
 
-bare_io.obj: io.c io.h port.h
-	$(CC) $(BARE_CFLAGS) -Fobare_io.obj -c io.c
+minimal_io.obj: io.c io.h port.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_io.obj -c io.c
 
-bare_term.obj: term.c term_ansi.c term_dos.c term_vt100.c term_apple1.h port.h
-	$(CC) $(BARE_CFLAGS) -Fobare_term.obj -c term.c
+minimal_term.obj: term.c term_ansi.c term_dos.c term_vt100.c term_apple1.h port.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_term.obj -c term.c
 
-bare_port_string.obj: $(PORT_STRING) port.h
-	$(CC) $(BARE_CFLAGS) -Fobare_port_string.obj -c $(PORT_STRING)
+minimal_port_string.obj: $(PORT_STRING) port.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_port_string.obj -c $(PORT_STRING)
 
-bare_port_win.obj: $(PORT_SRC) port.h
-	$(CC) $(BARE_CFLAGS) -Fobare_port_win.obj -c $(PORT_SRC)
+minimal_port_win.obj: $(PORT_SRC) port.h
+	$(CC) $(MINIMAL_CFLAGS) -Fominimal_port_win.obj -c $(PORT_SRC)
 
 clean:
-	-del /Q *.obj apple1.exe apple1_bare.exe 2>NUL
+	-del /Q *.obj apple1.exe apple1_minimal.exe 2>NUL
 
-.PHONY: all bare clean
+.PHONY: all minimal clean

@@ -245,14 +245,14 @@ ccomp:
 	$(MAKE) CC=ccomp AM_CFLAGS="-std=c99 -Wall" apple1
 
 # ---------------------------------------------------------------------------
-# Bare-bones POSIX build (omit flags only — CPU, bus, I/O, terminal, Wozmon)
+# Minimal feature POSIX build (omit flags only — CPU, bus, I/O, terminal, Wozmon)
 #
-#   make bare
+#   make minimal
 #
-# Output: ./apple1_bare
+# Output: ./apple1_minimal
 # ---------------------------------------------------------------------------
 
-BARE_CFLAGS = -Wall -Wextra -std=c89 -Os \
+MINIMAL_CFLAGS = -Wall -Wextra -std=c89 -Os \
 	-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
 	-DAPPLE1_OMIT_CHARMAP \
 	-DAPPLE1_OMIT_DEBUGGER \
@@ -265,37 +265,37 @@ BARE_CFLAGS = -Wall -Wextra -std=c89 -Os \
 	-DAPPLE1_OMIT_BUS_ACCESS_CB \
 	-DAPPLE1_ZERO_MALLOC
 
-BARE_OBJS = bare-cpu.o bare-bus.o bare-io.o bare-cli_config.o \
-	bare-term.o bare-port.o bare-main.o
+MINIMAL_OBJS = minimal-cpu.o minimal-bus.o minimal-io.o minimal-cli_config.o \
+	minimal-term.o minimal-port.o minimal-main.o
 
-bare: apple1_bare
+minimal: apple1_minimal
 
-apple1_bare: $(BARE_OBJS)
-	@echo "Linking apple1_bare (minimal omit-flag build)..."
-	$(CC) -o apple1_bare $(BARE_OBJS)
-	strip apple1_bare
-	@echo "Done: ./apple1_bare"
+apple1_minimal: $(MINIMAL_OBJS)
+	@echo "Linking apple1_minimal (minimal omit-flag build)..."
+	$(CC) -o apple1_minimal $(MINIMAL_OBJS)
+	strip apple1_minimal
+	@echo "Done: ./apple1_minimal"
 
-bare-cpu.o: cpu.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ cpu.c
+minimal-cpu.o: cpu.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ cpu.c
 
-bare-bus.o: bus.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ bus.c
+minimal-bus.o: bus.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ bus.c
 
-bare-io.o: io.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ io.c
+minimal-io.o: io.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ io.c
 
-bare-cli_config.o: cli_config.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ cli_config.c
+minimal-cli_config.o: cli_config.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ cli_config.c
 
-bare-term.o: term.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ term.c
+minimal-term.o: term.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ term.c
 
-bare-port.o: port.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ port.c
+minimal-port.o: port.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ port.c
 
-bare-main.o: main.c
-	$(CC) $(BARE_CFLAGS) -c -o $@ main.c
+minimal-main.o: main.c
+	$(CC) $(MINIMAL_CFLAGS) -c -o $@ main.c
 
 
 # ---------------------------------------------------------------------------

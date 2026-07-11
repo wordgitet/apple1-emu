@@ -6,7 +6,7 @@ apple1.vxe
 apple1_freertos
 apple1_qnx
 apple1_ubsan
-apple1_bare
+apple1_minimal
 freertos-*.o
 cwsdpmi.exe
 

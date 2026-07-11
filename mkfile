@@ -33,7 +33,7 @@ HFILES=\
 
 CFLAGS=-DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_PLAN9 -DAPPLE1_TERM_VT100
 
-BARECFLAGS=$CFLAGS\
+MINIMALCFLAGS=$CFLAGS\
 	-DAPPLE1_OMIT_DEBUGGER\
 	-DAPPLE1_OMIT_ACI\
 	-DAPPLE1_OMIT_KRUSADER\
@@ -44,14 +44,14 @@ BARECFLAGS=$CFLAGS\
 	-DAPPLE1_OMIT_BUS_ACCESS_CB\
 	-DAPPLE1_ZERO_MALLOC
 
-BAREOFILES=\
-	bare_main.$O\
-	bare_cli_config.$O\
-	bare_cpu.$O\
-	bare_bus.$O\
-	bare_io.$O\
-	bare_term.$O\
-	bare_port.$O\
+MINIMALOFILES=\
+	minimal_main.$O\
+	minimal_cli_config.$O\
+	minimal_cpu.$O\
+	minimal_bus.$O\
+	minimal_io.$O\
+	minimal_term.$O\
+	minimal_port.$O\
 
 </sys/src/cmd/mkone
 
@@ -66,224 +66,54 @@ term.$O: term.c term_vt100.c
 apple1:V: $O.$TARG
 	cp $O.$TARG apple1
 
-# Minimal build: same omit flags as make bare (GNU Makefile).
-apple1_bare:V: $BAREOFILES
-	$LD -o apple1_bare $BAREOFILES
+# Minimal build: same omit flags as make minimal (GNU Makefile).
+apple1_minimal:V: $MINIMALOFILES
+	$LD -o apple1_minimal $MINIMALOFILES
 
-bare:V: apple1_bare
+minimal:V: apple1_minimal
 
-bare_main.$O: main.c $HFILES
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	$CC $BARECFLAGS main.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+minimal_main.$O: main.c $HFILES
+	$CC $MINIMALCFLAGS main.c
 	mv main.$O $@
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
+minimal_cli_config.$O: cli_config.c $HFILES
+	$CC $MINIMALCFLAGS cli_config.c
 	mv cli_config.$O $@
 
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-bare_cpu.$O: cpu.c $HFILES
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	$CC $BARECFLAGS cpu.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+minimal_cpu.$O: cpu.c $HFILES
+	$CC $MINIMALCFLAGS cpu.c
 	mv cpu.$O $@
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-bare_bus.$O: bus.c $HFILES
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	$CC $BARECFLAGS bus.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+minimal_bus.$O: bus.c $HFILES
+	$CC $MINIMALCFLAGS bus.c
 	mv bus.$O $@
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-bare_io.$O: io.c $HFILES
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	$CC $BARECFLAGS io.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+minimal_io.$O: io.c $HFILES
+	$CC $MINIMALCFLAGS io.c
 	mv io.$O $@
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-bare_term.$O: term.c term_vt100.c $HFILES
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	$CC $BARECFLAGS term.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+minimal_term.$O: term.c term_vt100.c $HFILES
+	$CC $MINIMALCFLAGS term.c
 	mv term.$O $@
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-bare_port.$O: port.c port_string.c port_plan9.c $HFILES
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	$CC $BARECFLAGS port.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+minimal_port.$O: port.c port_string.c port_plan9.c $HFILES
+	$CC $MINIMALCFLAGS port.c
 	mv port.$O $@
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 # Single-file amalgamation (no Python): rc + awk, then 6c/6l.
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 amal:V: apple1.c apple1.h
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 	@{echo amalgamation ready: apple1.c apple1.h}
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 apple1.c apple1.h:V: tools/amalgamate.rc tools/amalgamate_plan9.awk
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 	rc tools/amalgamate.rc
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 amal-single:V: apple1.c apple1.h
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 	6c $CFLAGS apple1.c
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 	6l -o $O.$TARG apple1.$O
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 	cp $O.$TARG apple1
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 install:V: all
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 	cp $O.$TARG /$objtype/bin/apple1
 
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 clean:V:
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
-	rm -f *.$O $O.$TARG apple1 apple1_bare apple1.exe bare_*.$O
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
+	rm -f *.$O $O.$TARG apple1 apple1_minimal apple1.exe minimal_*.$O
