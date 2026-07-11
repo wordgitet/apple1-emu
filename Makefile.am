@@ -265,7 +265,7 @@ BARE_CFLAGS = -Wall -Wextra -std=c89 -Os \
 	-DAPPLE1_OMIT_BUS_ACCESS_CB \
 	-DAPPLE1_ZERO_MALLOC
 
-BARE_OBJS = bare-cpu.o bare-bus.o bare-io.o \
+BARE_OBJS = bare-cpu.o bare-bus.o bare-io.o bare-cli_config.o \
 	bare-term.o bare-port.o bare-main.o
 
 bare: apple1_bare
@@ -284,6 +284,9 @@ bare-bus.o: bus.c
 
 bare-io.o: io.c
 	$(CC) $(BARE_CFLAGS) -c -o $@ io.c
+
+bare-cli_config.o: cli_config.c
+	$(CC) $(BARE_CFLAGS) -c -o $@ cli_config.c
 
 bare-term.o: term.c
 	$(CC) $(BARE_CFLAGS) -c -o $@ term.c

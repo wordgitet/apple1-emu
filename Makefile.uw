@@ -22,7 +22,7 @@ BARE_CFLAGS = $(CFLAGS) \
 	-DAPPLE1_OMIT_DISKIO -DAPPLE1_OMIT_BUS_ACCESS_CB \
 	-DAPPLE1_ZERO_MALLOC
 
-BARE_SRCS = main.c cpu.c bus.c io.c term.c port.c
+BARE_SRCS = main.c cli_config.c cpu.c bus.c io.c term.c port.c
 
 AMALG_AWK = tools/amalgamate_unixware.awk
 
