@@ -41,11 +41,11 @@ BARECFLAGS=$CFLAGS\
 	-DAPPLE1_OMIT_PIA_THROTTLE\
 	-DAPPLE1_OMIT_KBD_BOUNCE\
 	-DAPPLE1_OMIT_DISKIO\
-	-DAPPLE1_OMIT_BUS_ACCESS_CB
+	-DAPPLE1_OMIT_BUS_ACCESS_CB\
+	-DAPPLE1_ZERO_MALLOC
 
 BAREOFILES=\
 	bare_main.$O\
-	bare_cli_config.$O\
 	bare_cpu.$O\
 	bare_bus.$O\
 	bare_io.$O\
@@ -74,10 +74,6 @@ bare:V: apple1_bare
 bare_main.$O: main.c $HFILES
 	$CC $BARECFLAGS main.c
 	mv main.$O $@
-
-bare_cli_config.$O: cli_config.c $HFILES
-	$CC $BARECFLAGS cli_config.c
-	mv cli_config.$O $@
 
 bare_cpu.$O: cpu.c $HFILES
 	$CC $BARECFLAGS cpu.c
