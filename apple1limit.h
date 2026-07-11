@@ -69,11 +69,11 @@
 #endif
 
 /*
- * Keyboard ring buffer in io.c (default 16 KB).  Override for small-RTP
- * targets (e.g. VxWorks QEMU).
+ * Keyboard ring buffer in io.c (default 2048 bytes, matches paste buffer).
+ * Override for small-RTP targets (e.g. VxWorks QEMU).
  */
 #ifndef APPLE1_KBD_BUFFER_SIZE
-#define APPLE1_KBD_BUFFER_SIZE 16384
+#define APPLE1_KBD_BUFFER_SIZE 2048
 #endif
 
 /*
