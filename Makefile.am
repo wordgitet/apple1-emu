@@ -1,5 +1,6 @@
 AM_CPPFLAGS = -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI
 AM_CFLAGS = -Wall -Wextra -std=c89
+AM_LDFLAGS =
 
 # Included by port.c / term.c — not separate translation units.
 PORT_SHIM = port_string.c port_posix.c port_win.c port_msdos.c port_plan9.c \
@@ -18,38 +19,42 @@ apple1_SOURCES = main.c cli_config.c $(CORE_SRC) term.c port.c \
                  cli_config.h embedded_roms.h port.h apple1limit.h
 apple1_CFLAGS = $(AM_CFLAGS) -DAPPLE1_OMIT_CHARMAP
 
+# Stripped optimized build target
+apple1-opt: apple1
+	strip apple1
+
 check_PROGRAMS = test_cpu test_aci test_dualram test_bus test_tomharte \
                  test_interrupts test_vfs test_config test_mem
 TESTS = $(check_PROGRAMS)
 
 test_cpu_SOURCES = tests/test_cpu.c tests/term_dummy.c $(CORE_SRC) port.c
-test_cpu_CFLAGS = $(AM_CFLAGS)
+test_cpu_CFLAGS = $(AM_CFLAGS) -g
 
 test_interrupts_SOURCES = tests/test_interrupts.c tests/term_dummy.c \
                           $(CORE_SRC) port.c
-test_interrupts_CFLAGS = $(AM_CFLAGS)
+test_interrupts_CFLAGS = $(AM_CFLAGS) -g
 
 test_aci_SOURCES = tests/test_aci.c tests/term_dummy.c $(CORE_NO_IO) port.c
-test_aci_CFLAGS = $(AM_CFLAGS)
+test_aci_CFLAGS = $(AM_CFLAGS) -g
 
 test_dualram_SOURCES = tests/test_dualram.c tests/term_dummy.c bus.c io.c port.c
-test_dualram_CFLAGS = $(AM_CFLAGS)
+test_dualram_CFLAGS = $(AM_CFLAGS) -g
 
 test_bus_SOURCES = tests/test_bus.c tests/term_dummy.c $(CORE_SRC) port.c
-test_bus_CFLAGS = $(AM_CFLAGS)
+test_bus_CFLAGS = $(AM_CFLAGS) -g
 
 test_tomharte_SOURCES = tests/test_tomharte.c tests/term_dummy.c $(CORE_SRC) \
                         port.c
-test_tomharte_CFLAGS = $(AM_CFLAGS)
+test_tomharte_CFLAGS = $(AM_CFLAGS) -g
 
 test_vfs_SOURCES = tests/test_vfs.c tests/term_dummy.c bus.c io.c port.c
-test_vfs_CFLAGS = $(AM_CFLAGS)
+test_vfs_CFLAGS = $(AM_CFLAGS) -g
 
 test_config_SOURCES = tests/test_config.c cli_config.c port.c
-test_config_CFLAGS = $(AM_CFLAGS)
+test_config_CFLAGS = $(AM_CFLAGS) -g
 
 test_mem_SOURCES = tests/test_mem.c port.c
-test_mem_CFLAGS = $(AM_CFLAGS)
+test_mem_CFLAGS = $(AM_CFLAGS) -g
 
 EXTRA_DIST = $(PORT_SHIM) $(TERM_SHIM) port_attrs.h port_stdarg.h \
              port_stdarg_libc.h port_stdarg_plan9.h apple1limit_checks.h \
@@ -247,7 +252,7 @@ ccomp:
 # Output: ./apple1_bare
 # ---------------------------------------------------------------------------
 
-BARE_CFLAGS = -Wall -Wextra -std=c89 -O2 \
+BARE_CFLAGS = -Wall -Wextra -std=c89 -Os \
 	-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
 	-DAPPLE1_OMIT_CHARMAP \
 	-DAPPLE1_OMIT_DEBUGGER \
@@ -267,6 +272,7 @@ bare: apple1_bare
 apple1_bare: $(BARE_OBJS)
 	@echo "Linking apple1_bare (minimal omit-flag build)..."
 	$(CC) -o apple1_bare $(BARE_OBJS)
+	strip apple1_bare
 	@echo "Done: ./apple1_bare"
 
 bare-cpu.o: cpu.c
@@ -295,7 +301,7 @@ bare-main.o: main.c
 # FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
 # ---------------------------------------------------------------------------
 
-FREERTOS_CFLAGS = -Wall -Wextra -std=c89 -O2 \
+FREERTOS_CFLAGS = -Wall -Wextra -std=c89 -Os \
 	-DAPPLE1_PORT_FREERTOS -DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
 	-DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI -DAPPLE1_OMIT_KRUSADER
 
@@ -448,4 +454,4 @@ apple1-term.o: term.c $(TERM_SHIM) term_apple1.h
         check-single check-single-uw \
         single single-posix single-dos single-watcom single-win single-plan9 \
         single-uw single-qnx dos-djgpp dos-watcom apple1-watcom.exe apple1-djgpp.exe \
-        apple1.exe cwsdpmi.exe tcc pcc lacc nwcc antcc freertos nspire bare
+        apple1.exe cwsdpmi.exe tcc pcc lacc nwcc antcc freertos nspire bare apple1-opt

@@ -9,5 +9,10 @@ AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 
 AC_PROG_CC
 
+# Use size-optimized build by default (-Os) for smaller binaries
+# Override automake's default -g -O2
+CFLAGS="-Os"
+CXXFLAGS="-Os"
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
