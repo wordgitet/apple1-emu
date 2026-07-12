@@ -15,6 +15,7 @@ macro registry.
 | **UnixWare / OpenUNIX** | `make -f Makefile.uw` | `main.c` | `port_posix.c` | `term_vt100.c` | Native `cc` + `make`, not autotools. |
 | **MINIX 3.3** | `./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `clang` + `binutils` from pkgin (neither in base). |
 | **Sortix 1.1** | `autoreconf -fi && ./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Compiles out of the box with GCC 14.2.0. |
+| **Illumos / Solaris** | `./configure && gmake` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `gmake` (gnu-make). Compiles out of the box with GCC. |
 | **TI-Nspire** (Ndless) | `make nspire` | `main_nspire.c` | `port_nspire.c` | `term_nspire.c` | No CLI; config via `apple1.conf.tns`. |
 | **VxWorks 7 RTP** | `bash vxworks_rtp_build.sh` | `main.c` | `port_vxworks.c` | `term_vt100.c` | See [VXWORKS_RTP.md](VXWORKS_RTP.md). |
 | **FreeRTOS** (simulator) | `make freertos` | `main.c` | `port_freertos.c` | `term_ansi.c` | See [FREERTOS_DEMO.md](FREERTOS_DEMO.md). |
@@ -236,6 +237,19 @@ bash freertos_demo_test.sh   # from FreeRTOS/Demo/Posix_GCC
 ```
 
 **Full guide:** [FREERTOS_DEMO.md](FREERTOS_DEMO.md).
+
+---
+
+## Illumos / Solaris
+
+```bash
+./configure
+gmake
+gmake check
+```
+
+- **Build Tool:** Requires GNU make (`gmake`) to build via autotools (native Sun `make` is not supported).
+- **Compilers:** Compiles out of the box with GCC, passing all 9/9 tests.
 
 ---
 
