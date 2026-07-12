@@ -263,6 +263,10 @@ gmake check
 - **Build Tool:** Compiles natively via the DCL command procedure `build.com` using the VSI C compiler (`CC`).
 - **Running:** Define the executable as a foreign command (`apple1 == "$SYS$SYSROOT:[SYSMGR.apple1-emu]apple1.exe"`) and run with quoted arguments (`apple1 "-h"`), or run directly under GNV `bash` (`./apple1.exe`).
 - **Compatibility:** Automatically detects `__VMS` to guard and omit missing POSIX `termios` headers and symbols, falling back to standard carriage returns/line feeds and socket-based timing structures.
+- **Keyboard Input (QIO PASSALL):** Raw character input under GNV `bash` is implemented via the OpenVMS system service `sys$qiow` on a channel assigned to `SYS$INPUT`. The read uses the base function code `IO$_TTYREADALL` (PASSALL mode) combined with the modifiers `IO$M_TIMED` and `IO$M_NOECHO`. PASSALL is critical because it disables the OpenVMS terminal driver's command-line/special character interception, allowing control sequences like **Ctrl+R** (CPU Reset) and **Ctrl+L** (Clear Screen) to pass directly to the emulator.
+- **Enter/CR Handling:** When Enter is pressed in PASSALL mode, the QIO operation terminates and returns a character count of `0`, returning the carriage return code (`0x0D`) in the low 16 bits of the I/O Status Block (`iosb.dev_info`).
+- **Cursor Position Jitters:** The OpenVMS terminal driver automatically issues a Carriage Return (`\r`) to reposition the cursor to column 0 every time it arms a timed read. To prevent this from corrupting the layout of the Apple-1 monitor prompts (like `\`), `port_vms.c` wraps each read poll with VT100 cursor save/restore escape codes (`ESC 7` and `ESC 8`).
+
 
 ---
 

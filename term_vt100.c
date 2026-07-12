@@ -280,6 +280,7 @@ void
 term_update(void)
 {
 	term_redraw();
+	port_term_flush();
 }
 
 uint8_t

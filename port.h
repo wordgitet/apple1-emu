@@ -433,6 +433,9 @@ port_sleep_us(uint32_t us);
  * port_term_raw_disable: restore the terminal to its original mode.
  * port_term_read_char:   read one byte; PORT_TERM_NODATA or PORT_TERM_EOF.
  * port_term_write_buf:   write n bytes to the terminal output.
+ * port_term_flush:        flush any platform output buffer (e.g. OpenVMS
+ *                         C RTL stdout); no-op on platforms that use
+ *                         unbuffered write() directly.
  */
 void
 port_term_raw_enable(void);
@@ -446,6 +449,8 @@ int
 port_term_read_char(void);
 void
 port_term_write_buf(const char *buf, port_size_t n);
+void
+port_term_flush(void);
 
 #define PORT_TERM_NODATA (-1)
 #define PORT_TERM_EOF	 (-2)

@@ -9,9 +9,9 @@
 #include "port.h"
 
 /* Log severity levels */
-#define BUS_LOG_INFO  0
+#define BUS_LOG_ERROR 0
 #define BUS_LOG_WARN  1
-#define BUS_LOG_ERROR 2
+#define BUS_LOG_INFO  2
 
 /*
  * Route a log message through the bus log callback.

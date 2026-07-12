@@ -60,6 +60,11 @@ port_term_write_buf(const char *buf, port_size_t n)
 }
 
 void
+port_term_flush(void)
+{
+}
+
+void
 port_signal_setup(port_sig_flag *flag)
 {
 	(void)flag;

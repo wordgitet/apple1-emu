@@ -279,6 +279,7 @@ term_update(void)
 
 	shadow_blink_on = blink_on;
 	shadow_valid = true;
+	port_term_flush();
 }
 
 uint8_t

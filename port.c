@@ -25,6 +25,9 @@
 #ifdef APPLE1_PORT_BARE
 #include "port_bare.c"
 #else
+#ifdef APPLE1_PORT_VMS
+#include "port_vms.c"
+#else
 #ifdef APPLE1_PORT_POSIX
 #include "port_posix.c"
 #else
@@ -137,7 +140,7 @@
 #  define PORT_DETECTED_POSIX
 # endif
 # ifdef __VMS
-#  define PORT_DETECTED_POSIX
+#  define PORT_DETECTED_VMS
 # endif
 
 # ifdef PORT_DETECTED_WIN
@@ -158,10 +161,14 @@
 #      ifdef PORT_DETECTED_VXWORKS
 #       include "port_vxworks.c"
 #      else
-#       ifdef PORT_DETECTED_POSIX
-#        include "port_posix.c"
+#       ifdef PORT_DETECTED_VMS
+#        include "port_vms.c"
 #       else
-#        include "port_bare.c"
+#        ifdef PORT_DETECTED_POSIX
+#         include "port_posix.c"
+#        else
+#         include "port_bare.c"
+#        endif
 #       endif
 #      endif
 #     endif
@@ -170,6 +177,8 @@
 #  endif
 # endif
 
+
+#endif
 #endif
 #endif
 #endif

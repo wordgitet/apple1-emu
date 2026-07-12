@@ -207,6 +207,11 @@ port_term_write_buf(const char *buf, port_size_t n)
 	(void)write(STDOUT_FILENO, buf, n);
 }
 
+void
+port_term_flush(void)
+{
+}
+
 char *
 port_term_read_line(char *buf, port_size_t size)
 {

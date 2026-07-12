@@ -147,6 +147,11 @@ port_term_write_buf(const char *buf, port_size_t n)
 	fwrite(buf, 1, (size_t)n, stdout);
 }
 
+void
+port_term_flush(void)
+{
+}
+
 char *
 port_term_read_line(char *buf, port_size_t size)
 {
