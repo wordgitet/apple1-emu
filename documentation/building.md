@@ -84,9 +84,10 @@ make pcc    # PCC
 make lacc   # lacc
 make nwcc   # nwcc 0.8.3 (clears -Wall/-Wextra for the rebuild)
 make antcc  # antcc 0.3.x (zero warnings, zero errors)
+make vbcc   # vbcc i386-linux (compile-only check; requires VBCC environment variable)
 ```
 
-Each runs `make clean` then rebuilds `apple1`.  To pick the compiler at
+Each runs `make clean` then rebuilds `apple1` (or runs compile-only checks for vbcc). To pick the compiler at
 configure time instead: `./configure CC=pcc`.
 
 nwcc 0.8.3 issues one harmless warning about `unsigned long long` not being
@@ -419,15 +420,18 @@ nmake -f Makefile.msc minimal
 - DJGPP: `make dos-djgpp` (needs `CWSDPMI.EXE` in DOSBox)
 - Open Watcom: `make dos-watcom` (CauseWay stub embedded; no extra EXE in DOSBox)
 
+**ELKS (16-bit 8086):** `make elks` (cross-compiles with `ia16-elf-gcc` using the small memory model).
+
 **UnixWare 7 / OpenUNIX:** `make -f Makefile.uw` on the target (native `cc` +
 `make`).  Minimal build: `make -f Makefile.uw minimal`.  See
 [UnixWare / OpenUNIX](#unixware--openunix) above.
 
-**Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr, TI-Nspire):**
+**Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr, TI-Nspire, vbcc):**
 - **Minimal features (GNU autotools):** `make minimal` — `./apple1_minimal`
 - **Minimal features (Plan 9):** `mk minimal` — `./apple1_minimal`
 - **TI-Nspire:** `make nspire` — see [platforms.md](platforms.md#ti-nspire-ndless)
 - **FreeRTOS (POSIX simulator):** `make freertos` — [FREERTOS_DEMO.md](FREERTOS_DEMO.md)
 - **VxWorks 7 RTP (QEMU SDK):** `bash vxworks_rtp_build.sh` — [VXWORKS_RTP.md](VXWORKS_RTP.md)
 - **Plan 9 / 9front:** `mk all` — [plan9-terminal.md](plan9-terminal.md)
+- **vbcc (i386-linux):** `make vbcc VBCC=/path/to/vbcc` (compile-only verification target)
 - Zephyr / OS/2 / bare metal: amalgamation with explicit `-DAPPLE1_PORT_*` flags

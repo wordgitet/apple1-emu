@@ -15,6 +15,9 @@
 #ifdef __ia16__
 #define PORT_USE_GETTIMEOFDAY
 #endif
+#ifdef __VBCC__
+#define PORT_USE_GETTIMEOFDAY
+#endif
 
 #ifdef PORT_USE_GETTIMEOFDAY
 #include <sys/time.h>
@@ -210,11 +213,16 @@ void
 port_signal_setup(port_sig_flag *flag)
 {
 #ifndef __USLC__
+#ifndef __VBCC__
 	struct sigaction sa;
+#endif
 #endif
 
 	g_sig_flag = flag;
 #ifdef __USLC__
+	signal(SIGINT, handle_sigint);
+#else
+#ifdef __VBCC__
 	signal(SIGINT, handle_sigint);
 #else
 	port_memset(&sa, 0, sizeof(sa));
@@ -222,6 +230,7 @@ port_signal_setup(port_sig_flag *flag)
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0; /* Don't restart fgets — Ctrl-C reaches dbg prompt */
 	sigaction(SIGINT, &sa, NULL);
+#endif
 #endif
 }
 

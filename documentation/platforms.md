@@ -38,7 +38,7 @@ make check
 - **Config:** `apple1.conf` or CLI switches — see [usage.md](usage.md).
 - **Keyboard:** Ctrl+C quit, Ctrl+R / Ctrl+T reset, Ctrl+L clear screen.
 
-Alternate compilers: `make antcc`, `make chibicc`, `make ccomp`, `make cparser`, `make cproc`, `make nwcc`, `make tcc`, `make pcc`, `make lacc`.
+Alternate compilers: `make antcc`, `make chibicc`, `make ccomp`, `make cparser`, `make cproc`, `make nwcc`, `make tcc`, `make pcc`, `make lacc`, `make vbcc`.
 
 ---
 

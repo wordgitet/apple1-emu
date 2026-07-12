@@ -248,6 +248,37 @@ elks:
 	$(MAKE) clean
 	$(MAKE) CC=ia16-elf-gcc AM_CFLAGS="-melks-libc -mcmodel=small -Os -DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_KRUSADER" apple1
 
+vbcc:
+	@echo "vbcc: compile-checking i386-linux (POSIX)..."
+	for src in $(apple1_SOURCES); do \
+		case "$$src" in *.c) \
+			PATH=$(VBCC)/bin:$$PATH VBCC=$(VBCC) $(VBCC)/bin/vc +i386-linux -c89 \
+			-I/usr/include \
+			-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
+			-c $$src -o /tmp/vbcc_i386_$$(basename $$src .c).o || exit 1; \
+			;; \
+		esac; \
+	done
+	@echo "vbcc: compile-checking aos68k (bare-metal)..."
+	for src in $(apple1_SOURCES); do \
+		case "$$src" in *.c) \
+			PATH=$(VBCC)/bin:$$PATH VBCC=$(VBCC) $(VBCC)/bin/vc +aos68k -c89 \
+			-DAPPLE1_PORT_BARE -DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
+			-c $$src -o /tmp/vbcc_amiga_$$(basename $$src .c).o || exit 1; \
+			;; \
+		esac; \
+	done
+	@echo "vbcc: compile-checking tos (bare-metal)..."
+	for src in $(apple1_SOURCES); do \
+		case "$$src" in *.c) \
+			PATH=$(VBCC)/bin:$$PATH VBCC=$(VBCC) $(VBCC)/bin/vc +tos -c89 \
+			-DAPPLE1_PORT_BARE -DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
+			-c $$src -o /tmp/vbcc_atari_$$(basename $$src .c).o || exit 1; \
+			;; \
+		esac; \
+	done
+	@echo "vbcc: all targets compiled successfully under vbcc!"
+
 # ---------------------------------------------------------------------------
 # Minimal feature POSIX build (omit flags only — CPU, bus, I/O, terminal, Wozmon)
 #
