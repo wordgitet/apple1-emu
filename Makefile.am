@@ -244,6 +244,10 @@ ccomp:
 	$(MAKE) clean
 	$(MAKE) CC=ccomp AM_CFLAGS="-std=c99 -Wall" apple1
 
+elks:
+	$(MAKE) clean
+	$(MAKE) CC=ia16-elf-gcc AM_CFLAGS="-melks-libc -mcmodel=small -Os -DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_KRUSADER" apple1
+
 # ---------------------------------------------------------------------------
 # Minimal feature POSIX build (omit flags only — CPU, bus, I/O, terminal, Wozmon)
 #

@@ -24,8 +24,8 @@ typedef unsigned long port_size_t;
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define PORT_UNUSED   __attribute__((unused))
-#define PORT_NORETURN __attribute__((noreturn))
+#define PORT_UNUSED   __attribute__((__unused__))
+#define PORT_NORETURN __attribute__((__noreturn__))
 #else
 #define PORT_UNUSED
 #define PORT_NORETURN

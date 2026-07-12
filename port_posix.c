@@ -12,6 +12,9 @@
 #ifdef __USLC__
 #define PORT_USE_GETTIMEOFDAY
 #endif
+#ifdef __ia16__
+#define PORT_USE_GETTIMEOFDAY
+#endif
 
 #ifdef PORT_USE_GETTIMEOFDAY
 #include <sys/time.h>
