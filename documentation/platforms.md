@@ -19,6 +19,7 @@ macro registry.
 | **TI-Nspire** (Ndless) | `make nspire` | `main_nspire.c` | `port_nspire.c` | `term_nspire.c` | No CLI; config via `apple1.conf.tns`. |
 | **VxWorks 7 RTP** | `bash vxworks_rtp_build.sh` | `main.c` | `port_vxworks.c` | `term_vt100.c` | See [VXWORKS_RTP.md](VXWORKS_RTP.md). |
 | **FreeRTOS** (simulator) | `make freertos` | `main.c` | `port_freertos.c` | `term_ansi.c` | See [FREERTOS_DEMO.md](FREERTOS_DEMO.md). |
+| **OpenVMS** | `@build.com` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs VSI C compiler. Auto-guards termios. |
 | **Zephyr** | explicit `-D` | `main.c` | `port_zephyr.c` | `term_ansi.c` | Stub port. |
 | **OS/2** | amalgamation | `main.c` | `port_os2.c` | `term_ansi.c` | Experimental. |
 | **Bare metal** | amalgamation | `main.c` | `port_bare.c` | `term_ansi.c` | No filesystem unless you wire VFS. |
@@ -250,6 +251,18 @@ gmake check
 
 - **Build Tool:** Requires GNU make (`gmake`) to build via autotools (native Sun `make` is not supported).
 - **Compilers:** Compiles out of the box with GCC, passing all 9/9 tests.
+
+---
+
+## OpenVMS
+
+```vms
+@build.com
+```
+
+- **Build Tool:** Compiles natively via the DCL command procedure `build.com` using the VSI C compiler (`CC`).
+- **Running:** Define the executable as a foreign command (`apple1 == "$SYS$SYSROOT:[SYSMGR.apple1-emu]apple1.exe"`) and run with quoted arguments (`apple1 "-h"`), or run directly under GNV `bash` (`./apple1.exe`).
+- **Compatibility:** Automatically detects `__VMS` to guard and omit missing POSIX `termios` headers and symbols, falling back to standard carriage returns/line feeds and socket-based timing structures.
 
 ---
 

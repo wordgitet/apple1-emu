@@ -136,6 +136,9 @@
 # ifdef __ia16__
 #  define PORT_DETECTED_POSIX
 # endif
+# ifdef __VMS
+#  define PORT_DETECTED_POSIX
+# endif
 
 # ifdef PORT_DETECTED_WIN
 #  include "port_win.c"

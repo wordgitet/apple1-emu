@@ -5,8 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __VMS
+#include <socket.h>
+#else
 #include <sys/select.h>
+#endif
+#ifndef __VMS
 #include <termios.h>
+#endif
 #include <time.h>
 #include <unistd.h>
 #ifdef __USLC__
@@ -16,6 +22,9 @@
 #define PORT_USE_GETTIMEOFDAY
 #endif
 #ifdef __VBCC__
+#define PORT_USE_GETTIMEOFDAY
+#endif
+#ifdef __VMS
 #define PORT_USE_GETTIMEOFDAY
 #endif
 
@@ -95,14 +104,17 @@ port_sleep_us(uint32_t us)
 /* Terminal I/O shims                                                 */
 /* ================================================================== */
 
+#ifndef __VMS
 static struct termios orig_termios;
 static struct termios dbg_termios;
+#endif
 static int posix_raw_mode_active = 0;
 static int posix_dbg_mode_active = 0;
 
 void
 port_term_raw_enable(void)
 {
+#ifndef __VMS
 	struct termios raw;
 
 	if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
@@ -121,11 +133,13 @@ port_term_raw_enable(void)
 #endif
 		}
 	}
+#endif
 }
 
 void
 port_term_raw_disable(void)
 {
+#ifndef __VMS
 	if (posix_raw_mode_active != 0) {
 #ifndef __USLC__
 #ifndef APPLE1_OMIT_PASTE
@@ -135,11 +149,13 @@ port_term_raw_disable(void)
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 		posix_raw_mode_active = 0;
 	}
+#endif
 }
 
 void
 port_term_dbg_enable(void)
 {
+#ifndef __VMS
 	struct termios t;
 
 	if (tcgetattr(STDIN_FILENO, &dbg_termios) == 0) {
@@ -152,15 +168,18 @@ port_term_dbg_enable(void)
 			posix_dbg_mode_active = 1;
 		}
 	}
+#endif
 }
 
 void
 port_term_dbg_disable(void)
 {
+#ifndef __VMS
 	if (posix_dbg_mode_active != 0) {
 		tcsetattr(STDIN_FILENO, TCSAFLUSH, &dbg_termios);
 		posix_dbg_mode_active = 0;
 	}
+#endif
 }
 
 int

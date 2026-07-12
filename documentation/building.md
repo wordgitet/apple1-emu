@@ -426,6 +426,8 @@ nmake -f Makefile.msc minimal
 `make`).  Minimal build: `make -f Makefile.uw minimal`.  See
 [UnixWare / OpenUNIX](#unixware--openunix) above.
 
+**OpenVMS:** `@build.com` (compiles natively via DCL using the VSI C compiler).
+
 **Other platforms (OS/2, Plan 9, VxWorks, FreeRTOS, Zephyr, TI-Nspire, vbcc):**
 - **Minimal features (GNU autotools):** `make minimal` — `./apple1_minimal`
 - **Minimal features (Plan 9):** `mk minimal` — `./apple1_minimal`
