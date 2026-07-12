@@ -20,6 +20,7 @@
 #endif
 
 #include "port_string.c"
+#include "port_path.c"
 
 #ifdef APPLE1_PORT_BARE
 #include "port_bare.c"

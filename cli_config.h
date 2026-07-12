@@ -55,4 +55,37 @@ load_config_file(const char *path,
     char *errbuf,
     port_size_t errbuf_sz);
 
+/*
+ * Resolve path fields through port_resolve_data_path() (in-place).
+ * Call after load_config_file() succeeds, before stealing into locals.
+ */
+void
+cli_config_resolve_paths(struct cli_config_opts *opts);
+
+/*
+ * Move ownership of parsed settings from cfg into caller-owned pointers.
+ * String pointers in cfg are NULL after this call; booleans are copied.
+ */
+void
+cli_config_steal(struct cli_config_opts *cfg,
+    char **rom_path,
+    char **bin_path,
+    uint16_t *bin_address,
+    char **wozmon_txt_path,
+    char **flat_bin_path,
+    bool *opt_uncapped,
+    bool *opt_throttle_pia,
+    bool *opt_emulate_dram,
+    bool *opt_emulate_bounce,
+    bool *opt_randomize_cold,
+    bool *opt_flat_bus,
+    bool *opt_trace,
+    char **aci_path,
+    char **tape_path,
+    char **save_tape_path,
+    char **krusader_path,
+    uint32_t *baud,
+    char **log_path,
+    int *log_level);
+
 #endif /* CLI_CONFIG_H */

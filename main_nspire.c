@@ -28,63 +28,12 @@
 #include "term_apple1.h"
 
 #include <libndls.h>
-#include <stdio.h>
-#include <string.h>
 
 /* ------------------------------------------------------------------ */
 /* Config path                                                          */
 /* ------------------------------------------------------------------ */
 
 #define NSPIRE_CFG_SUBPATH "/ndless/apple1.conf.tns"
-#define NSPIRE_DATA_PREFIX "/ndless/"
-
-/* ------------------------------------------------------------------ */
-/* Data file path resolution                                            */
-/* ------------------------------------------------------------------ */
-
-/*
- * Turn config-relative paths (roms/basic.tns) into absolute paths under
- * <documents>/ndless/.  enable_relative_paths() is unreliable when argv[0]
- * has no directory component, so fopen("roms/...") often fails on-device.
- * Falls back to Ndless locate() by basename.
- */
-static char *
-nspire_resolve_data_path(const char *path)
-{
-	char buf[384];
-	const char *base;
-	const char *docs;
-	const char *rel;
-	port_file_t f;
-
-	if (path == NULL || path[0] == '\0')
-		return (NULL);
-	if (path[0] == '/')
-		return (port_strdup(path));
-
-	docs = get_documents_dir();
-	rel = path;
-	if (rel[0] == '.' && rel[1] == '/')
-		rel += 2;
-	if (strncmp(rel, "ndless/", 7) == 0)
-		rel += 7;
-	port_snprintf(buf, sizeof(buf), "%s%s%s", docs, NSPIRE_DATA_PREFIX, rel);
-	f = port_vfs_default.open(buf, PORT_VFS_READ);
-	if (f != PORT_FILE_INVALID) {
-		port_vfs_default.close(f);
-		return (port_strdup(buf));
-	}
-
-	base = strrchr(path, '/');
-	if (base != NULL)
-		base++;
-	else
-		base = path;
-	if (locate(base, buf, sizeof(buf)) == 0)
-		return (port_strdup(buf));
-
-	return (port_strdup(path));
-}
 
 static void
 nspire_fatal(const char *msg)
@@ -103,64 +52,17 @@ char *g_argv0   = NULL;
 bool  g_debug_enabled = false;
 uint32_t opt_baud = 0;
 
-/* ------------------------------------------------------------------ */
-/* Minimal log callback (writes to stderr via newlib)                  */
-/* ------------------------------------------------------------------ */
-
 static void
 nspire_log(void *ctx, int level, const char *msg)
 {
+	char buf[256];
+	port_size_t n;
+
 	(void)ctx;
 	(void)level;
-	fprintf(stderr, "%s\n", msg);
-}
-
-/* ------------------------------------------------------------------ */
-/* apply_loaded_config — mirror of the one in main.c                   */
-/*   (duplicated so main_nspire.c compiles standalone without main.c)  */
-/* ------------------------------------------------------------------ */
-
-static void
-apply_cfg(struct cli_config_opts *cfg,
-    char **rom_path,
-    char **bin_path,
-    uint16_t *bin_address,
-    bool *opt_uncapped,
-    bool *opt_throttle_pia,
-    bool *opt_emulate_dram,
-    bool *opt_emulate_bounce,
-    bool *opt_randomize_cold,
-    bool *opt_flat_bus)
-{
-	if (cfg->rom_path != NULL) {
-		if (*rom_path != NULL)
-			port_free(*rom_path);
-		*rom_path = cfg->rom_path;
-		cfg->rom_path = NULL;
-	}
-	if (cfg->bin_path != NULL) {
-		if (*bin_path != NULL)
-			port_free(*bin_path);
-		*bin_path = cfg->bin_path;
-		cfg->bin_path = NULL;
-		*bin_address = cfg->bin_address;
-	}
-	if (cfg->flat_bin_path != NULL) {
-		if (*bin_path != NULL)
-			port_free(*bin_path);
-		*bin_path = cfg->flat_bin_path;
-		cfg->flat_bin_path = NULL;
-		*bin_address = 0x0000;
-		*opt_flat_bus = true;
-	}
-	*opt_uncapped = cfg->opt_uncapped;
-	*opt_throttle_pia = cfg->opt_throttle_pia;
-	*opt_emulate_dram = cfg->opt_emulate_dram;
-	*opt_emulate_bounce = cfg->opt_emulate_bounce;
-	*opt_randomize_cold = cfg->opt_randomize_cold;
-	*opt_flat_bus = cfg->opt_flat_bus;
-	if (cfg->baud != 0)
-		opt_baud = cfg->baud;
+	port_snprintf(buf, sizeof(buf), "%s\r\n", msg);
+	n = port_strlen(buf);
+	port_term_write_buf(buf, n);
 }
 
 /* ------------------------------------------------------------------ */
@@ -233,6 +135,13 @@ main(int argc, char **argv)
 	char errbuf[256];
 	char *rom_path;
 	char *bin_path;
+	char *flat_bin_path;
+	char *wozmon_txt_path;
+	char *aci_path;
+	char *tape_path;
+	char *save_tape_path;
+	char *krusader_path;
+	char *log_path;
 	uint16_t bin_address;
 	uint32_t k;
 	uint32_t cycle_accumulator;
@@ -245,8 +154,19 @@ main(int argc, char **argv)
 	bool opt_emulate_bounce;
 	bool opt_randomize_cold;
 	bool opt_flat_bus;
+	bool opt_trace;
+	int log_level;
 	int cfg_rc;
 	int action;
+
+	(void)wozmon_txt_path;
+	(void)aci_path;
+	(void)tape_path;
+	(void)save_tape_path;
+	(void)krusader_path;
+	(void)log_path;
+	(void)opt_trace;
+	(void)log_level;
 
 	(void)argc;
 
@@ -257,6 +177,13 @@ main(int argc, char **argv)
 	/* Defaults */
 	rom_path          = NULL;
 	bin_path          = NULL;
+	flat_bin_path     = NULL;
+	wozmon_txt_path   = NULL;
+	aci_path          = NULL;
+	tape_path         = NULL;
+	save_tape_path    = NULL;
+	krusader_path     = NULL;
+	log_path          = NULL;
 	bin_address       = 0;
 	opt_uncapped      = false;
 	opt_throttle_pia  = true;
@@ -264,6 +191,8 @@ main(int argc, char **argv)
 	opt_emulate_bounce = false;
 	opt_randomize_cold = true;
 	opt_flat_bus      = false;
+	opt_trace         = false;
+	log_level         = 1;
 
 	/* Try to load config from <documents>/ndless/apple1.conf.tns */
 	port_snprintf(cfg_path, sizeof(cfg_path),
@@ -272,20 +201,35 @@ main(int argc, char **argv)
 	cli_config_init_defaults(&cfg);
 	cfg_rc = load_config_file(cfg_path, &cfg, errbuf, sizeof(errbuf));
 	if (cfg_rc == CLI_CONFIG_OK) {
-		apply_cfg(&cfg,
+		cli_config_resolve_paths(&cfg);
+		cli_config_steal(&cfg,
 		    &rom_path,
 		    &bin_path,
 		    &bin_address,
+		    &wozmon_txt_path,
+		    &flat_bin_path,
 		    &opt_uncapped,
 		    &opt_throttle_pia,
 		    &opt_emulate_dram,
 		    &opt_emulate_bounce,
 		    &opt_randomize_cold,
-		    &opt_flat_bus);
+		    &opt_flat_bus,
+		    &opt_trace,
+		    &aci_path,
+		    &tape_path,
+		    &save_tape_path,
+		    &krusader_path,
+		    &opt_baud,
+		    &log_path,
+		    &log_level);
 	} else if (cfg_rc == CLI_CONFIG_PARSE) {
-		fprintf(stderr,
-		    "apple1.conf.tns: %s (using defaults)\n",
+		char msg[320];
+
+		port_snprintf(msg,
+		    sizeof(msg),
+		    "apple1.conf.tns: %s (using defaults)\r\n",
 		    errbuf);
+		port_term_write_buf(msg, port_strlen(msg));
 	}
 	/* CLI_CONFIG_CANTOPEN = no config file, silently use defaults */
 	cli_config_free_strings(&cfg);
@@ -327,15 +271,7 @@ main(int argc, char **argv)
 	/* Load ROM (NULL = use embedded WozMon) */
 	{
 		port_result_t rc;
-		char *resolved;
 
-		if (rom_path != NULL) {
-			resolved = nspire_resolve_data_path(rom_path);
-			if (resolved != NULL) {
-				port_free(rom_path);
-				rom_path = resolved;
-			}
-		}
 		rc = bus_load_rom(&bus, rom_path);
 		if (rc != PORT_OK) {
 			nspire_fatal("bus_load_rom failed\r\n");
@@ -348,16 +284,26 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (bin_path != NULL) {
+	if (flat_bin_path != NULL) {
 		port_result_t rc;
-		char *resolved;
 		char msg[96];
 
-		resolved = nspire_resolve_data_path(bin_path);
-		if (resolved != NULL) {
-			port_free(bin_path);
-			bin_path = resolved;
+		rc = bus_load_bin(&bus, flat_bin_path, 0x0000);
+		if (rc != PORT_OK) {
+			port_snprintf(msg,
+			    sizeof(msg),
+			    "LOAD FAIL\r\n%s\r\n",
+			    flat_bin_path);
+			nspire_fatal(msg);
+			bus_free(&bus);
+			return (1);
 		}
+		port_free(flat_bin_path);
+		flat_bin_path = NULL;
+	} else if (bin_path != NULL) {
+		port_result_t rc;
+		char msg[96];
+
 		rc = bus_load_bin(&bus, bin_path, bin_address);
 		if (rc != PORT_OK) {
 			port_snprintf(msg,

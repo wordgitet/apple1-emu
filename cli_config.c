@@ -474,3 +474,91 @@ load_config_file(const char *path,
 	port_vfs_default.close(fp);
 	return (CLI_CONFIG_OK);
 }
+
+static void
+resolve_one(char **path)
+{
+	char *resolved;
+
+	if (path == NULL || *path == NULL) {
+		return;
+	}
+	resolved = port_resolve_data_path(*path);
+	if (resolved == NULL) {
+		return;
+	}
+	port_free(*path);
+	*path = resolved;
+}
+
+void
+cli_config_resolve_paths(struct cli_config_opts *opts)
+{
+	if (opts == NULL) {
+		return;
+	}
+	resolve_one(&opts->rom_path);
+	resolve_one(&opts->bin_path);
+	resolve_one(&opts->wozmon_txt_path);
+	resolve_one(&opts->flat_bin_path);
+	resolve_one(&opts->aci_path);
+	resolve_one(&opts->tape_path);
+	resolve_one(&opts->save_tape_path);
+	resolve_one(&opts->krusader_path);
+	resolve_one(&opts->log_path);
+}
+
+void
+cli_config_steal(struct cli_config_opts *cfg,
+    char **rom_path,
+    char **bin_path,
+    uint16_t *bin_address,
+    char **wozmon_txt_path,
+    char **flat_bin_path,
+    bool *opt_uncapped,
+    bool *opt_throttle_pia,
+    bool *opt_emulate_dram,
+    bool *opt_emulate_bounce,
+    bool *opt_randomize_cold,
+    bool *opt_flat_bus,
+    bool *opt_trace,
+    char **aci_path,
+    char **tape_path,
+    char **save_tape_path,
+    char **krusader_path,
+    uint32_t *baud,
+    char **log_path,
+    int *log_level)
+{
+	if (cfg == NULL) {
+		return;
+	}
+	*rom_path = cfg->rom_path;
+	cfg->rom_path = NULL;
+	*bin_path = cfg->bin_path;
+	cfg->bin_path = NULL;
+	*bin_address = cfg->bin_address;
+	*wozmon_txt_path = cfg->wozmon_txt_path;
+	cfg->wozmon_txt_path = NULL;
+	*flat_bin_path = cfg->flat_bin_path;
+	cfg->flat_bin_path = NULL;
+	*aci_path = cfg->aci_path;
+	cfg->aci_path = NULL;
+	*tape_path = cfg->tape_path;
+	cfg->tape_path = NULL;
+	*save_tape_path = cfg->save_tape_path;
+	cfg->save_tape_path = NULL;
+	*krusader_path = cfg->krusader_path;
+	cfg->krusader_path = NULL;
+	*baud = cfg->baud;
+	*opt_uncapped = cfg->opt_uncapped;
+	*opt_throttle_pia = cfg->opt_throttle_pia;
+	*opt_emulate_dram = cfg->opt_emulate_dram;
+	*opt_emulate_bounce = cfg->opt_emulate_bounce;
+	*opt_randomize_cold = cfg->opt_randomize_cold;
+	*opt_flat_bus = cfg->opt_flat_bus;
+	*opt_trace = cfg->opt_trace;
+	*log_path = cfg->log_path;
+	cfg->log_path = NULL;
+	*log_level = cfg->log_level;
+}

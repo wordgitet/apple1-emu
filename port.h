@@ -339,6 +339,9 @@ port_malloc_zero(port_size_t sz);
 char *
 port_strdup(const char *str);
 
+char *
+port_resolve_data_path(const char *path);
+
 /* ================================================================== */
 /* Memory utility shims                                               */
 /* ================================================================== */

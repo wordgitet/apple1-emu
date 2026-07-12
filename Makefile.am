@@ -3,7 +3,7 @@ AM_CFLAGS = -Wall -Wextra -std=c89
 AM_LDFLAGS =
 
 # Included by port.c / term.c — not separate translation units.
-PORT_SHIM = port_string.c port_posix.c port_win.c port_msdos.c port_plan9.c \
+PORT_SHIM = port_string.c port_path.c port_posix.c port_win.c port_msdos.c port_plan9.c \
             port_freertos.c port_zephyr.c port_bare.c port_os2.c \
             port_vxworks.c port_tcc_va.c port_nspire.c
 

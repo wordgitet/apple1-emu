@@ -255,59 +255,6 @@ cli_arg_is_runtime_only(const char *arg)
 	return (0);
 }
 
-static int
-apply_loaded_config(struct cli_config_opts *cfg,
-    char **rom_path,
-    char **bin_path,
-    uint16_t *bin_address,
-    char **wozmon_txt_path,
-    char **flat_bin_path,
-    bool *opt_uncapped,
-    bool *opt_throttle_pia,
-    bool *opt_emulate_dram,
-    bool *opt_emulate_bounce,
-    bool *opt_randomize_cold,
-    bool *opt_flat_bus,
-    bool *opt_trace,
-    char **aci_path,
-    char **tape_path,
-    char **save_tape_path,
-    char **krusader_path,
-    uint32_t *baud,
-    char **log_path,
-    int *log_level)
-{
-	*rom_path = cfg->rom_path;
-	cfg->rom_path = NULL;
-	*bin_path = cfg->bin_path;
-	cfg->bin_path = NULL;
-	*bin_address = cfg->bin_address;
-	*wozmon_txt_path = cfg->wozmon_txt_path;
-	cfg->wozmon_txt_path = NULL;
-	*flat_bin_path = cfg->flat_bin_path;
-	cfg->flat_bin_path = NULL;
-	*aci_path = cfg->aci_path;
-	cfg->aci_path = NULL;
-	*tape_path = cfg->tape_path;
-	cfg->tape_path = NULL;
-	*save_tape_path = cfg->save_tape_path;
-	cfg->save_tape_path = NULL;
-	*krusader_path = cfg->krusader_path;
-	cfg->krusader_path = NULL;
-	*baud = cfg->baud;
-	*opt_uncapped = cfg->opt_uncapped;
-	*opt_throttle_pia = cfg->opt_throttle_pia;
-	*opt_emulate_dram = cfg->opt_emulate_dram;
-	*opt_emulate_bounce = cfg->opt_emulate_bounce;
-	*opt_randomize_cold = cfg->opt_randomize_cold;
-	*opt_flat_bus = cfg->opt_flat_bus;
-	*opt_trace = cfg->opt_trace;
-	*log_path = cfg->log_path;
-	cfg->log_path = NULL;
-	*log_level = cfg->log_level;
-	return (0);
-}
-
 /* ------------------------------------------------------------------ */
 /*  Card cleanup helper                                                 */
 /* ------------------------------------------------------------------ */
@@ -529,7 +476,8 @@ main(int argc, char *argv[])
 			cli_config_free_strings(&cfg);
 			return (1);
 		}
-		apply_loaded_config(&cfg,
+		cli_config_resolve_paths(&cfg);
+		cli_config_steal(&cfg,
 		    &rom_path,
 		    &bin_path,
 		    &bin_address,

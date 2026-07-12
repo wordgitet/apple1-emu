@@ -202,3 +202,58 @@ static struct port_vfs nspire_vfs = {
 };
 
 struct port_vfs *g_port_vfs = &nspire_vfs;
+
+/* ================================================================== */
+/* Config data paths (Ndless documents + locate fallback)               */
+/* ================================================================== */
+
+#define NSPIRE_DATA_PREFIX "/ndless/"
+
+char *
+port_resolve_data_path(const char *path)
+{
+	char buf[384];
+	const char *base;
+	const char *docs;
+	const char *rel;
+	port_file_t f;
+
+	if (path == NULL || path[0] == '\0') {
+		return (NULL);
+	}
+	if (path[0] == '/') {
+		return (port_strdup(path));
+	}
+
+	docs = get_documents_dir();
+	rel = path;
+	if (rel[0] == '.' && rel[1] == '/') {
+		rel += 2;
+	}
+	if (port_strncmp(rel, "ndless/", 7) == 0) {
+		rel += 7;
+	}
+	port_snprintf(buf,
+	    sizeof(buf),
+	    "%s%s%s",
+	    docs,
+	    NSPIRE_DATA_PREFIX,
+	    rel);
+	f = port_vfs_default.open(buf, PORT_VFS_READ);
+	if (f != PORT_FILE_INVALID) {
+		port_vfs_default.close(f);
+		return (port_strdup(buf));
+	}
+
+	base = strrchr(path, '/');
+	if (base != NULL) {
+		base++;
+	} else {
+		base = path;
+	}
+	if (locate(base, buf, sizeof(buf)) == 0) {
+		return (port_strdup(buf));
+	}
+
+	return (port_strdup(path));
+}
