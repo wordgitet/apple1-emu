@@ -97,16 +97,86 @@ port_sleep_us(uint32_t us)
 /* Terminal I/O shims                                                 */
 /* ================================================================== */
 
+static unsigned char vms_orig_char[12];
+static int vms_char_saved = 0;
+
+static int
+vms_term_write_block(const char *buf, unsigned int n)
+{
+	struct vms_iosb iosb;
+	unsigned int status;
+
+	if (vms_channel == 0) {
+		return (-1);
+	}
+	iosb.status = 0;
+	iosb.count = 0;
+	iosb.dev_info = 0;
+	/*
+	 * IO$_WRITEVBLK (48): write raw bytes to the TT channel, bypassing
+	 * DECC$ record-oriented stdout carriage control.
+	 */
+	status = sys$qiow(0, vms_channel, 48, &iosb, 0, 0,
+	    (void *)buf, n, 0, 0, 0, 0);
+	if ((status & 1) == 0 || (iosb.status & 1) == 0) {
+		return (-1);
+	}
+	return (0);
+}
+
+static void
+vms_term_write_expand(const char *buf, port_size_t n)
+{
+	const char crlf[2] = { '\r', '\n' };
+	port_size_t i;
+
+	for (i = 0; i < n; i++) {
+		if (buf[i] == '\n' && (i == 0 || buf[i - 1] != '\r')) {
+			if (vms_term_write_block(crlf, 2) != 0) {
+				(void)fwrite(crlf, 1, 2, stdout);
+			}
+		} else if (vms_term_write_block(buf + i, 1) != 0) {
+			(void)fwrite(buf + i, 1, 1, stdout);
+		}
+	}
+	(void)fflush(stdout);
+}
+
 void
 port_term_raw_enable(void)
 {
 	if (vms_channel == 0) {
 		struct dsc$descriptor_s dev;
-		dev.dsc$w_length = 9;
+		struct vms_iosb iosb;
+		unsigned char new_char[12];
+		unsigned int status;
+
+		dev.dsc$w_length = 2;
 		dev.dsc$b_dtype = DSC$K_DTYPE_T;
 		dev.dsc$b_class = DSC$K_CLASS_S;
-		dev.dsc$a_pointer = "SYS$INPUT";
-		(void)sys$assign(&dev, &vms_channel, 0, 0);
+		dev.dsc$a_pointer = "TT";
+		status = sys$assign(&dev, &vms_channel, 0, 0);
+		if (status & 1) {
+			/* Get current characteristics using IO$_SENSEMODE (39) */
+			iosb.status = 0;
+			iosb.count = 0;
+			iosb.dev_info = 0;
+			status = sys$qiow(0, vms_channel, 39, &iosb, 0, 0,
+			                  vms_orig_char, 12, 0, 0, 0, 0);
+			if ((status & 1) && (iosb.status & 1)) {
+				vms_char_saved = 1;
+				port_memcpy(new_char, vms_orig_char, 12);
+				/*
+				 * Set TT$M_PASSALL (0x01) and TT$M_NOECHO (0x02)
+				 * in basic characteristics (bytes 4-7).
+				 */
+				new_char[4] |= 0x03;
+				/* Apply new characteristics using IO$_SETMODE (35) */
+				iosb.status = 0;
+				status = sys$qiow(0, vms_channel, 35, &iosb, 0, 0,
+				                  new_char, 12, 0, 0, 0, 0);
+			}
+		}
 	}
 }
 
@@ -114,6 +184,14 @@ void
 port_term_raw_disable(void)
 {
 	if (vms_channel != 0) {
+		if (vms_char_saved != 0) {
+			struct vms_iosb iosb;
+			iosb.status = 0;
+			/* Restore original characteristics using IO$_SETMODE (35) */
+			(void)sys$qiow(0, vms_channel, 35, &iosb, 0, 0,
+			               vms_orig_char, 12, 0, 0, 0, 0);
+			vms_char_saved = 0;
+		}
 		(void)sys$dassgn(vms_channel);
 		vms_channel = 0;
 	}
@@ -128,14 +206,6 @@ void
 port_term_dbg_disable(void)
 {
 }
-
-/*
- * 1 when the last write left the cursor on a partial line (no trailing
- * newline).  Used to decide when to save/restore the cursor position
- * around QIO calls, which cause the VMS terminal driver to emit a CR
- * that repositions the cursor to column 0.
- */
-static int vms_line_dirty = 0;
 
 int
 port_term_read_char(void)
@@ -152,41 +222,19 @@ port_term_read_char(void)
 		return (PORT_TERM_NODATA);
 	}
 
-	/*
-	 * The VMS terminal driver emits CR (and sometimes LF) when it
-	 * arms an IO$_READVBLK read, repositioning the cursor to column 0
-	 * or to the next line.  To keep the cursor on the partial output
-	 * line (e.g. after the '\' prompt or after a dump result), we
-	 * save the cursor position with ESC-7 before the QIO call and
-	 * restore it with ESC-8 after a timeout (no key pressed).
-	 *
-	 * When a character IS available the QIO completes without the
-	 * driver's format pass, so no CR is emitted and no restore needed.
-	 */
-	if (vms_line_dirty != 0) {
-		/* ESC 7 — VT100 save cursor position */
-		(void)fwrite("\033" "7", 1, 2, stdout);
-		(void)fflush(stdout);
-	}
-
 	iosb.status  = 0;
 	iosb.count   = 0;
 	iosb.dev_info = 0;
 
 	/*
-	 * IO$_TTYREADALL (58) | IO$M_TIMED (128) | IO$M_NOECHO (64) = 250.
+	 * IO$_READVBLK (49) | IO$M_TIMED (128) = 177.
 	 *
-	 * On OpenVMS, PASSALL mode is enabled by using the base function code
-	 * IO$_TTYREADALL instead of IO$_READVBLK.  This instructs the terminal
-	 * driver to pass every typed character verbatim — including control
-	 * characters like Ctrl+R (0x12, CPU reset) and Ctrl+L (0x0C).
-	 *
-	 * Since it is a passall read, there are no special terminators, and
-	 * all keys (including CR/Enter) are returned directly in the buffer
-	 * with count=1.
+	 * Since we permanently enabled TT$M_PASSALL and TT$M_NOECHO on the
+	 * channel via IO$_SETMODE, standard read virtual block performs raw,
+	 * non-echoing input without driver-side formatting.
 	 */
 	status = sys$qiow(0, vms_channel,
-	    IO$_TTYREADALL | IO$M_TIMED | IO$M_NOECHO,
+	    IO$_READVBLK | IO$M_TIMED,
 	    &iosb, 0, 0, &c, 1, 0, 0, 0, 0);
 
 	if (status & 1) {
@@ -202,18 +250,8 @@ port_term_read_char(void)
 			}
 		}
 		if (iosb.status == 556) { /* SS$_TIMEOUT — no key pressed */
-			if (vms_line_dirty != 0) {
-				/* ESC 8 — VT100 restore cursor position */
-				(void)fwrite("\033" "8", 1, 2, stdout);
-				(void)fflush(stdout);
-			}
 			return (PORT_TERM_NODATA);
 		}
-	}
-	/* Error or unexpected status */
-	if (vms_line_dirty != 0) {
-		(void)fwrite("\033" "8", 1, 2, stdout);
-		(void)fflush(stdout);
 	}
 	return (PORT_TERM_EOF);
 }
@@ -221,23 +259,23 @@ port_term_read_char(void)
 void
 port_term_write_buf(const char *buf, port_size_t n)
 {
-	port_size_t i;
-
-	(void)fwrite(buf, 1, (size_t)n, stdout);
-	(void)fflush(stdout);
-	for (i = 0; i < n; i++) {
-		if (buf[i] == '\n') {
-			vms_line_dirty = 0;
-		} else {
-			vms_line_dirty = 1;
-		}
+	if (buf == NULL || n == 0) {
+		return;
 	}
+	if (vms_channel == 0) {
+		port_term_raw_enable();
+	}
+	/*
+	 * Lone LF from dumb-terminal output must become CR+LF on the raw TT
+	 * channel so the cursor returns to column 0 after each line.
+	 */
+	vms_term_write_expand(buf, n);
 }
 
 void
 port_term_flush(void)
 {
-	(void)fflush(stdout);
+	/* Channel writes are synchronous; no RTL buffer to flush. */
 }
 
 char *

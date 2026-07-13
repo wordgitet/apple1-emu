@@ -7,7 +7,7 @@
  * OpenVMS), or any host where escape-sequence rendering is too costly.
  *
  * The real Apple-1 only outputs CR (0x0D) as its line terminator.
- * We expand CR -> CR+LF so it renders correctly on modern terminals.
+ * We expand CR -> LF; the port layer may add further line discipline.
  */
 
 #include "port.h"
@@ -42,7 +42,6 @@ term_write(uint8_t val)
 	val &= 0x7F;
 
 	if (val == 0x0D) {
-		/* OpenVMS C RTL translates \n to CRLF for records automatically. */
 		buf[0] = '\n';
 		len = 1;
 	} else if (val >= 0x20 && val <= 0x7E) {
