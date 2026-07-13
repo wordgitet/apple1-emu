@@ -19,7 +19,7 @@ macro registry.
 | **TI-Nspire** (Ndless) | `make nspire` | `main_nspire.c` | `port_nspire.c` | `term_nspire.c` | No CLI; config via `apple1.conf.tns`. |
 | **VxWorks 7 RTP** | `bash vxworks_rtp_build.sh` | `main.c` | `port_vxworks.c` | `term_vt100.c` | See [VXWORKS_RTP.md](VXWORKS_RTP.md). |
 | **FreeRTOS** (simulator) | `make freertos` | `main.c` | `port_freertos.c` | `term_ansi.c` | See [FREERTOS_DEMO.md](FREERTOS_DEMO.md). |
-| **OpenVMS** | `@build.com` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs VSI C compiler. Auto-guards termios. |
+| **OpenVMS** | `@build.com` | `main.c` | `port_vms.c` | `term_dumb.c` | VSI C (`CC`). |
 | **Zephyr** | explicit `-D` | `main.c` | `port_zephyr.c` | `term_ansi.c` | Stub port. |
 | **OS/2** | amalgamation | `main.c` | `port_os2.c` | `term_ansi.c` | Experimental. |
 | **Bare metal** | amalgamation | `main.c` | `port_bare.c` | `term_ansi.c` | No filesystem unless you wire VFS. |

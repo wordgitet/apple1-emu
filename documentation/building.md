@@ -26,7 +26,7 @@ autoreconf -fi
 
 ## Requirements
 
-- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [nwcc](https://nwcc.sourceforge.net/), [antcc](https://github.com/thesamesam/antcc), [lacc](https://github.com/larme/lacc), …)
+- C89 compiler (`cc`, `clang`, [PCC](https://pcc.ludd.ltu.se/), [TinyCC](https://bellard.org/tcc/), [nwcc](https://nwcc.sourceforge.net/), [antcc](https://github.com/thesamesam/antcc), [lacc](https://github.com/larme/lacc), [vbcc](https://www.volker-barthelmann.de/vbcc/), VSI C (`CC`) on OpenVMS, …)
 - Python 3 (for amalgamation / `make single`)
 - GNU autotools (`autoconf`, `automake`) only when changing `configure.ac` / `Makefile.am`
 - POSIX-like shell for `make check`
@@ -86,6 +86,9 @@ make nwcc   # nwcc 0.8.3 (clears -Wall/-Wextra for the rebuild)
 make antcc  # antcc 0.3.x (zero warnings, zero errors)
 make vbcc   # vbcc i386-linux (compile-only check; requires VBCC environment variable)
 ```
+
+On **OpenVMS**, use `@build.com` with the native VSI C compiler (`CC`) instead of
+`make` — see [platforms.md](platforms.md#openvms).
 
 Each runs `make clean` then rebuilds `apple1` (or runs compile-only checks for vbcc). To pick the compiler at
 configure time instead: `./configure CC=pcc`.
