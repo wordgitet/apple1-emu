@@ -552,7 +552,7 @@ vxworks_vfs_read_line(port_file_t f, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs vxworks_vfs = { 1,
+static struct port_vfs vxworks_vfs = { "vxworks", 1,
 	vxworks_vfs_open,
 	vxworks_vfs_close,
 	vxworks_vfs_read,

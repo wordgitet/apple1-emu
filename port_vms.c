@@ -431,7 +431,7 @@ vms_vfs_read_line(port_file_t f, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs vms_vfs = { 1,
+static struct port_vfs vms_vfs = { "vms", 1,
 	vms_vfs_open,
 	vms_vfs_close,
 	vms_vfs_read,

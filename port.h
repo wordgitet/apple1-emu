@@ -564,6 +564,7 @@ typedef void *port_file_t;
 #define PORT_FILE_INVALID ((void *)0)
 
 struct port_vfs {
+	const char *zName; /* Name of this VFS structure (for diagnostics). */
 	int iVersion; /* Structure version number (currently 1). */
 
 	/*

@@ -191,6 +191,7 @@ nspire_vfs_read_line(port_file_t f, char *buf, port_size_t size)
 }
 
 static struct port_vfs nspire_vfs = {
+	"nspire",
 	1,
 	nspire_vfs_open,
 	nspire_vfs_close,

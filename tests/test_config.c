@@ -106,7 +106,7 @@ mock_read_line(port_file_t f, char *buf, port_size_t size)
 	return (1);
 }
 
-static struct port_vfs mock_vfs = { 1,
+static struct port_vfs mock_vfs = { "mock_config", 1,
 	mock_open,
 	mock_close,
 	mock_read,

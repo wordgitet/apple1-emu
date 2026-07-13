@@ -76,7 +76,7 @@ bare_vfs_read_line(port_file_t f, char *buf, port_size_t size)
 	return (0);
 }
 
-static struct port_vfs bare_vfs = { 1,
+static struct port_vfs bare_vfs = { "bare", 1,
 	bare_vfs_open,
 	bare_vfs_close,
 	bare_vfs_read,

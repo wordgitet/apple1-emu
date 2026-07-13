@@ -22,6 +22,9 @@
 #include "port_string.c"
 #include "port_path.c"
 
+#ifdef APPLE1_PORT_OTHER
+/* User provides their own port implementation externally. */
+#else
 #ifdef APPLE1_PORT_BARE
 #include "port_bare.c"
 #else
@@ -63,10 +66,10 @@
 #  define PORT_DETECTED_WIN
 # endif
 
-# ifdef __MSDOS__
+# ifdef MSDOS
 #  define PORT_DETECTED_MSDOS
 # endif
-# ifdef MSDOS
+# ifdef __MSDOS__
 #  define PORT_DETECTED_MSDOS
 # endif
 # ifdef __dos__
@@ -88,8 +91,25 @@
 # ifdef __OS2__
 #  define PORT_DETECTED_OS2
 # endif
+# ifdef OS2
+#  define PORT_DETECTED_OS2
+# endif
 # ifdef __os2__
 #  define PORT_DETECTED_OS2
+# endif
+
+# ifdef __vxworks
+#  define PORT_DETECTED_VXWORKS
+# endif
+# ifdef __VXWORKS__
+#  define PORT_DETECTED_VXWORKS
+# endif
+
+# ifdef __VMS__
+#  define PORT_DETECTED_VMS
+# endif
+# ifdef VMS
+#  define PORT_DETECTED_VMS
 # endif
 
 # ifdef __TINSPIRE__
@@ -109,34 +129,49 @@
 # ifdef __unix
 #  define PORT_DETECTED_POSIX
 # endif
+# ifdef unix
+#  define PORT_DETECTED_POSIX
+# endif
 # ifdef __APPLE__
-#  define PORT_DETECTED_POSIX
-# endif
-# ifdef __linux__
-#  define PORT_DETECTED_POSIX
-# endif
-# ifdef __FreeBSD__
 #  define PORT_DETECTED_POSIX
 # endif
 # ifdef __NetBSD__
 #  define PORT_DETECTED_POSIX
 # endif
+# ifdef __FreeBSD__
+#  define PORT_DETECTED_POSIX
+# endif
 # ifdef __OpenBSD__
 #  define PORT_DETECTED_POSIX
 # endif
-# ifdef __DragonFly__
+# ifdef __linux__
 #  define PORT_DETECTED_POSIX
 # endif
-# ifdef __haiku__
+# ifdef __linux
 #  define PORT_DETECTED_POSIX
 # endif
-# ifdef __QNX__
+# ifdef linux
 #  define PORT_DETECTED_POSIX
 # endif
-# ifdef __rtems__
+# ifdef __HAIKU__
 #  define PORT_DETECTED_POSIX
 # endif
-# ifdef __ia16__
+# ifdef __sun
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __sun__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __svr4__
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef __SVR4
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef _POSIX_VERSION
+#  define PORT_DETECTED_POSIX
+# endif
+# ifdef _POSIX2_VERSION
 #  define PORT_DETECTED_POSIX
 # endif
 # ifdef __VMS
@@ -177,7 +212,7 @@
 #  endif
 # endif
 
-
+#endif
 #endif
 #endif
 #endif

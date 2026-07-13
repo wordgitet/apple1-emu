@@ -7,6 +7,9 @@
 #include "port.h"
 #include "term_apple1.h"
 
+#ifdef APPLE1_TERM_OTHER
+/* User provides their own terminal driver implementation externally. */
+#else
 #ifdef APPLE1_TERM_DUMB
 #include "term_dumb.c"
 #else
@@ -43,6 +46,7 @@
 #include "term_vt100.c"
 #else
 #include "term_ansi.c"
+#endif
 #endif
 #endif
 #endif
