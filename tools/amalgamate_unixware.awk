@@ -70,6 +70,11 @@ function copy_source(file, outpath,    path, line, inc, base)
 				    outpath)
 				continue
 			}
+			if (base in is_optional) {
+				emit("/* amalgamation: omit optional \"" inc "\" */",
+				    outpath)
+				continue
+			}
 			if (base in is_internal) {
 				if (!(base in seen)) {
 					emit("", outpath)
@@ -101,10 +106,14 @@ BEGIN {
 	n_src = split("port.c bus.c cpu.c disasm.c aci.c krusader.c dbg.c " \
 	    "io.c cli_config.c term.c main.c", src, " ")
 	split("embedded_roms.h font5x7.h stb_image_write.h term_internal.h " \
-	    "apple1limit.h port_posix_inc.h port_string.c port_posix.c " \
-	    "port_win.c port_msdos.c port_plan9.c port_freertos.c " \
-	    "port_zephyr.c port_bare.c port_os2.c port_vxworks.c " \
-	    "port_tcc_va.c term_ansi.c term_dos.c term_vt100.c", internal, " ")
+	    "apple1limit.h port_posix_inc.h port_attrs.h port_stdarg_libc.h " \
+	    "port_stdarg_plan9.h apple1limit_checks.h port_path.c port_string.c " \
+	    "port_posix.c port_win.c port_msdos.c port_plan9.c port_zephyr.c " \
+	    "port_bare.c port_os2.c port_vxworks.c port_vms.c port_tcc_va.c " \
+	    "term_ansi.c term_dos.c term_vt100.c term_dumb.c", internal, " ")
+	split("port_freertos.c port_nspire.c term_nspire.c", optional, " ")
+	for (i in optional)
+		is_optional[optional[i]] = 1
 	for (i in internal)
 		is_internal[internal[i]] = 1
 

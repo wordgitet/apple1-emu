@@ -22,12 +22,16 @@ Single-file compile examples:
   make single HOST=win         # Windows via MinGW cross-compiler
   make single HOST=plan9       # Plan 9 preset (amalgamate; compile on 9front)
 
+  python3 tools/amalgamate.py --port port_vms.c --term term_dumb.c
+  cc -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_VMS -DAPPLE1_TERM_DUMB apple1.c -o apple1
+
 Manual:
 
   cc -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI apple1.c -o apple1
 """
 
 import argparse
+import glob
 import os
 import re
 import sys
@@ -79,25 +83,22 @@ INTERNAL_HEADERS = {
     "font5x7.h",
     "stb_image_write.h",
     "term_internal.h",
-    "port_string.c",
-    "port_posix.c",
-    "port_win.c",
-    "port_msdos.c",
-    "port_plan9.c",
-    "port_freertos.c",
-    "port_zephyr.c",
-    "port_bare.c",
-    "port_os2.c",
-    "port_vxworks.c",
-    "port_tcc_va.c",
-    "term_ansi.c",
-    "term_dos.c",
-    "term_vt100.c",
     "port_posix_inc.h",
     "port_attrs.h",
     "port_stdarg_libc.h",
+    "port_stdarg_plan9.h",
     "apple1limit.h",
     "apple1limit_checks.h",
+}
+
+# All port_*.c / term_*.c shims are inlined when port.c / term.c are processed.
+INTERNAL_GLOB = ("port_*.c", "term_*.c")
+
+# Inlined only via --port / --term, not when expanding port.c / term.c selectors.
+OPTIONAL_SHIMS = {
+    "port_freertos.c",
+    "port_nspire.c",
+    "term_nspire.c",
 }
 
 # ---------------------------------------------------------------------------
@@ -127,7 +128,8 @@ def read(path):
         return f.read()
 
 
-def embed_file(srcdir, filename, already_included, public_header_set):
+def embed_file(srcdir, filename, already_included, public_header_set,
+               internal_headers, optional_shims=None):
     """
     Return the processed text for *filename*.
 
@@ -136,6 +138,8 @@ def embed_file(srcdir, filename, already_included, public_header_set):
          inlined (public headers) or are excluded (internal).
       2. Keep all other lines verbatim.
     """
+    if optional_shims is None:
+        optional_shims = set()
     path = os.path.join(srcdir, filename)
     lines = read(path).splitlines(keepends=True)
     out = []
@@ -150,7 +154,11 @@ def embed_file(srcdir, filename, already_included, public_header_set):
                 out.append("/* amalgamation: omit #include \"{inc}\" */\n"
                            .format(inc=inc))
                 continue
-            if inc_base in INTERNAL_HEADERS:
+            if inc_base in optional_shims:
+                out.append("/* amalgamation: omit optional \"{inc}\" */\n"
+                           .format(inc=inc))
+                continue
+            if inc_base in internal_headers:
                 # Still need to inline it (once)
                 if inc_base not in already_included:
                     inc_path = os.path.join(srcdir, inc_base)
@@ -159,7 +167,8 @@ def embed_file(srcdir, filename, already_included, public_header_set):
                             "\n/* ---- begin {f} ---- */\n".format(f=inc_base))
                         sub_text, _ = embed_file(
                             srcdir, inc_base, already_included,
-                            public_header_set)
+                            public_header_set, internal_headers,
+                            optional_shims)
                         out.append(sub_text)
                         out.append(
                             "/* ---- end {f} ---- */\n\n".format(f=inc_base))
@@ -178,8 +187,20 @@ def embed_file(srcdir, filename, already_included, public_header_set):
 # Main
 # ---------------------------------------------------------------------------
 
+def internal_headers_for(srcdir):
+    """Return INTERNAL_HEADERS plus every port_*.c / term_*.c shim in srcdir."""
+    headers = set(INTERNAL_HEADERS)
+    for pattern in INTERNAL_GLOB:
+        for path in glob.glob(os.path.join(srcdir, pattern)):
+            headers.add(os.path.basename(path))
+    return headers
+
+
 def build(srcdir, outdir, port_sources, term_src):
+    internal_headers = internal_headers_for(srcdir)
     public_header_set = set(PUBLIC_HEADERS)
+    selector_build = ("port.c" in port_sources) or (term_src == "term.c")
+    optional_shims = OPTIONAL_SHIMS if selector_build else set()
 
     # ---- apple1.h -----------------------------------------------------------
     h_parts = [BANNER.format(name="apple1.h")]
@@ -193,7 +214,8 @@ def build(srcdir, outdir, port_sources, term_src):
             continue
         h_parts.append("\n/* ======== begin {f} ======== */\n".format(f=hdr))
         text, already_included = embed_file(
-            srcdir, hdr, already_included, public_header_set)
+            srcdir, hdr, already_included, public_header_set, internal_headers,
+            optional_shims)
         h_parts.append(text)
         already_included.add(hdr)
         h_parts.append("/* ======== end {f} ======== */\n".format(f=hdr))
@@ -230,7 +252,8 @@ def build(srcdir, outdir, port_sources, term_src):
         c_parts.append(
             "\n/* ======== begin {f} ======== */\n".format(f=src))
         text, already_included = embed_file(
-            srcdir, src, already_included, public_header_set)
+            srcdir, src, already_included, public_header_set, internal_headers,
+            optional_shims)
         c_parts.append(text)
         c_parts.append(
             "/* ======== end {f} ======== */\n".format(f=src))

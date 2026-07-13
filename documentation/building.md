@@ -262,6 +262,11 @@ cc -std=c89 -O2 -DAPPLE1_OMIT_CHARMAP -DAPPLE1_PORT_POSIX -DAPPLE1_TERM_ANSI \
 | `win` | `port_win.c` / `term_ansi.c` |
 | `plan9` | `port_plan9.c` / `term_vt100.c` |
 | `unixware` | `port.c` / `term.c` + `-DAPPLE1_PORT_POSIX -DAPPLE1_TERM_VT100` |
+| `vms` (manual) | `port_vms.c` / `term_dumb.c` + `-DAPPLE1_PORT_VMS -DAPPLE1_TERM_DUMB` |
+
+`tools/amalgamate.py` auto-inlines every `port_*.c` and `term_*.c` when using
+`port.c` / `term.c` so new platform shims do not need a manual list update.
+Native OpenVMS builds still use `@build.com`; amalgamation is optional there.
 
 On Plan 9 without Python: `mk amalg` (runs `rc tools/amalgamate.rc`) or
 `awk -f tools/amalgamate_plan9.awk` from the repo root.
