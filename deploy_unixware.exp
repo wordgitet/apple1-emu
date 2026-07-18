@@ -1,0 +1,65 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+set host "172.16.183.128"
+set user "unix"
+set pass "unix"
+
+# Step 1: FTP upload
+send_user "Starting FTP upload...\n"
+spawn ftp -p $host
+expect {
+    -re "(Name|login|user|User)" {
+        send "$user\r"
+        exp_continue
+    }
+    "Password:" {
+        send "$pass\r"
+    }
+    timeout {
+        send_user "FTP connection timed out.\n"
+        exit 1
+    }
+}
+
+expect "ftp>" { send "prompt\r" }
+expect "ftp>" { send "mput *.c\r" }
+expect "ftp>" { send "mput *.h\r" }
+expect "ftp>" { send "put Makefile.uw\r" }
+expect "ftp>" { send "quit\r" }
+expect eof
+send_user "FTP upload completed.\n\n"
+
+# Step 2: Telnet build
+send_user "Starting Telnet build...\n"
+spawn telnet $host
+expect {
+    "login:" {
+        send "$user\r"
+    }
+    timeout {
+        send_user "Telnet connection timed out.\n"
+        exit 1
+    }
+}
+
+expect "Password:" { send "$pass\r" }
+expect "$ " {
+    sleep 2
+    send "make -f Makefile.uw clean\r"
+}
+expect "$ " {
+    sleep 1
+    send "make -f Makefile.uw\r"
+}
+expect "$ " {
+    sleep 1
+    send "echo BUILD_STATUS:\$?\r"
+}
+expect -re "BUILD_STATUS:(\[0-9\]+)" {
+    set status $expect_out(1,string)
+    send_user "\nBuild finished. Exit code: $status\n"
+}
+expect "$ " { send "exit\r" }
+expect eof
+send_user "Telnet session finished.\n"

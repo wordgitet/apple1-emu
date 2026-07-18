@@ -5,39 +5,7 @@
 #define volatile
 #endif
 
-#ifdef APPLE1_FREERTOS_POSIX_SIM
 #include "port_posix_inc.h"
-#else
-#ifdef APPLE1_PORT_POSIX
-#include "port_posix_inc.h"
-#else
-#ifndef APPLE1_PORT_PLAN9
-#ifndef APPLE1_PORT_BARE
-#ifndef __MSDOS__
-#ifndef __OS2__
-#ifndef APPLE1_PORT_PLAN9_APE
-#ifndef APPLE1_PORT_WIN
-#ifndef _WIN32
-#ifndef _WIN64
-#ifndef APPLE1_PORT_ZEPHYR
-#ifndef APPLE1_PORT_FREERTOS
-#ifndef APPLE1_PORT_VXWORKS
-#ifndef APPLE1_PORT_NSPIRE
-#include "port_posix_inc.h"
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 
 
 /*
@@ -52,40 +20,23 @@
  * Core source files must include only this header, never any system
  * headers directly.
  */
-#ifdef APPLE1_PORT_PLAN9
-#ifndef APPLE1_PORT_PLAN9_APE
-#include <u.h>
-#include <libc.h>
+#ifndef HAVE_UINT8_T
+#define HAVE_UINT8_T 1
 #endif
+#ifndef HAVE_INT8_T
+#define HAVE_INT8_T 1
 #endif
-
-#ifndef APPLE1_PORT_PLAN9
-#ifndef APPLE1_PORT_BARE
-#ifndef __MSDOS__
-#ifndef __OS2__
-#ifndef APPLE1_PORT_PLAN9_APE
-# ifndef HAVE_UINT8_T
-#  define HAVE_UINT8_T 1
-# endif
-# ifndef HAVE_INT8_T
-#  define HAVE_INT8_T 1
-# endif
-# ifndef HAVE_UINT16_T
-#  define HAVE_UINT16_T 1
-# endif
-# ifndef HAVE_INT16_T
-#  define HAVE_INT16_T 1
-# endif
-# ifndef HAVE_UINT32_T
-#  define HAVE_UINT32_T 1
-# endif
-# ifndef HAVE_INT32_T
-#  define HAVE_INT32_T 1
-# endif
+#ifndef HAVE_UINT16_T
+#define HAVE_UINT16_T 1
 #endif
+#ifndef HAVE_INT16_T
+#define HAVE_INT16_T 1
 #endif
+#ifndef HAVE_UINT32_T
+#define HAVE_UINT32_T 1
 #endif
-#endif
+#ifndef HAVE_INT32_T
+#define HAVE_INT32_T 1
 #endif
 
 /* HAVE_UINT8_T is only set on hosted platforms that ship <stdint.h>. */
@@ -164,11 +115,8 @@ typedef UINT16_TYPE  u16;
 typedef INT16_TYPE   i16;
 typedef UINT32_TYPE  u32;
 typedef INT32_TYPE   i32;
-/* Plan 9 u.h already defines u64/i64; skip redeclaration. */
-#ifndef APPLE1_PORT_PLAN9
 typedef UINT64_TYPE  u64;
 typedef INT64_TYPE   i64;
-#endif
 
 #ifndef HAVE_UINT8_T
 typedef u8 uint8_t;
@@ -192,11 +140,7 @@ typedef i32 int32_t;
 #ifdef HAVE_UINT8_T
 typedef uintptr_t port_uintptr;
 #else
-#ifdef APPLE1_PORT_PLAN9
-typedef uintptr port_uintptr;
-#else
 typedef unsigned long port_uintptr;
-#endif
 #endif
 
 #include "port_stdarg.h"
@@ -287,14 +231,7 @@ port_error_string(port_result_t rc);
 #define NULL ((void *)0)
 #endif
 
-#ifdef APPLE1_PORT_PLAN9
-#define PORT_STATIC_INLINE static
-typedef unsigned long port_size_t;
-#define PORT_UNUSED
-#define PORT_NORETURN
-#else
 #include "port_attrs.h"
-#endif
 
 /* ================================================================== */
 /* Memory allocation shims                                            */

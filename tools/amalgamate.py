@@ -86,7 +86,6 @@ INTERNAL_HEADERS = {
     "port_posix_inc.h",
     "port_attrs.h",
     "port_stdarg_libc.h",
-    "port_stdarg_plan9.h",
     "apple1limit.h",
     "apple1limit_checks.h",
 }
@@ -95,11 +94,7 @@ INTERNAL_HEADERS = {
 INTERNAL_GLOB = ("port_*.c", "term_*.c")
 
 # Inlined only via --port / --term, not when expanding port.c / term.c selectors.
-OPTIONAL_SHIMS = {
-    "port_freertos.c",
-    "port_nspire.c",
-    "term_nspire.c",
-}
+OPTIONAL_SHIMS = set()
 
 # ---------------------------------------------------------------------------
 # Helpers
