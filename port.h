@@ -5,6 +5,9 @@
 #define volatile
 #endif
 
+#ifdef APPLE1_FREERTOS_POSIX_SIM
+#include "port_posix_inc.h"
+#else
 #ifdef APPLE1_PORT_POSIX
 #include "port_posix_inc.h"
 #else
@@ -21,6 +24,7 @@
 #ifndef APPLE1_PORT_VXWORKS
 #ifndef APPLE1_PORT_NSPIRE
 #include "port_posix_inc.h"
+#endif
 #endif
 #endif
 #endif

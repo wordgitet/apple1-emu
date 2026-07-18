@@ -4,7 +4,8 @@ AM_LDFLAGS =
 
 # Included by port.c / term.c — not separate translation units.
 PORT_SHIM = port_string.c port_path.c port_posix.c port_win.c port_msdos.c port_plan9.c \
-            port_freertos.c port_zephyr.c port_bare.c port_os2.c \
+            port_freertos.c port_freertos_posix.c port_freertos_board.h \
+            port_zephyr.c port_bare.c port_os2.c \
             port_vxworks.c port_tcc_va.c port_nspire.c
 
 TERM_SHIM = term_ansi.c term_dos.c term_vt100.c term_nspire.c
@@ -334,11 +335,12 @@ minimal-main.o: main.c
 
 
 # ---------------------------------------------------------------------------
-# FreeRTOS POSIX host build (libc I/O, no FreeRTOS kernel — see FREERTOS_DEMO.md)
+# FreeRTOS POSIX simulator build (see FREERTOS_DEMO.md)
 # ---------------------------------------------------------------------------
 
 FREERTOS_CFLAGS = -Wall -Wextra -std=c89 -Os \
-	-DAPPLE1_PORT_FREERTOS -DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
+	-DAPPLE1_PORT_FREERTOS -DAPPLE1_FREERTOS_POSIX_SIM \
+	-DAPPLE1_TERM_ANSI -DAPPLE1_OMIT_CHARMAP \
 	-DAPPLE1_OMIT_DEBUGGER -DAPPLE1_OMIT_ACI -DAPPLE1_OMIT_KRUSADER
 
 FREERTOS_OBJS = freertos-cpu.o freertos-bus.o freertos-io.o freertos-cli_config.o \
@@ -347,7 +349,7 @@ FREERTOS_OBJS = freertos-cpu.o freertos-bus.o freertos-io.o freertos-cli_config.
 freertos: apple1_freertos
 
 apple1_freertos: $(FREERTOS_OBJS)
-	@echo "Linking apple1_freertos (POSIX host, no FreeRTOS kernel)..."
+	@echo "Linking apple1_freertos (FreeRTOS POSIX simulator adapter)..."
 	$(CC) -o apple1_freertos $(FREERTOS_OBJS)
 	@echo "Done: ./apple1_freertos (see documentation/FREERTOS_DEMO.md)"
 
