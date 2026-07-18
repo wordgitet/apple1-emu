@@ -1,28 +1,21 @@
 # Platform ports
 
-Every target is selected at **compile time** with `-DAPPLE1_PORT_*` and
-`-DAPPLE1_TERM_*`.  [`port.c`](../port.c) and [`term.c`](../term.c) `#include`
-the matching shim.  See [configuration.md](configuration.md) for the full
-macro registry.
+The codebase targets **POSIX** exclusively.  The port and terminal backend
+are selected at compile time; `port.c` and `term.c` include the matching shim.
 
-| Platform | Build | Entry | Port | Terminal | Notes |
-|----------|-------|-------|------|----------|-------|
-| **POSIX** (Linux, macOS, *BSD, Haiku, …) | `./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Default.  Ctrl+R reset, Ctrl+L clear. |
-| **MS-DOS** (DJGPP) | `make dos-djgpp` | `main.c` | `port_msdos.c` | `term_dos.c` | Needs `CWSDPMI.EXE` in DOSBox. |
-| **MS-DOS** (Open Watcom) | `make dos-watcom` | `main.c` | `port_msdos.c` | `term_dos.c` | CauseWay stub embedded. |
-| **Windows** (MSVC) | `nmake -f Makefile.msc` | `main.c` | `port_win.c` | `term_ansi.c` | Or MinGW via autotools. |
-| **Plan 9 / 9front** | `mk all` | `main.c` | `port_plan9.c` | `term_vt100.c` | See [plan9-terminal.md](plan9-terminal.md). |
-| **UnixWare / OpenUNIX** | `make -f Makefile.uw` | `main.c` | `port_posix.c` | `term_vt100.c` | Native `cc` + `make`, not autotools. |
-| **MINIX 3.3** | `./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `clang` + `binutils` from pkgin (neither in base). |
-| **Sortix 1.1** | `autoreconf -fi && ./configure && make` | `main.c` | `port_posix.c` | `term_ansi.c` | Compiles out of the box with GCC 14.2.0. |
-| **Illumos / Solaris** | `./configure && gmake` | `main.c` | `port_posix.c` | `term_ansi.c` | Needs `gmake` (gnu-make). Compiles out of the box with GCC. |
-| **TI-Nspire** (Ndless) | `make nspire` | `main_nspire.c` | `port_nspire.c` | `term_nspire.c` | No CLI; config via `apple1.conf.tns`. |
-| **VxWorks 7 RTP** | `bash vxworks_rtp_build.sh` | `main.c` | `port_vxworks.c` | `term_vt100.c` | See [VXWORKS_RTP.md](VXWORKS_RTP.md). |
-| **FreeRTOS** (simulator) | `make freertos` | `main.c` | `port_freertos.c` | `term_ansi.c` | See [FREERTOS_DEMO.md](FREERTOS_DEMO.md). |
-| **OpenVMS** | `@build.com` | `main.c` | `port_vms.c` | `term_dumb.c` | VSI C (`CC`). |
-| **Zephyr** | explicit `-D` | `main.c` | `port_zephyr.c` | `term_ansi.c` | Stub port. |
-| **OS/2** | amalgamation | `main.c` | `port_os2.c` | `term_ansi.c` | Experimental. |
-| **Bare metal** | amalgamation | `main.c` | `port_bare.c` | `term_ansi.c` | No filesystem unless you wire VFS. |
+| Platform | Build command | Port | Terminal |
+|----------|---------------|------|----------|
+| **Linux** | `./configure && make` | `port_posix.c` | `term_ansi.c` |
+| **macOS** | `./configure && make` | `port_posix.c` | `term_ansi.c` |
+| ***BSD** | `./configure && make` | `port_posix.c` | `term_ansi.c` |
+| **Illumos / Solaris** | `./configure && gmake` | `port_posix.c` | `term_ansi.c` |
+| **MINIX 3.3** | `./configure && make` | `port_posix.c` | `term_ansi.c` |
+| **Sortix 1.1** | `autoreconf -fi && ./configure && make` | `port_posix.c` | `term_ansi.c` |
+| **UnixWare / OpenUNIX** | `make -f Makefile.uw` | `port_posix.c` | `term_ansi.c` |
+
+Compiler portability (gcc, clang, TCC, pcc, lacc, nwcc, cproc, cparser,
+chibicc, ccomp, vbcc) is preserved — see
+[building.md](building.md#alternate-compilers).
 
 ---
 
@@ -35,60 +28,9 @@ make check
 ./apple1 -r wozmon.bin
 ```
 
-- **Display:** 40×24 ANSI terminal; power-on checkerboard (`_` / blinking `@`).
+- **Display:** 40×24 ANSI terminal; power-on checkerboard.
 - **Config:** `apple1.conf` or CLI switches — see [usage.md](usage.md).
 - **Keyboard:** Ctrl+C quit, Ctrl+R / Ctrl+T reset, Ctrl+L clear screen.
-
-Alternate compilers: `make antcc`, `make chibicc`, `make ccomp`, `make cparser`, `make cproc`, `make nwcc`, `make tcc`, `make pcc`, `make lacc`, `make vbcc`.
-
----
-
-## MS-DOS
-
-Two cross-compilers, same DOS terminal backend.
-
-| Target | Command | Runtime in DOSBox |
-|--------|---------|-------------------|
-| DJGPP | `make dos-djgpp` | `APPLE1.EXE` + `CWSDPMI.EXE` |
-| Open Watcom | `make dos-watcom` | `APPLE1.EXE` only (CauseWay) |
-
-```dos
-APPLE1 -R WOZMON.BIN
-```
-
-Uses conio / BIOS int 10h — no ANSI.SYS.  Full CLI in [usage.md](usage.md).
-
-Details: [building.md](building.md#ms-dos-cross-build).
-
----
-
-## Windows
-
-```bash
-nmake -f Makefile.msc
-nmake -f Makefile.msc minimal
-```
-
-Produces `apple1.exe` with `port_win.c` + `term_ansi.c`.  `minimal` builds
-`apple1_minimal.exe` with the same `APPLE1_OMIT_*` strip set as `make minimal`.
-MinGW builds can use autotools with `CC=x86_64-w64-mingw32-gcc`.
-
----
-
-## Plan 9 / 9front
-
-```bash
-mk all
-./6.out
-mk minimal
-./apple1_minimal
-```
-
-Headless: `./6.out -H`.
-
-- **Why VT100, not ANSI:** `vt` in Plan 9 / 9front only emulates a VT-100 or 
-VT-220 terminal. See [plan9-terminal.md](plan9-terminal.md).
-- **Amalgamation:** `mk amalg` (no Python).
 
 ---
 
@@ -102,146 +44,14 @@ make -f Makefile.uw minimal
 ./apple1
 ```
 
-Uses `port_posix.c` with `__USLC__` shims and `term_vt100.c`.  No `make check`
-on UnixWare — run tests on a POSIX host first.
-
----
-
-## MINIX 3
-
-Tested on **MINIX 3.3.0** (i386).  Neither a compiler nor a linker ships
-in the base system — install both from pkgin:
-
-```sh
-pkgin -y install clang binutils
-```
-
-Then build normally:
-
-```sh
-./configure
-make
-./apple1 -r wozmon.bin
-```
-
-`configure` picks up clang automatically.  No source changes are needed;
-the code is strict C89 POSIX and compiles warning-free.
-
-**Ctrl+R over SSH:** most local shells (bash, zsh) intercept Ctrl+R for
-reverse history search before the byte reaches the SSH stream.  Run the
-emulator on the MINIX console directly, or use `bind -r '\C-r'` in bash
-on the host before connecting, to pass Ctrl+R through.
-
----
-
-## Sortix 1.1
-
-Tested on **Sortix 1.1.0-dev** (x86_64).  Since autotools (autoreconf, autoconf,
-automake) and GCC 14.2.0 are preinstalled on Sortix, the emulator builds completely
-out of the box.
-
-Generate configure script first:
-
-```sh
-autoreconf -fi
-```
-
-Then build normally:
-
-```sh
-./configure
-make
-./apple1 -r wozmon.bin
-```
-
-No source changes are needed; the C89 POSIX codebase compiles and runs cleanly.
-
----
-
-## TI-Nspire (Ndless)
-
-Apple-1 for TI-Nspire calculators running [Ndless](https://ndless.me/).  Uses
-the LCD (`lcd_blit`) and physical keyboard (`isKeyPressed`).
-
-**Build** (requires Ndless SDK: `nspire-gcc`, `nspire-ld`, `genzehn`,
-`make-prg`):
-
-```bash
-make nspire
-make nspire NDLESS_SDK=/path/to/ndless-sdk
-```
-
-Output: **`apple1.tns`**.  Omitted at compile time: debugger, ACI, Krusader,
-disassembler, charmap, PIA throttle.  Entry: `main_nspire.c` (no argv parsing).
-
-**Install:**
-
-```
-<documents>/ndless/apple1.tns
-<documents>/ndless/apple1.conf.tns    # optional
-<documents>/ndless/roms/basic.tns     # example data file
-```
-
-Ndless transfer only accepts `.tns` — rename raw `.bin` dumps for upload; the
-emulator reads bytes as-is.  Config paths resolve under `<documents>/ndless/`
-unless absolute (`/documents/ndless/...`).  Same `key = value` format as desktop
-`.conf` files — see `apple1.conf.tns` in the repo and [usage.md](usage.md).
-
-Example config:
-
-```
-load = roms/basic.tns @ E000
-```
-
-**Run:** launch from Ndless menu.  Blank screen + blinking `@`, Wozmon boots
-automatically (no manual reset).  40×20 chars on 320×240 LCD.
-
-| Key | Action |
-|-----|--------|
-| ESC | Quit |
-| DOC (CX) / HOME (classic) | Reset 6502 |
-| Ctrl + DEL | Clear screen |
-| Shift + Space | `_` (rubout) |
-| Shift + × | `"` |
-| Ctrl + EE | `@` |
-
-No DEL/backspace mapped — use Shift+Space for rubout.
-
----
-
-## VxWorks 7 RTP
-
-```bash
-source ~/vxworks-sdk/sdkenv.sh
-bash vxworks_rtp_build.sh
-```
-
-Produces `apple1.vxe`.  Uses `term_vt100.c` on serial stdio.
-
-**Full guide:** [VXWORKS_RTP.md](VXWORKS_RTP.md).
-
----
-
-## FreeRTOS
-
-Quick local binary (no scheduler):
-
-```bash
-make freertos
-./apple1_freertos
-```
-
-Full Posix_GCC integration test:
-
-```bash
-bash freertos_demo_test.sh   # from FreeRTOS/Demo/Posix_GCC
-```
-
-**Full guide:** [FREERTOS_DEMO.md](FREERTOS_DEMO.md).
+Uses `port_posix.c` with `__USLC__` shims.  Run tests on a standard POSIX
+host before deploying.
 
 ---
 
 ## Illumos / Solaris
+
+Requires GNU make:
 
 ```bash
 ./configure
@@ -249,51 +59,42 @@ gmake
 gmake check
 ```
 
-- **Build Tool:** Requires GNU make (`gmake`) to build via autotools (native Sun `make` is not supported).
-- **Compilers:** Compiles out of the box with GCC, passing all 9/9 tests.
+Compiles warning-free with GCC; all 9 tests pass.
 
 ---
 
-## OpenVMS
+## MINIX 3
 
-```vms
-@build.com
+Tested on **MINIX 3.3.0** (i386).  Install a compiler from pkgin first:
+
+```sh
+pkgin -y install clang binutils
+./configure
+make
+./apple1 -r wozmon.bin
 ```
-
-- **Build Tool:** Compiles natively via the DCL command procedure `build.com` using the VSI C compiler (`CC`).
-- **Running:** Define the executable as a foreign command (`apple1 == "$SYS$SYSROOT:[SYSMGR.apple1-emu]apple1.exe"`) and run with quoted arguments (`apple1 "-h"`), or run directly under GNV `bash` (`./apple1.exe`).
-- **Compatibility:** Automatically detects `__VMS` to guard and omit missing POSIX `termios` headers and symbols, falling back to standard carriage returns/line feeds and socket-based timing structures.
-- **Keyboard Input (QIO PASSALL):** Raw character input under GNV `bash` is implemented via the OpenVMS system service `sys$qiow` on a channel assigned to `SYS$INPUT`. The read uses the base function code `IO$_TTYREADALL` (PASSALL mode) combined with the modifiers `IO$M_TIMED` and `IO$M_NOECHO`. PASSALL is critical because it disables the OpenVMS terminal driver's command-line/special character interception, allowing control sequences like **Ctrl+R** (CPU Reset) and **Ctrl+L** (Clear Screen) to pass directly to the emulator.
-- **Enter/CR Handling:** When Enter is pressed in PASSALL mode, the QIO operation terminates and returns a character count of `0`, returning the carriage return code (`0x0D`) in the low 16 bits of the I/O Status Block (`iosb.dev_info`).
-- **Cursor Position Jitters:** The OpenVMS terminal driver automatically issues a Carriage Return (`\r`) to reposition the cursor to column 0 every time it arms a timed read. To prevent this from corrupting the layout of the Apple-1 monitor prompts (like `\`), `port_vms.c` wraps each read poll with VT100 cursor save/restore escape codes (`ESC 7` and `ESC 8`).
-
 
 ---
 
-## Zephyr / OS/2 / bare metal
+## Sortix 1.1
 
-Build via amalgamation with explicit flags:
+Autotools and GCC are pre-installed; autoreconf first:
 
-```bash
-python3 tools/amalgamate.py --port port_bare.c
-cc -std=c89 -DAPPLE1_PORT_BARE -DAPPLE1_TERM_ANSI apple1.c -o apple1
+```sh
+autoreconf -fi
+./configure
+make
+./apple1 -r wozmon.bin
 ```
-
-`port_zephyr.c` and `port_os2.c` are stubs or lightly tested.  Wire
-`g_port_vfs` before `bus_init()` on bare metal if you have no filesystem.
 
 ---
 
 ## Single-file amalgamation
 
-`make single` with `HOST=` selects the port preset:
+```bash
+make amalgamation           # generates apple1.c + apple1.h
+make single                 # also compiles POSIX binary
+make check-single           # link-only smoke test
+```
 
-| `HOST` | Port / term |
-|--------|-------------|
-| `posix` | auto / ANSI |
-| `dos`, `watcom` | MS-DOS / DOS |
-| `win` | Windows / ANSI |
-| `plan9` | Plan 9 / VT100 |
-| `unixware` | POSIX / VT100 |
-
-See [building.md](building.md#single-file-amalgamation-make-single).
+See [building.md](building.md#single-file-amalgamation).

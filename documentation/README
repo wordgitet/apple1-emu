@@ -1,11 +1,10 @@
 Apple-1 Emulator Documentation
 ================================
 
-Portable Apple-1 emulator in C.  Core code talks only to port.h; each host
-gets a port_*.c shim and a term_*.c display backend.
+Apple-1 emulator in C.  Core code talks only to port.h; platform port and terminal are POSIX-only.
 
-Quick start (POSIX)
--------------------
+Quick start
+-----------
 
     ./configure && make
     make check
@@ -19,19 +18,16 @@ Documentation map
 -----------------
 
 Core (all hosts)
-    usage.md            CLI options, .conf files, keyboard (POSIX/MS-DOS)
+    usage.md            CLI options, .conf files, keyboard (POSIX)
     configuration.md    Compile-time limits, APPLE1_OMIT_*, port registry
     hardware.md         Memory map, PIA, expansion cards
     debugger.md         Interactive debugger (-g)
 
 Build
-    building.md         Autotools, tests, amalgamation, cross-compiles
+    building.md         Autotools, tests, amalgamation
 
-Platforms (pick your host)
-    platforms.md        All ports — POSIX, DOS, Windows, Plan 9, Nspire,
-                          VxWorks, FreeRTOS, UnixWare, bare metal
-    FREERTOS_DEMO.md    FreeRTOS Posix_GCC simulator
-    VXWORKS_RTP.md      VxWorks 7 RTP on QEMU
+Platforms
+    platforms.md        Supported POSIX systems
 
 Deprecated
     manual.md           Legacy GUI-era index — do not use
@@ -39,11 +35,10 @@ Deprecated
 Project layout
 --------------
 
-    main.c              POSIX / Windows / Plan 9 / MS-DOS CLI entry
-    main_nspire.c       TI-Nspire entry (no argv parsing)
+    main.c              POSIX CLI entry
     cpu.c  bus.c        6502 and system bus
-    port.c  term.c      Select port_*.c / term_*.c at compile time
-    port_string.c       Freestanding string/format helpers (all builds)
+    port.c  term.c      Selects shims at compile time
+    port_string.c       Freestanding string/format helpers
     apple1limit.h       Compile-time limits and defaults
     tools/amalgamate.py Single-file apple1.c generator
 
@@ -52,6 +47,3 @@ What this is
 
 Cycle-oriented Apple-1 with Woz Monitor, optional ACI cassette card, optional
 Krusader ROM, CLI debugger, and a 40-column terminal display.
-
-Not included: the old SDL3 GUI (removed).  All interaction is terminal or
-host-specific UI (Nspire LCD, DOS conio, etc.).
